@@ -1,7 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Dongle:wght@400;700&family=Jua&family=Nanum+Pen+Script&display=swap');
 
-body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-.app-container { width: 100%; max-width: 400px; height: 100vh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+/* 🌟 모바일 주소창에 가리지 않도록 100dvh 사용 */
+body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
+
+/* 🌟 하단에 50px(채팅창 높이)만큼 여백을 주어 가려지지 않게 설정 */
+.app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; box-sizing: border-box; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
 
@@ -20,36 +23,36 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .menu-section h3 { margin-top: 0; font-size: 15px; color: #555; display: flex; align-items: center; }
 .setting-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
 
-.koko-zone { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 80px; }
-.speech-bubble { background: white; padding: 12px 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 80%; }
-.koko-character { width: 130px; cursor: pointer; animation: floating 2s ease-in-out infinite; }
+/* 🌟 작은 화면에서도 꼬꼬가 너무 공간을 차지하지 않도록 유연하게 설정 */
+.koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 10px; min-height: 120px; }
+.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 85%; font-size: 14px; }
+.koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; }
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
-/* 탭 메뉴 UI */
-.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 250px; display: flex; flex-direction: column; position: relative; z-index: 5; margin-bottom: 40px; }
-.tab-buttons { display: flex; border-bottom: 1px solid #eee; overflow-x: auto; scrollbar-width: none; }
-.tab-buttons::-webkit-scrollbar { display: none; }
-.tab-btn { flex: 1; min-width: 70px; padding: 15px 5px; font-size: 14px; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 5px; }
-.tab-btn .ui-icon { margin: 0; }
+/* 🌟 탭 메뉴 UI (가로 스크롤 방지, 4등분 꽉 채우기) */
+.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 260px; display: flex; flex-direction: column; position: relative; z-index: 5; flex-shrink: 0; }
+.tab-buttons { display: flex; width: 100%; border-bottom: 1px solid #eee; }
+.tab-btn { flex: 1; min-width: 0; padding: 12px 2px; font-size: 12px; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; }
+.tab-btn .ui-icon { margin: 0; width: 1em; height: 1em; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
-.tab-content { display: none; padding: 15px 20px; overflow-y: auto; flex-grow: 1; }
+.tab-content { display: none; padding: 15px; overflow-y: auto; flex-grow: 1; }
 .tab-content.active { display: block; }
 
 .input-group { display: flex; gap: 8px; margin-bottom: 10px; }
-.input-group input { flex-grow: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
-.action-btn { width: 100%; padding: 10px; background-color: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; }
+.input-group input { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
+.action-btn { width: 100%; padding: 10px; background-color: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; display: flex; align-items: center; justify-content: center; font-size: 13px; }
 .action-btn.feed-action { margin-top: 10px; }
 .action-btn:disabled { background-color: #e0e0e0; cursor: not-allowed; }
 .item-list { list-style: none; padding: 0; margin: 0; }
-.item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 14px; }
+.item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 8px 10px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; }
 .delete-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; }
 
-/* 스케줄 리스트 전용 스타일 */
-.schedule-time-badge { background: #0984e3; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px; }
+.schedule-time-badge { background: #0984e3; color: white; padding: 3px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px; }
 
+/* 💬 팝업형 미니 채팅창 */
 .chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; display: flex; flex-direction: column; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
-.chat-drawer.expanded { height: 60%; }
+.chat-drawer.expanded { height: 65%; } /* 확장 시 화면의 65% 차지 */
 .chat-header-bar { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-weight: bold; color: #555; border-bottom: 1px solid #e1e8ed; cursor: pointer; background: white; border-radius: 20px 20px 0 0; }
 #chat-preview-text { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; display: flex; align-items: center; }
 .chat-drawer-body { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; opacity: 0; transition: opacity 0.2s; }
