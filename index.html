@@ -83,4 +83,87 @@
 
         <section class="tab-container">
             <div class="tab-buttons">
-                <button class="tab-btn active" data-target="tab-todo">📝 할 일</button
+                <button class="tab-btn active" data-target="tab-todo">📝 할 일</button>
+                <button class="tab-btn" data-target="tab-dday">🚩 디데이</button>
+                <button class="tab-btn" data-target="tab-health">🩺 건강</button>
+            </div>
+
+            <div id="tab-todo" class="tab-content active">
+                <div class="input-group">
+                    <input type="text" id="new-todo-input" placeholder="새로운 할 일을 적어주세요!">
+                    <button id="add-todo-btn" class="action-btn">추가</button>
+                </div>
+                <ul id="todo-list" class="item-list"></ul>
+                <button id="feed-btn" class="action-btn feed-action" disabled>꼬꼬에게 모이 주기 🌾</button>
+            </div>
+
+            <div id="tab-dday" class="tab-content">
+                <div class="d-day-info" style="text-align:center; font-weight:bold; color:#ff6b6b; margin-bottom:10px;">🚩 디데이를 추가해보세요!</div>
+                <div class="input-group">
+                    <input type="text" id="dday-title-input" placeholder="예: 내 생일">
+                    <input type="date" id="dday-date-input">
+                    <button id="save-dday-btn" class="action-btn" style="background-color:#ff6b6b;">저장</button>
+                </div>
+                <ul id="dday-list-display" class="item-list"></ul>
+            </div>
+
+            <div id="tab-health" class="tab-content">
+                <div class="alarm-item"><span>💧 물 마시기 (1시간)</span><input type="checkbox" checked></div>
+                <div class="alarm-item"><span>🧘 스트레칭 (2시간)</span><input type="checkbox" checked></div>
+            </div>
+        </section>
+
+        <section id="chat-drawer" class="chat-drawer collapsed">
+            <div id="chat-header-bar" class="chat-header-bar">
+                <span id="chat-preview-text">💬 여기를 눌러 채팅창 열기...</span>
+                <span id="chat-toggle-icon">🔼</span>
+            </div>
+            
+            <div class="chat-drawer-body">
+                <div class="chat-tabs">
+                    <button id="tab-global" class="active">전체 채팅</button>
+                    <button id="tab-room">1:1 비밀방</button>
+                </div>
+
+                <div id="room-code-area" style="display:none; margin-bottom:10px;">
+                    <div class="input-group">
+                        <input type="text" id="room-code-input" placeholder="비밀방 코드 입력">
+                        <button id="join-room-btn" class="action-btn" style="background-color:#a29bfe;">입장</button>
+                    </div>
+                </div>
+
+                <div class="chat-box" id="chat-box">
+                    <div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">닉네임을 등록해야 채팅이 가능해요!</div>
+                </div>
+                
+                <label style="font-size:12px; cursor:pointer; color:#ff9f43; font-weight:bold; display:block; margin-bottom:5px;">
+                    <input type="checkbox" id="megaphone-check"> 📢 확성기로 크게 말하기
+                </label>
+
+                <div class="input-group">
+                    <input type="text" id="chat-input" placeholder="닉네임 등록 필요" disabled>
+                    <button id="send-chat-btn" class="action-btn" disabled>전송</button>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="feedback-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div style="background:white; padding:20px; border-radius:15px; width:85%; max-width:320px;">
+            <h3 style="margin-top:0; color:#74b9ff;">쪽지 보내기</h3>
+            <p style="font-size:12px; color:#555; line-height:1.5; margin-bottom:15px;">개발자에게 보내고 싶은 내용을 써주세요. 다이렉트로 전송됩니다.</p>
+            <textarea id="feedback-text" rows="5" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd; box-sizing:border-box; resize:none;"></textarea>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button id="close-feedback-btn" class="action-btn" style="background-color:#ccc; color:#333;">취소</button>
+                <button id="send-feedback-btn" class="action-btn" style="background-color:#74b9ff;">전송하기</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

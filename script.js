@@ -83,4 +83,158 @@ auth.onAuthStateChanged((user) => {
         myUid = user.uid; 
 
         if (user.uid === ADMIN_UID) {
-            document.getElementById('admin-feedback-area').style.display =
+            document.getElementById('admin-feedback-area').style.display = 'block';
+            loadAdminFeedbacks();
+        } else {
+            document.getElementById('admin-feedback-area').style.display = 'none';
+        }
+
+        db.collection('users').doc(user.uid).get().then(doc => {
+            if (doc.exists) {
+                const data = doc.data();
+                if (data.todos) { todos = data.todos; renderTodos(); }
+                if (data.ddays) { ddays = data.ddays; renderDdays(); }
+                if (data.nickname) {
+                    myNickname = data.nickname; localStorage.setItem('koko_nickname', myNickname);
+                    document.getElementById('nickname-input').value = myNickname;
+                    document.getElementById('profile-status').innerText = "✅ 동기화 완료";
+                    enableChat();
+                }
+                if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
+            } else syncToCloud();
+        });
+    } else {
+        document.getElementById('login-area').style.display = 'block';
+        document.getElementById('user-profile-area').style.display = 'none';
+        document.getElementById('admin-feedback-area').style.display = 'none';
+    }
+});
+
+// 닉네임 로직
+document.getElementById('save-nickname-btn').addEventListener('click', async () => {
+    const name = document.getElementById('nickname-input').value.trim();
+    if (!name || name === myNickname) return;
+    const status = document.getElementById('profile-status');
+
+    if (lastChangeDate) {
+        const diff = (new Date() - lastChangeDate) / 86400000;
+        if (diff < 7) { status.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; return; }
+    }
+    const nameRef = db.collection('nicknames').doc(name);
+    const doc = await nameRef.get();
+    if (doc.exists && doc.data().uid !== myUid) { status.innerText = "❌ 사용 중인 이름!"; return; }
+
+    if (myNickname) await db.collection('nicknames').doc(myNickname).delete();
+    await nameRef.set({ uid: myUid });
+    await db.collection('users').doc(myUid).set({ nickname: name, lastNicknameChange: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    
+    myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
+    status.innerText = "✅ 변경 완료!"; status.style.color = "#2ecc71"; enableChat();
+});
+
+// 설정 로직
+const fontSelect = document.getElementById('font-select'); const sizeSelect = document.getElementById('size-select');
+if (localStorage.getItem('koko_font')) { document.body.style.fontFamily = localStorage.getItem('koko_font'); fontSelect.value = localStorage.getItem('koko_font'); }
+fontSelect.addEventListener('change', e => { document.body.style.fontFamily = e.target.value; localStorage.setItem('koko_font', e.target.value); });
+if (localStorage.getItem('koko_font_size')) { document.body.className = localStorage.getItem('koko_font_size'); sizeSelect.value = localStorage.getItem('koko_font_size'); }
+sizeSelect.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); });
+
+// 피드백 (모달 수정)
+document.getElementById('open-feedback-btn').addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
+document.getElementById('close-feedback-btn').addEventListener('click', () => document.getElementById('feedback-modal').style.display = 'none');
+document.getElementById('send-feedback-btn').addEventListener('click', async () => {
+    const txt = document.getElementById('feedback-text').value.trim(); if (!txt) return;
+    await db.collection('feedbacks').add({ text: txt, senderUid: myUid, senderNickname: myNickname || '익명', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("전송 완료! 🐥"); document.getElementById('feedback-modal').style.display = 'none'; document.getElementById('feedback-text').value = '';
+});
+function loadAdminFeedbacks() {
+    db.collection('feedbacks').orderBy('timestamp', 'desc').onSnapshot(snap => {
+        const list = document.getElementById('admin-feedback-list'); list.innerHTML = '';
+        snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;">👤 ${d.senderNickname}</div><div>${d.text}</div></div>`; });
+    });
+}
+
+// ==========================================
+// 💬 3. 팝업 채팅창 로직 (미리보기 기능 추가)
+// ==========================================
+function enableChat() { document.getElementById('chat-input').disabled = false; document.getElementById('send-chat-btn').disabled = false; document.getElementById('chat-input').placeholder = "메시지 입력..."; loadMessages(); }
+if(myNickname) enableChat();
+
+let currentChatMode = 'global'; let currentRoomCode = ''; let chatUnsubscribe = null;
+document.getElementById('tab-global').addEventListener('click', e => { currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room').classList.remove('active'); document.getElementById('room-code-area').style.display = 'none'; loadMessages(); });
+document.getElementById('tab-room').addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); document.getElementById('room-code-area').style.display = 'block'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 🔒</div>'; if(chatUnsubscribe) chatUnsubscribe(); });
+document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); });
+
+function loadMessages() {
+    if (!myNickname) return;
+    if (chatUnsubscribe) chatUnsubscribe(); document.getElementById('chat-box').innerHTML = ''; 
+    let queryRef = currentChatMode === 'global' ? db.collection('global_messages') : (currentRoomCode ? db.collection('secret_rooms').doc(currentRoomCode).collection('messages') : null);
+    if (!queryRef) return;
+    let isInit = true; 
+
+    chatUnsubscribe = queryRef.orderBy('timestamp').onSnapshot(snap => {
+        snap.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const data = change.doc.data();
+                
+                // 🌟 최신 메시지 미니바 미리보기 업데이트
+                document.getElementById('chat-preview-text').innerText = `${data.sender}: ${data.text}`;
+
+                const isMe = data.uid ? (data.uid === myUid) : (data.sender === myNickname);
+                const shakeClass = (data.megaphone && !isInit) ? 'shake' : '';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-message ${isMe ? 'me' : 'other'} ${data.megaphone ? 'megaphone' : ''} ${shakeClass}`;
+                if (!isMe) { const sDiv = document.createElement('div'); sDiv.className = 'chat-sender'; sDiv.innerText = data.sender; msgDiv.appendChild(sDiv); }
+                const tDiv = document.createElement('div'); tDiv.innerText = (data.megaphone ? '📢 ' : '') + data.text; msgDiv.appendChild(tDiv);
+                document.getElementById('chat-box').appendChild(msgDiv);
+            }
+        });
+        isInit = false; document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+    });
+}
+document.getElementById('send-chat-btn').addEventListener('click', () => {
+    const text = document.getElementById('chat-input').value.trim(); if (!text || !myNickname) return;
+    const isMega = document.getElementById('megaphone-check').checked;
+    const data = { text: text, sender: myNickname, uid: myUid, megaphone: isMega, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+    if (currentChatMode === 'global') db.collection('global_messages').add(data); else db.collection('secret_rooms').doc(currentRoomCode).collection('messages').add(data);
+    document.getElementById('chat-input').value = ''; document.getElementById('megaphone-check').checked = false;
+});
+
+// ==========================================
+// 📝 4. 투두, 디데이, 날씨, 운세 로직
+// ==========================================
+let todos = JSON.parse(localStorage.getItem('koko_todos')) || [];
+function renderTodos() {
+    const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false;
+    todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; });
+    document.getElementById('feed-btn').disabled = !anyChecked;
+}
+document.getElementById('add-todo-btn').addEventListener('click', () => { const txt = document.getElementById('new-todo-input').value.trim(); if (!txt) return; todos.push({ text: txt, checked: false }); document.getElementById('new-todo-input').value=''; renderTodos(); syncToCloud(); });
+window.toggleTodo = i => { todos[i].checked = !todos[i].checked; renderTodos(); syncToCloud(); };
+window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
+document.getElementById('feed-btn').addEventListener('click', () => { kokoSpeech.innerText="냠냠! 💯"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); kokoSpeech.innerText="화이팅!";}, 2000); });
+renderTodos();
+
+let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
+function renderDdays() {
+    const list = document.getElementById('dday-list-display'); list.innerHTML = ''; 
+    if (ddays.length === 0) { document.querySelector('.d-day-info').innerText = "🚩 디데이를 추가해보세요!"; return; }
+    const today = new Date(); today.setHours(0,0,0,0);
+    const calc = ddays.map(d => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, diff: Math.ceil((t-today)/86400000) }; });
+    calc.forEach((d, i) => { 
+        let badge = d.diff === 0 ? `<span style="color:#ff6b6b;">D-Day🎉</span>` : (d.diff > 0 ? `<span style="color:#ff9f43;">D-${d.diff}</span>` : `<span style="color:#888;">D+${Math.abs(d.diff)}</span>`);
+        list.innerHTML += `<li><span><strong>${d.title}</strong> <span style="font-size:12px;color:#999;">(${d.date})</span> ${badge}</span><button class="delete-btn" onclick="deleteDday(${i})">❌</button></li>`;
+    });
+    const cl = calc.reduce((p, c) => Math.abs(c.diff) < Math.abs(p.diff) ? c : p);
+    document.querySelector('.d-day-info').innerText = cl.diff === 0 ? `🚩 ${cl.title} D-Day!` : (cl.diff > 0 ? `🚩 ${cl.title} D-${cl.diff}` : `🚩 ${cl.title} D+${Math.abs(cl.diff)}`);
+}
+document.getElementById('save-dday-btn').addEventListener('click', () => { const t=document.getElementById('dday-title-input').value; const d=document.getElementById('dday-date-input').value; if(t&&d){ ddays.push({title:t, date:d}); renderDdays(); syncToCloud(); }});
+window.deleteDday = i => { ddays.splice(i, 1); renderDdays(); syncToCloud(); };
+renderDdays();
+
+function getKokoWeather() { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ document.querySelector('.weather-info').innerText=`${d.current_weather.weathercode<=1?'☀️':(d.current_weather.weathercode<=45?'☁️':'🌧️')} ${d.current_weather.temperature}°C`; }); }); }
+getKokoWeather();
+
+const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
+document.getElementById('fortune-btn').addEventListener('click', () => { kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
+kokoChar.addEventListener('click', () => { const h=new Date().getHours(); kokoSpeech.innerText= h<12?"아침 화이팅!🌅":(h<18?"나른한 오후 ☀️":"수고했어요!🌙"); kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
