@@ -38,17 +38,17 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .flex-column-tab.active { display: flex; flex-direction: column; padding: 15px 15px 0 15px; }
 .scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
-.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 8px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
+.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 10px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; }
 
-/* 🌟 디데이 1줄 완벽 정렬 CSS */
-.dday-one-line { display: flex; gap: 6px; align-items: center; width: 100%; margin: 0; }
-.dday-compact-select { width: 55px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; text-align: center; outline: none; background: white; flex-shrink: 0; appearance: none; -webkit-appearance: none;}
-.dday-one-line input[type="text"] { flex-grow: 1; min-width: 50px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px;}
-.date-square-wrapper { position: relative; width: 34px; height: 34px; background: #f0f4f8; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; overflow: hidden; transition: 0.2s; }
+/* 🌟 디데이 1줄 완벽 비율 (가로 스크롤 완전 차단) */
+.dday-one-line { display: flex; gap: 5px; align-items: center; width: 100%; margin: 0; }
+.dday-compact-select { flex: 0 0 15%; min-width: 45px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
+.dday-one-line input[type="text"] { flex: 1 1 auto; min-width: 0; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
+.date-square-wrapper { flex: 0 0 10%; min-width: 32px; max-width: 36px; height: 34px; background: #f0f4f8; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; transition: 0.2s; position: relative; }
 .date-square-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.dday-save-btn { width: 45px; height: 34px; padding: 0; background-color: #ff6b6b; font-size: 13px; flex-shrink: 0; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.dday-save-btn { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0; background-color: #ff6b6b; font-size: 13px; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
 
 .input-group { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
 .input-group input { flex-grow: 1; width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
@@ -56,7 +56,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .action-btn:disabled { background-color: #e0e0e0; cursor: not-allowed; }
 
 .item-list { list-style: none; padding: 0; margin: 0; width: 100%; }
-/* 롱프레스 시 텍스트 선택(드래그) 완벽 방지 */
 .item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; width: 100%; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;}
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 16px; font-weight: bold;}
 .more-btn { color: #888; font-size: 18px; padding: 0 5px;}

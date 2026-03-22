@@ -215,7 +215,7 @@ function loadAdminFeedbacks() {
 }
 
 // ==========================================
-// 💬 5. 채팅 로직 (🌟 닉네임 노란색 반영)
+// 💬 5. 채팅 로직 (🌟 노란색 확성기 개선)
 // ==========================================
 function enableChat() { 
     const input = document.getElementById('chat-input'); const btn = document.getElementById('send-chat-btn');
@@ -265,9 +265,9 @@ function loadMessages() {
                     sDiv.className = 'chat-sender'; 
                     let devIcon = isDeveloper ? `<img src="icon-wrench.png" class="ui-icon" style="width:12px; height:12px; margin-right:2px; filter: grayscale(100%);">` : '';
                     
-                    // 🌟 확성기면 밝은 노란색(그림자 추가), 개발자면 빨간색
+                    // 🌟 확성기면 밝은 노란색(#FFFF00)으로 강렬하게 표시!
                     if (data.megaphone) {
-                        sDiv.innerHTML = `${devIcon} <span style="color:#FFFF00; text-shadow: 1px 1px 0px rgba(0,0,0,0.2); font-weight:bold;">${data.sender}</span>`;
+                        sDiv.innerHTML = `${devIcon} <span style="color:#FFFF00; text-shadow: 1px 1px 0px rgba(0,0,0,0.3); font-weight:bold;">${data.sender}</span>`;
                     } else if (isDeveloper) {
                         sDiv.innerHTML = `${devIcon} <span style="color:#e74c3c; font-weight:bold;">${data.sender}</span>`;
                     } else {
@@ -294,7 +294,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이(🌟업데이트), 날씨
+// 🏆 6. 퀘스트, 투두, 디데이, 날씨
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
@@ -323,7 +323,6 @@ window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
 document.getElementById('feed-btn')?.addEventListener('click', () => { if(kokoSpeech) kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); if(kokoSpeech) kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); });
 renderTodos();
 
-// 🌟 디데이 로직 완벽 개편 (롱프레스 핀 & 카테고리 아이콘 적용)
 let currentDdayIndex = -1;
 let ddayPressTimer = null;
 let isPressing = false;
@@ -335,9 +334,9 @@ window.startDdayPress = (index, event) => {
         if(isPressing) {
             ddays[index].pinned = !ddays[index].pinned;
             renderDdays(); syncToCloud();
-            if(navigator.vibrate) navigator.vibrate(50); // 진동 피드백
+            if(navigator.vibrate) navigator.vibrate(50); 
         }
-    }, 500); // 0.5초 꾹 누르면 작동
+    }, 500); 
 };
 
 window.cancelDdayPress = () => {
@@ -345,7 +344,6 @@ window.cancelDdayPress = () => {
     if(ddayPressTimer) clearTimeout(ddayPressTimer);
 };
 
-// 🌟 선택창 글씨 다이어트 로직
 const ddaySelect = document.getElementById('dday-icon-select');
 const optTextFull = { "": "기본", "🎂": "🎂 생일", "🔥": "🔥 마감", "💖": "💖 기념", "✈️": "✈️ 여행", "🎓": "🎓 시험", "🎯": "🎯 목표" };
 const optTextShort = { "": "기본", "🎂": "생일", "🔥": "마감", "💖": "기념", "✈️": "여행", "🎓": "시험", "🎯": "목표" };
@@ -367,7 +365,6 @@ if(ddaySelect) {
     updateDdaySelectUI();
 }
 
-// 🌟 날짜 선택 시 사각형 색상 변경
 const ddayDateInput = document.getElementById('dday-date-input');
 const dateIconSpan = document.getElementById('date-square-icon');
 if(ddayDateInput && dateIconSpan) {
@@ -428,7 +425,6 @@ function renderDdays() {
             <button class="more-btn" onclick="openDdayMenu(${d.originalIndex}, event)">⋮</button>
         `;
         
-        // 이벤트 연결
         li.addEventListener('mousedown', (e) => startDdayPress(d.originalIndex, e));
         li.addEventListener('touchstart', (e) => startDdayPress(d.originalIndex, e), {passive: true});
         li.addEventListener('mouseup', cancelDdayPress);
@@ -463,7 +459,6 @@ document.getElementById('save-dday-btn')?.addEventListener('click', () => {
         ddays.push({title: t, date: d, pinned: false, isMain: false, icon: iconVal}); 
         renderDdays(); syncToCloud(); 
         
-        // UI 리셋
         tObj.value=''; dObj.value=''; if(iObj) iObj.value='';
         updateDdaySelectUI();
         if(dateIconSpan) {
@@ -515,5 +510,5 @@ document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kok
 kokoChar?.addEventListener('click', () => { completeQuest(1); const h=new Date().getHours(); if(kokoSpeech) kokoSpeech.innerHTML= h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } });
 
 renderCalendar();
-console.log("🛠️ 껌딱지 꼬꼬 V2.7 로드 완료! (확성기 노란색, 디데이 1줄 배열 및 아이콘, 롱프레스 핀 기능 추가)");
+console.log("🛠️ 껌딱지 꼬꼬 V2.8 로드 완료! (1줄 완벽 배열, 캘린더 사각 버튼, 스마트 카테고리 적용)");
 // --- 파일 끝 ---
