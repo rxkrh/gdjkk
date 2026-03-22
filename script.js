@@ -83,7 +83,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직
+// 📅 3. 캘린더 및 스케줄 로직 (🌟 시간 선택 옵션 추가)
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display');
@@ -114,24 +114,46 @@ function renderSchedulesForSelected() {
     if(infoObj) infoObj.innerText = `선택한 날짜: ${selectedDateStr}`;
     const list = document.getElementById('schedule-list'); if(!list) return;
     list.innerHTML = '';
+    
     const daySchedules = schedules[selectedDateStr] || [];
-    daySchedules.sort((a, b) => a.time.localeCompare(b.time));
+    
+    // 🌟 '종일' 일정이 항상 위로 오도록 스마트하게 정렬!
+    daySchedules.sort((a, b) => {
+        if (a.time === "종일") return -1;
+        if (b.time === "종일") return 1;
+        return a.time.localeCompare(b.time);
+    });
+
     if(daySchedules.length === 0) { list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`; return; }
-    daySchedules.forEach((s, i) => { list.innerHTML += `<li><span><span class="schedule-time-badge">${s.time}</span> ${s.task}</span><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></li>`; });
+    
+    daySchedules.forEach((s, i) => { 
+        // 종일 뱃지는 색상을 다르게 표현
+        let badgeClass = s.time === "종일" ? "schedule-time-badge allday" : "schedule-time-badge";
+        list.innerHTML += `<li><span><span class="${badgeClass}">${s.time}</span> ${s.task}</span><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></li>`; 
+    });
 }
 
 document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
 document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() + 1); renderCalendar(); });
+
 document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
-    const timeObj = document.getElementById('schedule-time-input'); const taskObj = document.getElementById('schedule-task-input');
+    const timeObj = document.getElementById('schedule-time-input'); 
+    const taskObj = document.getElementById('schedule-task-input');
     if(!timeObj || !taskObj) return;
-    const time = timeObj.value; const task = taskObj.value.trim();
-    if (!time || !task) { alert("시간과 일정을 모두 입력해주세요!"); return; }
+    
+    let time = timeObj.value; 
+    const task = taskObj.value.trim();
+    
+    // 🌟 시간은 이제 옵션입니다! 입력 안 하면 '종일'로 자동 기록됨
+    if (!task) { alert("일정 내용을 입력해주세요!"); return; }
+    if (!time) time = "종일";
+
     if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
     schedules[selectedDateStr].push({ time: time, task: task });
     localStorage.setItem('koko_schedules', JSON.stringify(schedules));
     timeObj.value = ''; taskObj.value = ''; renderCalendar(); syncToCloud();
 });
+
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
@@ -202,7 +224,7 @@ function loadAdminFeedbacks() {
 }
 
 // ==========================================
-// 💬 5. 채팅 로직
+// 💬 5. 채팅 로직 (🌟 개발자 렌치 아이콘 표시)
 // ==========================================
 function enableChat() { 
     const input = document.getElementById('chat-input'); const btn = document.getElementById('send-chat-btn');
@@ -234,12 +256,35 @@ function loadMessages() {
         snap.docChanges().forEach(change => {
             if (change.type === 'added') {
                 const data = change.doc.data();
-                document.getElementById('chat-preview-text').innerHTML = `<img src="icon-chat.png" class="ui-icon"> ${data.sender}: ${data.text}`;
                 const isMe = data.uid ? (data.uid === myUid) : (data.sender === myNickname);
+                // 🌟 보낸 사람이 개발자인지 확인 (ADMIN_UID 일치 여부)
+                const isDeveloper = data.uid === ADMIN_UID;
+
+                // 채팅 미리보기바 업데이트
+                const preview = document.getElementById('chat-preview-text');
+                if(preview) {
+                    const devMark = isDeveloper ? `<img src="icon-wrench.png" class="ui-icon" style="width:12px; height:12px;">` : '';
+                    preview.innerHTML = `<img src="icon-chat.png" class="ui-icon"> ${devMark}${data.sender}: ${data.text}`;
+                }
+                
                 const shakeClass = (data.megaphone && !isInit) ? 'shake' : '';
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `chat-message ${isMe ? 'me' : 'other'} ${data.megaphone ? 'megaphone' : ''} ${shakeClass}`;
-                if (!isMe) { const sDiv = document.createElement('div'); sDiv.className = 'chat-sender'; sDiv.innerText = data.sender; msgDiv.appendChild(sDiv); }
+                
+                // 제3자가 보낸 메시지일 경우 닉네임 표시
+                if (!isMe) { 
+                    const sDiv = document.createElement('div'); 
+                    sDiv.className = 'chat-sender'; 
+                    
+                    // 🌟 개발자라면 렌치 아이콘과 눈에 띄는 빨간 글씨 적용!
+                    if (isDeveloper) {
+                        sDiv.innerHTML = `<img src="icon-wrench.png" class="ui-icon" style="width:12px; height:12px; margin-right:2px; filter: grayscale(100%);"> <span style="color:#e74c3c; font-weight:bold;">${data.sender}</span>`;
+                    } else {
+                        sDiv.innerText = data.sender; 
+                    }
+                    msgDiv.appendChild(sDiv); 
+                }
+
                 const tDiv = document.createElement('div');
                 if (data.megaphone) { tDiv.innerHTML = '<img src="icon-mega.png" class="ui-icon"> '; tDiv.appendChild(document.createTextNode(data.text)); } else { tDiv.innerText = data.text; }
                 msgDiv.appendChild(tDiv); if(chatBox) chatBox.appendChild(msgDiv);
@@ -258,19 +303,27 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이(🌟업데이트), 날씨
+// 🏆 6. 퀘스트, 투두, 디데이, 날씨 로직
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
     const btn = document.getElementById('attendance-btn');
-    document.getElementById('attendance-streak').innerText = attendance.streak;
+    const streak = document.getElementById('attendance-streak');
+    if(streak) streak.innerText = attendance.streak;
+    
     if(btn) {
-        if (attendance.lastDate === todayStr) { btn.innerHTML = `오늘 출석 완료! <img src="icon-fire.png" class="ui-icon" style="margin-left:4px;">`; btn.disabled = true; btn.style.backgroundColor = "#aaa"; completeQuest(2); } 
-        else { btn.innerHTML = `오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;">`; btn.disabled = false; btn.style.backgroundColor = "#2ecc71"; }
+        if (attendance.lastDate === todayStr) { 
+            btn.innerHTML = `오늘 출석 완료! <img src="icon-fire.png" class="ui-icon" style="margin-left:4px;">`; 
+            btn.disabled = true; btn.style.backgroundColor = "#aaa"; 
+            completeQuest(2); 
+        } else { 
+            btn.innerHTML = `오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;">`; 
+            btn.disabled = false; btn.style.backgroundColor = "#2ecc71"; 
+        }
     }
 }
 document.getElementById('attendance-btn')?.addEventListener('click', () => { const todayStr = new Date().toDateString(); attendance.lastDate = todayStr; attendance.streak += 1; localStorage.setItem('koko_attendance', JSON.stringify(attendance)); syncToCloud(); checkAttendanceUI(); if(kokoSpeech) kokoSpeech.innerHTML = `출석 도장 꾹! 연속 ${attendance.streak}일째! <img src="icon-party.png" class="ui-icon">`; });
-function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; document.getElementById(`quest-${questNum}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; if(kokoChar) { kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } } }
+function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; if(kokoChar) { kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } } }
 checkAttendanceUI(); 
 
 function renderTodos() { 
@@ -285,7 +338,7 @@ window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
 document.getElementById('feed-btn')?.addEventListener('click', () => { if(kokoSpeech) kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); if(kokoSpeech) kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); });
 renderTodos();
 
-// 🌟 디데이 로직 완벽 개편 (핀 고정, 대표 지정, 정렬, 레이아웃)
+// 🌟 디데이 로직
 let currentDdayIndex = -1;
 
 function renderDdays() { 
@@ -294,29 +347,20 @@ function renderDdays() {
     if(!list || !banner) return;
     list.innerHTML = ''; 
     
-    if (ddays.length === 0) { 
-        banner.innerHTML = `<img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!`; 
-        return; 
-    } 
-    
-    // 호환성: 기존 데이터에 속성 추가
+    if (ddays.length === 0) { banner.innerHTML = `<img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!`; return; } 
     ddays = ddays.map(d => ({...d, pinned: d.pinned || false, isMain: d.isMain || false}));
-    
     const today = new Date(); today.setHours(0,0,0,0); 
     
-    // 계산 및 정렬 로직
     let calc = ddays.map((d, i) => { 
         const t = new Date(d.date); t.setHours(0,0,0,0); 
         return { ...d, originalIndex: i, diff: Math.ceil((t-today)/86400000) }; 
     }); 
     
-    // 고정(Pinned)된 항목이 무조건 위로 오도록 정렬
     calc.sort((a, b) => {
-        if (a.pinned === b.pinned) return a.diff - b.diff; // 같은 상태면 날짜순
-        return a.pinned ? -1 : 1; // pinned가 true면 위로
+        if (a.pinned === b.pinned) return a.diff - b.diff; 
+        return a.pinned ? -1 : 1; 
     });
 
-    // 리스트 화면 그리기
     calc.forEach((d) => { 
         let badge = d.diff === 0 ? `<span style="color:#ff6b6b;font-weight:bold; font-size:14px;">D-Day<img src="icon-party.png" class="ui-icon" style="margin-left:2px;"></span>` : (d.diff > 0 ? `<span style="color:#ff9f43;font-weight:bold; font-size:14px;">D-${d.diff}</span>` : `<span style="color:#888;font-weight:bold; font-size:14px;">D+${Math.abs(d.diff)}</span>`); 
         let pinIcon = d.pinned ? `<img src="icon-pin.png" class="ui-icon" style="width:14px; height:14px;"> ` : '';
@@ -335,10 +379,8 @@ function renderDdays() {
         </li>`; 
     }); 
 
-    // 대표(메인) 배너 결정
     let mainDday = calc.find(d => d.isMain);
     if(!mainDday) {
-        // 대표가 없으면 가장 날짜가 가까운 것(diff가 0 이상이면서 가장 작은 것) 자동 선택
         let upcoming = calc.filter(d => d.diff >= 0).sort((a,b) => a.diff - b.diff);
         mainDday = upcoming.length > 0 ? upcoming[0] : calc[0];
     }
@@ -354,31 +396,25 @@ document.getElementById('save-dday-btn')?.addEventListener('click', () => {
     if(tObj.value && dObj.value){ ddays.push({title: tObj.value, date: dObj.value, pinned: false, isMain: false}); renderDdays(); syncToCloud(); tObj.value=''; dObj.value=''; }
 });
 
-// 🌟 디데이 팝업 메뉴 로직
 window.openDdayMenu = (index, event) => {
     currentDdayIndex = index;
-    const menu = document.getElementById('dday-dropdown');
-    const pinBtn = document.getElementById('dday-pin-btn');
+    const menu = document.getElementById('dday-dropdown'); const pinBtn = document.getElementById('dday-pin-btn');
     if(!menu || !pinBtn) return;
     
-    // 메뉴 내용 변경 (이미 핀 되어있으면 '해제'로)
     pinBtn.innerHTML = ddays[index].pinned ? `📌 고정 해제` : `📌 상단 고정`;
-    
-    // 클릭한 버튼 근처에 팝업 띄우기
     const rect = event.target.getBoundingClientRect();
     menu.style.display = 'flex';
     menu.style.top = `${rect.bottom + window.scrollY}px`;
-    menu.style.left = `${rect.left - 100}px`; // 버튼의 왼쪽으로 조금 치우치게
+    menu.style.left = `${rect.left - 100}px`; 
 };
 
-// 팝업 메뉴 버튼 이벤트 연결
 document.getElementById('dday-pin-btn')?.addEventListener('click', () => {
     ddays[currentDdayIndex].pinned = !ddays[currentDdayIndex].pinned;
     renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none';
 });
 
 document.getElementById('dday-main-btn')?.addEventListener('click', () => {
-    ddays.forEach(d => d.isMain = false); // 다른 대표 해제
+    ddays.forEach(d => d.isMain = false); 
     ddays[currentDdayIndex].isMain = true;
     renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none';
     if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`;
@@ -389,12 +425,9 @@ document.getElementById('dday-del-btn')?.addEventListener('click', () => {
     renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none';
 });
 
-// 바탕화면 클릭 시 팝업 닫기
 document.addEventListener('click', (e) => {
     const menu = document.getElementById('dday-dropdown');
-    if (menu && menu.style.display === 'flex' && !e.target.classList.contains('more-btn')) {
-        menu.style.display = 'none';
-    }
+    if (menu && menu.style.display === 'flex' && !e.target.classList.contains('more-btn')) menu.style.display = 'none';
 });
 
 renderDdays();
@@ -409,5 +442,5 @@ document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kok
 kokoChar?.addEventListener('click', () => { completeQuest(1); const h=new Date().getHours(); if(kokoSpeech) kokoSpeech.innerHTML= h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } });
 
 renderCalendar();
-console.log("📌 껌딱지 꼬꼬 V2.4 로드 완료! (디데이 핀, 메뉴 팝업, 레이아웃 개선 적용)");
+console.log("🛠️ 껌딱지 꼬꼬 V2.5 로드 완료! 개발자 렌치 & 시간 선택 옵션 & 디데이 입력창 슬림화 적용 완료!");
 // --- 파일 끝 ---
