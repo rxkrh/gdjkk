@@ -26,7 +26,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
 /* 탭 메뉴 UI */
-.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 250px; display: flex; flex-direction: column; position: relative; z-index: 5; margin-bottom: 40px; } /* 채팅창 높이 확보 */
+.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 250px; display: flex; flex-direction: column; position: relative; z-index: 5; margin-bottom: 40px; }
 .tab-buttons { display: flex; border-bottom: 1px solid #eee; }
 .tab-btn { flex: 1; padding: 15px 0; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
@@ -47,7 +47,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 /* 💬 팝업형 미니 채팅창 (하단 고정) */
 .chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; display: flex; flex-direction: column; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
-.chat-drawer.expanded { height: 60%; } /* 앱 화면의 60%까지 솟아오름 */
+.chat-drawer.expanded { height: 60%; }
 .chat-header-bar { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-weight: bold; color: #555; border-bottom: 1px solid #e1e8ed; cursor: pointer; background: white; border-radius: 20px 20px 0 0; }
 #chat-preview-text { font-size: 13px; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 90%; }
 .chat-drawer-body { padding: 15px; display: flex; flex-direction: column; flex-grow: 1; overflow: hidden; opacity: 0; transition: opacity 0.2s; }
@@ -68,3 +68,11 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .font-small { font-size: 13px; } .font-normal { font-size: 15px; } .font-large { font-size: 18px; }
 @media (min-width: 401px) { body { background-color: #e0e0e0; } .app-container { border-radius: 20px; } }
+
+/* 🌟 Twemoji 이미지 스타일 (글자 사이에 자연스럽게 끼어들도록 설정) */
+img.emoji {
+    height: 1em;
+    width: 1em;
+    margin: 0 .05em 0 .1em;
+    vertical-align: -0.1em;
+}

@@ -24,6 +24,13 @@ function syncToCloud() {
     if (auth.currentUser) db.collection('users').doc(auth.currentUser.uid).set({ todos: todos, ddays: ddays }, { merge: true });
 }
 
+// 🌟 Twemoji 적용 함수 (화면이 바뀔 때마다 호출하여 이모티콘을 이미지로 변환)
+function applyTwemoji() {
+    if (typeof twemoji !== 'undefined') {
+        twemoji.parse(document.body, { folder: 'svg', ext: '.svg' }); // 고화질 SVG 사용
+    }
+}
+
 // ==========================================
 // 📱 1. 새로운 UI 동작 로직 (사이드메뉴, 탭, 채팅창)
 // ==========================================
@@ -63,6 +70,7 @@ chatHeaderBar.addEventListener('click', () => {
         const chatBox = document.getElementById('chat-box');
         chatBox.scrollTop = chatBox.scrollHeight;
     }
+    applyTwemoji(); // 채팅창 열릴 때 이모티콘 적용
 });
 
 
@@ -101,7 +109,12 @@ auth.onAuthStateChanged((user) => {
                     enableChat();
                 }
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
-            } else syncToCloud();
+                kokoSpeech.innerText = "동기화 완료! 보고 싶었어요 🐥☁️";
+            } else {
+                syncToCloud();
+                kokoSpeech.innerText = "환영해요! 데이터를 안전하게 보관할게요 🐥💖";
+            }
+            applyTwemoji(); // 로그인 후 멘트 이모티콘 적용
         });
     } else {
         document.getElementById('login-area').style.display = 'block';
@@ -118,11 +131,11 @@ document.getElementById('save-nickname-btn').addEventListener('click', async () 
 
     if (lastChangeDate) {
         const diff = (new Date() - lastChangeDate) / 86400000;
-        if (diff < 7) { status.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; return; }
+        if (diff < 7) { status.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; applyTwemoji(); return; }
     }
     const nameRef = db.collection('nicknames').doc(name);
     const doc = await nameRef.get();
-    if (doc.exists && doc.data().uid !== myUid) { status.innerText = "❌ 사용 중인 이름!"; return; }
+    if (doc.exists && doc.data().uid !== myUid) { status.innerText = "❌ 사용 중인 이름!"; applyTwemoji(); return; }
 
     if (myNickname) await db.collection('nicknames').doc(myNickname).delete();
     await nameRef.set({ uid: myUid });
@@ -130,6 +143,8 @@ document.getElementById('save-nickname-btn').addEventListener('click', async () 
     
     myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     status.innerText = "✅ 변경 완료!"; status.style.color = "#2ecc71"; enableChat();
+    kokoSpeech.innerText = `새 이름 "${myNickname}", 맘에 들어요! 💬`;
+    applyTwemoji(); // 닉네임 변경 후 이모티콘 적용
 });
 
 // 설정 로직
@@ -137,7 +152,7 @@ const fontSelect = document.getElementById('font-select'); const sizeSelect = do
 if (localStorage.getItem('koko_font')) { document.body.style.fontFamily = localStorage.getItem('koko_font'); fontSelect.value = localStorage.getItem('koko_font'); }
 fontSelect.addEventListener('change', e => { document.body.style.fontFamily = e.target.value; localStorage.setItem('koko_font', e.target.value); });
 if (localStorage.getItem('koko_font_size')) { document.body.className = localStorage.getItem('koko_font_size'); sizeSelect.value = localStorage.getItem('koko_font_size'); }
-sizeSelect.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); });
+sizeSelect.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); kokoSpeech.innerText = "글씨 크기 조절 완료! 👀✨"; applyTwemoji(); });
 
 // 피드백 (모달 수정)
 document.getElementById('open-feedback-btn').addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
@@ -151,6 +166,7 @@ function loadAdminFeedbacks() {
     db.collection('feedbacks').orderBy('timestamp', 'desc').onSnapshot(snap => {
         const list = document.getElementById('admin-feedback-list'); list.innerHTML = '';
         snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;">👤 ${d.senderNickname}</div><div>${d.text}</div></div>`; });
+        applyTwemoji(); // 관리자 피드백 목록 이모티콘 적용
     });
 }
 
@@ -162,8 +178,8 @@ if(myNickname) enableChat();
 
 let currentChatMode = 'global'; let currentRoomCode = ''; let chatUnsubscribe = null;
 document.getElementById('tab-global').addEventListener('click', e => { currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room').classList.remove('active'); document.getElementById('room-code-area').style.display = 'none'; loadMessages(); });
-document.getElementById('tab-room').addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); document.getElementById('room-code-area').style.display = 'block'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 🔒</div>'; if(chatUnsubscribe) chatUnsubscribe(); });
-document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); });
+document.getElementById('tab-room').addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); document.getElementById('room-code-area').style.display = 'block'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 🔒</div>'; if(chatUnsubscribe) chatUnsubscribe(); applyTwemoji(); });
+document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); kokoSpeech.innerText = `"${currentRoomCode}" 방 입장! 쉿! 🤫`; applyTwemoji(); });
 
 function loadMessages() {
     if (!myNickname) return;
@@ -177,7 +193,7 @@ function loadMessages() {
             if (change.type === 'added') {
                 const data = change.doc.data();
                 
-                // 🌟 최신 메시지 미니바 미리보기 업데이트
+                // 최신 메시지 미니바 미리보기 업데이트
                 document.getElementById('chat-preview-text').innerText = `${data.sender}: ${data.text}`;
 
                 const isMe = data.uid ? (data.uid === myUid) : (data.sender === myNickname);
@@ -189,7 +205,9 @@ function loadMessages() {
                 document.getElementById('chat-box').appendChild(msgDiv);
             }
         });
-        isInit = false; document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        isInit = false; 
+        document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+        applyTwemoji(); // 🌟 채팅 메시지 추가될 때마다 이모티콘 적용
     });
 }
 document.getElementById('send-chat-btn').addEventListener('click', () => {
@@ -208,17 +226,18 @@ function renderTodos() {
     const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false;
     todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; });
     document.getElementById('feed-btn').disabled = !anyChecked;
+    applyTwemoji(); // 투두리스트 렌더링 후 이모티콘 적용
 }
 document.getElementById('add-todo-btn').addEventListener('click', () => { const txt = document.getElementById('new-todo-input').value.trim(); if (!txt) return; todos.push({ text: txt, checked: false }); document.getElementById('new-todo-input').value=''; renderTodos(); syncToCloud(); });
 window.toggleTodo = i => { todos[i].checked = !todos[i].checked; renderTodos(); syncToCloud(); };
 window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
-document.getElementById('feed-btn').addEventListener('click', () => { kokoSpeech.innerText="냠냠! 💯"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); kokoSpeech.innerText="화이팅!";}, 2000); });
+document.getElementById('feed-btn').addEventListener('click', () => { kokoSpeech.innerText="냠냠! 너무 맛있어요 💯"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); kokoSpeech.innerText="다음 할 일도 화이팅!"; applyTwemoji();}, 2000); applyTwemoji(); });
 renderTodos();
 
 let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
 function renderDdays() {
     const list = document.getElementById('dday-list-display'); list.innerHTML = ''; 
-    if (ddays.length === 0) { document.querySelector('.d-day-info').innerText = "🚩 디데이를 추가해보세요!"; return; }
+    if (ddays.length === 0) { document.querySelector('.d-day-info').innerText = "🚩 디데이를 추가해보세요!"; applyTwemoji(); return; }
     const today = new Date(); today.setHours(0,0,0,0);
     const calc = ddays.map(d => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, diff: Math.ceil((t-today)/86400000) }; });
     calc.forEach((d, i) => { 
@@ -227,14 +246,20 @@ function renderDdays() {
     });
     const cl = calc.reduce((p, c) => Math.abs(c.diff) < Math.abs(p.diff) ? c : p);
     document.querySelector('.d-day-info').innerText = cl.diff === 0 ? `🚩 ${cl.title} D-Day!` : (cl.diff > 0 ? `🚩 ${cl.title} D-${cl.diff}` : `🚩 ${cl.title} D+${Math.abs(cl.diff)}`);
+    applyTwemoji(); // 디데이 렌더링 후 이모티콘 적용
 }
 document.getElementById('save-dday-btn').addEventListener('click', () => { const t=document.getElementById('dday-title-input').value; const d=document.getElementById('dday-date-input').value; if(t&&d){ ddays.push({title:t, date:d}); renderDdays(); syncToCloud(); }});
 window.deleteDday = i => { ddays.splice(i, 1); renderDdays(); syncToCloud(); };
 renderDdays();
 
-function getKokoWeather() { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ document.querySelector('.weather-info').innerText=`${d.current_weather.weathercode<=1?'☀️':(d.current_weather.weathercode<=45?'☁️':'🌧️')} ${d.current_weather.temperature}°C`; }); }); }
+function getKokoWeather() { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ document.querySelector('.weather-info').innerText=`${d.current_weather.weathercode<=1?'☀️':(d.current_weather.weathercode<=45?'☁️':'🌧️')} ${d.current_weather.temperature}°C`; applyTwemoji(); }); }); }
 getKokoWeather();
 
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
-document.getElementById('fortune-btn').addEventListener('click', () => { kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
-kokoChar.addEventListener('click', () => { const h=new Date().getHours(); kokoSpeech.innerText= h<12?"아침 화이팅!🌅":(h<18?"나른한 오후 ☀️":"수고했어요!🌙"); kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
+document.getElementById('fortune-btn').addEventListener('click', () => { kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); applyTwemoji(); });
+kokoChar.addEventListener('click', () => { const h=new Date().getHours(); kokoSpeech.innerText= h<12?"아침 화이팅!🌅":(h<18?"나른한 오후 ☀️":"수고했어요!🌙"); kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); applyTwemoji(); });
+
+// 🌟 페이지 로드 시 최초 1회 실행
+document.addEventListener('DOMContentLoaded', () => {
+    applyTwemoji();
+});
