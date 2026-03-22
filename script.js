@@ -1,4 +1,4 @@
-// --- 0. Firebase 설정 (자동화 완료 ✨) ---
+// --- 0. Firebase 설정 ---
 const firebaseConfig = {
     apiKey: "AIzaSyCh75DKVXwnar_cUtl40vIzMt2134bxGVo",
     authDomain: "koko-app-d214b.firebaseapp.com",
@@ -12,13 +12,27 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
 
-// 개발자 관리자 UID (자동화 완료 ✨)
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
+
+// 🌟 에러 해결의 핵심! (모든 저장소 변수들을 맨 위에서 먼저 만듭니다)
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
+
+let myNickname = localStorage.getItem('koko_nickname') || '';
+let lastChangeDate = null; 
+
+let currentChatMode = 'global'; 
+let currentRoomCode = ''; 
+let chatUnsubscribe = null;
+
+let todos = JSON.parse(localStorage.getItem('koko_todos')) || [];
+let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
+let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || [];
+let attendance = JSON.parse(localStorage.getItem('koko_attendance')) || { lastDate: "", streak: 0 };
+let dailyQuests = { q1: false, q2: false, q3: false }; 
 
 function syncToCloud() {
     if (auth.currentUser) db.collection('users').doc(auth.currentUser.uid).set({ 
@@ -70,9 +84,6 @@ chatHeaderBar.addEventListener('click', () => {
 // ==========================================
 // 🔐 2. 로그인, 프로필, 피드백
 // ==========================================
-let lastChangeDate = null; 
-let myNickname = localStorage.getItem('koko_nickname') || '';
-
 document.getElementById('google-login-btn').addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn').addEventListener('click', () => auth.signOut());
 
@@ -166,7 +177,6 @@ function loadAdminFeedbacks() {
 function enableChat() { document.getElementById('chat-input').disabled = false; document.getElementById('send-chat-btn').disabled = false; document.getElementById('chat-input').placeholder = "메시지 입력..."; loadMessages(); }
 if(myNickname) enableChat();
 
-let currentChatMode = 'global'; let currentRoomCode = ''; let chatUnsubscribe = null;
 document.getElementById('tab-global').addEventListener('click', e => { currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room').classList.remove('active'); document.getElementById('room-code-area').style.display = 'none'; loadMessages(); });
 document.getElementById('tab-room').addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); document.getElementById('room-code-area').style.display = 'block'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; if(chatUnsubscribe) chatUnsubscribe(); });
 document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); kokoSpeech.innerHTML = `"${currentRoomCode}" 방 입장! 쉿! <img src="icon-shh.png" class="ui-icon">`; });
@@ -208,9 +218,6 @@ document.getElementById('send-chat-btn').addEventListener('click', () => {
 // ==========================================
 // 🏆 4. 퀘스트 & 출석체크 로직
 // ==========================================
-let attendance = JSON.parse(localStorage.getItem('koko_attendance')) || { lastDate: "", streak: 0 };
-let dailyQuests = { q1: false, q2: false, q3: false }; 
-
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
     const btn = document.getElementById('attendance-btn');
@@ -252,7 +259,6 @@ checkAttendanceUI();
 // 📅 5. 스케줄, 투두, 디데이, 날씨 로직
 // ==========================================
 // 📅 스케줄
-let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || [];
 function renderSchedules() {
     const list = document.getElementById('schedule-list'); list.innerHTML = '';
     schedules.sort((a, b) => a.time.localeCompare(b.time));
@@ -274,7 +280,6 @@ window.deleteSchedule = i => { schedules.splice(i, 1); renderSchedules(); syncTo
 renderSchedules();
 
 // 📝 투두리스트
-let todos = JSON.parse(localStorage.getItem('koko_todos')) || [];
 function renderTodos() {
     const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false;
     todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; });
@@ -289,8 +294,7 @@ window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
 document.getElementById('feed-btn').addEventListener('click', () => { kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); });
 renderTodos();
 
-// 📌 디데이 (핀셋 아이콘 반영)
-let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
+// 📌 디데이
 function renderDdays() {
     const list = document.getElementById('dday-list-display'); list.innerHTML = ''; 
     if (ddays.length === 0) { document.querySelector('.d-day-info').innerHTML = "<img src='icon-pin.png' class='ui-icon'> 디데이를 추가해보세요!"; return; }
