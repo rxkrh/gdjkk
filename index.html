@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V2.6</title>
+    <title>껌딱지 꼬꼬 V2.7</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -127,10 +127,11 @@
                     <div style="text-align:center; font-size:11px; color:#aaa; margin-bottom:5px;">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
                 </div>
+                
                 <div class="sticky-bottom-input">
-                    <div class="input-group" style="margin-bottom:6px;">
-                        <select id="dday-icon-select" style="padding: 6px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; outline: none; background: white;">
-                            <option value="">📌 기본</option>
+                    <div class="input-group dday-one-line" style="margin-bottom:0;">
+                        <select id="dday-icon-select" class="dday-compact-select">
+                            <option value="">기본</option>
                             <option value="🎂">🎂 생일</option>
                             <option value="🔥">🔥 마감</option>
                             <option value="💖">💖 기념</option>
@@ -139,10 +140,11 @@
                             <option value="🎯">🎯 목표</option>
                         </select>
                         <input type="text" id="dday-title-input" placeholder="디데이 제목">
-                    </div>
-                    <div class="input-group" style="margin-bottom:0;">
-                        <input type="date" id="dday-date-input" style="flex-grow:1;">
-                        <button id="save-dday-btn" class="action-btn" style="background-color:#ff6b6b; width: 60px; padding: 6px 10px;">저장</button>
+                        <div class="date-square-wrapper">
+                            <span id="date-square-icon">📅</span>
+                            <input type="date" id="dday-date-input" title="날짜 선택">
+                        </div>
+                        <button id="save-dday-btn" class="action-btn dday-save-btn">저장</button>
                     </div>
                 </div>
             </div>
