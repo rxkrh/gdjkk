@@ -11,12 +11,12 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 const auth = firebase.auth();
 const provider = new firebase.auth.GoogleAuthProvider();
-
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
+// 저장소 변수 초기화
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
 let myNickname = localStorage.getItem('koko_nickname') || '';
@@ -28,9 +28,12 @@ let chatUnsubscribe = null;
 
 let todos = JSON.parse(localStorage.getItem('koko_todos')) || [];
 let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
-let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || [];
 let attendance = JSON.parse(localStorage.getItem('koko_attendance')) || { lastDate: "", streak: 0 };
 let dailyQuests = { q1: false, q2: false, q3: false }; 
+
+// 🌟 스케줄 데이터 구조 변경 (날짜별로 분리: { "2026-03-22": [{time, task}], ... })
+let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || {};
+if (Array.isArray(schedules)) schedules = {}; // 이전 버전의 배열 데이터가 있다면 초기화
 
 function syncToCloud() {
     if (auth.currentUser) db.collection('users').doc(auth.currentUser.uid).set({ 
@@ -39,7 +42,7 @@ function syncToCloud() {
 }
 
 // ==========================================
-// 📱 1. 새로운 UI 동작 로직
+// 📱 1. UI 동작 로직 (탭, 사이드메뉴, 채팅창)
 // ==========================================
 const menuBtn = document.getElementById('menu-open-btn');
 const menuCloseBtn = document.getElementById('menu-close-btn');
@@ -59,6 +62,7 @@ tabBtns.forEach(btn => {
         tabContents.forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.target).classList.add('active');
+        if(btn.dataset.target === 'tab-schedule') renderCalendar(); // 달력 탭 열릴 때 새로고침
     });
 });
 
@@ -99,7 +103,7 @@ auth.onAuthStateChanged((user) => {
                 const data = doc.data();
                 if (data.todos) { todos = data.todos; renderTodos(); }
                 if (data.ddays) { ddays = data.ddays; renderDdays(); }
-                if (data.schedules) { schedules = data.schedules; renderSchedules(); }
+                if (data.schedules) { schedules = data.schedules; renderCalendar(); }
                 if (data.attendance) { attendance = data.attendance; checkAttendanceUI(); }
                 if (data.nickname) { myNickname = data.nickname; localStorage.setItem('koko_nickname', myNickname); document.getElementById('nickname-input').value = myNickname; document.getElementById('profile-status').innerText = "✅ 동기화 완료"; enableChat(); }
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
@@ -139,6 +143,7 @@ fontSelect.addEventListener('change', e => { document.body.style.fontFamily = e.
 if (localStorage.getItem('koko_font_size')) { document.body.className = localStorage.getItem('koko_font_size'); sizeSelect.value = localStorage.getItem('koko_font_size'); }
 sizeSelect.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); kokoSpeech.innerHTML = "글씨 크기 조절 완료! <img src='icon-sparkle.png' class='ui-icon'>"; });
 
+// 피드백
 document.getElementById('open-feedback-btn').addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
 document.getElementById('close-feedback-btn').addEventListener('click', () => document.getElementById('feedback-modal').style.display = 'none');
 document.getElementById('send-feedback-btn').addEventListener('click', async () => {
@@ -154,32 +159,20 @@ function loadAdminFeedbacks() {
 }
 
 // ==========================================
-// 💬 3. 채팅 로직 (확성기 보임/숨김 자동 전환)
+// 💬 3. 채팅 로직
 // ==========================================
 function enableChat() { document.getElementById('chat-input').disabled = false; document.getElementById('send-chat-btn').disabled = false; document.getElementById('chat-input').placeholder = "메시지 입력..."; loadMessages(); }
 if(myNickname) enableChat();
 
-// 전체 채팅 탭 클릭 시
 document.getElementById('tab-global').addEventListener('click', e => { 
-    currentChatMode = 'global'; 
-    e.target.classList.add('active'); 
-    document.getElementById('tab-room').classList.remove('active'); 
-    document.getElementById('room-code-area').style.display = 'none'; 
-    document.getElementById('megaphone-label').style.display = 'flex'; // 확성기 보이기
-    loadMessages(); 
+    currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room').classList.remove('active'); 
+    document.getElementById('room-code-area').style.display = 'none'; document.getElementById('megaphone-label').style.display = 'flex'; loadMessages(); 
 });
-
-// 1:1 비밀방 탭 클릭 시
 document.getElementById('tab-room').addEventListener('click', e => { 
-    currentChatMode = 'room'; 
-    e.target.classList.add('active'); 
-    document.getElementById('tab-global').classList.remove('active'); 
-    document.getElementById('room-code-area').style.display = 'flex'; // 코드 입력창 인라인 보이기
-    document.getElementById('megaphone-label').style.display = 'none'; // 확성기 완전히 숨기기 (공간 확보)
-    document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; 
-    if(chatUnsubscribe) chatUnsubscribe(); 
+    currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); 
+    document.getElementById('room-code-area').style.display = 'flex'; document.getElementById('megaphone-label').style.display = 'none'; 
+    document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; if(chatUnsubscribe) chatUnsubscribe(); 
 });
-
 document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); kokoSpeech.innerHTML = `"${currentRoomCode}" 방 입장! 쉿! <img src="icon-shh.png" class="ui-icon">`; });
 
 function loadMessages() {
@@ -217,7 +210,91 @@ document.getElementById('send-chat-btn').addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 4. 퀘스트 & 출석체크 로직
+// 📅 4. 캘린더 및 스케줄 로직 (NEW ✨)
+// ==========================================
+let currentCalDate = new Date();
+let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.getMonth()+1).padStart(2,'0')}-${String(currentCalDate.getDate()).padStart(2,'0')}`; // YYYY-MM-DD
+
+function renderCalendar() {
+    const year = currentCalDate.getFullYear();
+    const month = currentCalDate.getMonth();
+    document.getElementById('current-month-display').innerText = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    
+    const grid = document.getElementById('calendar-grid');
+    grid.innerHTML = '';
+
+    // 빈 칸
+    for(let i=0; i<firstDay; i++) {
+        grid.innerHTML += `<div class="calendar-day empty"></div>`;
+    }
+
+    // 날짜 채우기
+    const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    
+    for(let i=1; i<=daysInMonth; i++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
+        let classes = "calendar-day";
+        if(dateStr === todayStr) classes += " today";
+        if(dateStr === selectedDateStr) classes += " selected";
+        if(schedules[dateStr] && schedules[dateStr].length > 0) classes += " has-schedule"; // 빨간점
+        
+        grid.innerHTML += `<div class="${classes}" onclick="selectDate('${dateStr}')">${i}</div>`;
+    }
+    renderSchedulesForSelected();
+}
+
+document.getElementById('prev-month-btn').addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
+document.getElementById('next-month-btn').addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() + 1); renderCalendar(); });
+
+window.selectDate = (dateStr) => {
+    selectedDateStr = dateStr;
+    renderCalendar(); // 선택 UI 갱신
+};
+
+function renderSchedulesForSelected() {
+    document.getElementById('selected-date-info').innerText = `선택한 날짜: ${selectedDateStr}`;
+    const list = document.getElementById('schedule-list'); 
+    list.innerHTML = '';
+    
+    const daySchedules = schedules[selectedDateStr] || [];
+    daySchedules.sort((a, b) => a.time.localeCompare(b.time));
+    
+    if(daySchedules.length === 0) {
+        list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`;
+        return;
+    }
+    
+    daySchedules.forEach((s, i) => { 
+        list.innerHTML += `<li><span><span class="schedule-time-badge">${s.time}</span> ${s.task}</span><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></li>`; 
+    });
+}
+
+document.getElementById('add-schedule-btn').addEventListener('click', () => {
+    const time = document.getElementById('schedule-time-input').value;
+    const task = document.getElementById('schedule-task-input').value.trim();
+    if (!time || !task) { alert("시간과 일정을 모두 입력해주세요!"); return; }
+    
+    if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
+    schedules[selectedDateStr].push({ time: time, task: task });
+    
+    localStorage.setItem('koko_schedules', JSON.stringify(schedules));
+    document.getElementById('schedule-time-input').value = '';
+    document.getElementById('schedule-task-input').value = '';
+    renderCalendar(); // 달력 점 갱신
+    syncToCloud();
+});
+
+window.deleteSchedule = i => { 
+    schedules[selectedDateStr].splice(i, 1); 
+    localStorage.setItem('koko_schedules', JSON.stringify(schedules));
+    renderCalendar(); syncToCloud(); 
+};
+
+// ==========================================
+// 🏆 5. 퀘스트, 투두, 디데이, 날씨 로직
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
@@ -229,14 +306,6 @@ function checkAttendanceUI() {
 document.getElementById('attendance-btn').addEventListener('click', () => { const todayStr = new Date().toDateString(); attendance.lastDate = todayStr; attendance.streak += 1; localStorage.setItem('koko_attendance', JSON.stringify(attendance)); syncToCloud(); checkAttendanceUI(); kokoSpeech.innerHTML = `출석 도장 꾹! 연속 ${attendance.streak}일째! <img src="icon-party.png" class="ui-icon">`; });
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; document.getElementById(`quest-${questNum}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } }
 checkAttendanceUI(); 
-
-// ==========================================
-// 📅 5. 스케줄, 투두, 디데이, 날씨 로직
-// ==========================================
-function renderSchedules() { const list = document.getElementById('schedule-list'); list.innerHTML = ''; schedules.sort((a, b) => a.time.localeCompare(b.time)); schedules.forEach((s, i) => { list.innerHTML += `<li><span><span class="schedule-time-badge">${s.time}</span> ${s.task}</span><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></li>`; }); }
-document.getElementById('add-schedule-btn').addEventListener('click', () => { const time = document.getElementById('schedule-time-input').value; const task = document.getElementById('schedule-task-input').value.trim(); if (!time || !task) { alert("시간과 일정을 모두 입력해주세요!"); return; } schedules.push({ time: time, task: task }); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); document.getElementById('schedule-time-input').value = ''; document.getElementById('schedule-task-input').value = ''; renderSchedules(); syncToCloud(); });
-window.deleteSchedule = i => { schedules.splice(i, 1); renderSchedules(); syncToCloud(); };
-renderSchedules();
 
 function renderTodos() { const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false; todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; }); document.getElementById('feed-btn').disabled = !anyChecked; }
 document.getElementById('add-todo-btn').addEventListener('click', () => { const txt = document.getElementById('new-todo-input').value.trim(); if (!txt) return; todos.push({ text: txt, checked: false }); document.getElementById('new-todo-input').value=''; renderTodos(); syncToCloud(); });
