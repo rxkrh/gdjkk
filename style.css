@@ -39,10 +39,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .flex-column-tab.active { display: flex; flex-direction: column; padding: 15px 15px 0 15px; }
 .scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
-
-/* 🌟 디데이 입력창 상하 여백(padding)을 대폭 줄여서 다이어트! */
-.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 6px 0; border-top: 1px solid #f0f0f0; margin-top: auto; }
-.sticky-bottom-input .input-group input, .sticky-bottom-input .input-group button { padding: 6px 10px; }
+.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 6px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
+.sticky-bottom-input .input-group input, .sticky-bottom-input .input-group button, .sticky-bottom-input .input-group select { padding: 6px 10px; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; }
 
@@ -52,7 +50,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .action-btn:disabled { background-color: #e0e0e0; cursor: not-allowed; }
 
 .item-list { list-style: none; padding: 0; margin: 0; width: 100%; }
-.item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; width: 100%; }
+/* 🌟 롱프레스 시 화면 드래그 방지 */
+.item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; width: 100%; user-select: none; -webkit-user-select: none;}
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 16px; font-weight: bold;}
 .more-btn { color: #888; font-size: 18px; padding: 0 5px;}
 
@@ -73,7 +72,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .calendar-day.has-schedule::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ff6b6b; border-radius: 50%; }
 
 .schedule-input-area { border-top: 1px dashed #eee; padding-top: 10px; }
-/* 🌟 '종일' 뱃지를 위한 주황색 스타일 추가 */
 .schedule-time-badge { background: #0984e3; color: white; padding: 3px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px; }
 .schedule-time-badge.allday { background: #ff9f43; }
 
