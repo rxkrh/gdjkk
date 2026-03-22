@@ -227,7 +227,7 @@ renderTodos();
 let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
 function renderDdays() {
     const list = document.getElementById('dday-list-display'); list.innerHTML = ''; 
-    if (ddays.length === 0) { document.querySelector('.d-day-info').innerHTML = "<img src='icon-flag.png' class='ui-icon'> 디데이를 추가해보세요!"; return; }
+    if (ddays.length === 0) { document.querySelector('.d-day-info').innerHTML = "<img src='icon-dday.png' class='ui-icon'> 디데이를 추가해보세요!"; return; }
     const today = new Date(); today.setHours(0,0,0,0);
     const calc = ddays.map(d => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, diff: Math.ceil((t-today)/86400000) }; });
     calc.forEach((d, i) => { 
