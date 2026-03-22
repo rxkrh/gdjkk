@@ -3,167 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>껌딱지 꼬꼬</title>
+    <title>껌딱지 꼬꼬 V2</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="font-normal">
     <div class="app-container">
+        
         <header class="top-bar">
-            <div class="weather-info">🌤️ 날씨 불러오는 중...</div>
-            <div class="d-day-info">🚩 디데이를 설정해주세요!</div>
+            <button id="menu-open-btn" class="icon-btn">🍔</button>
+            <div class="top-right-icons">
+                <span class="weather-info">🌤️ --°C</span>
+                <button id="fortune-btn" class="icon-btn">🥠</button>
+            </div>
         </header>
 
-        <main class="koko-zone">
-            <div class="speech-bubble" id="koko-speech">
-                주인님, 오늘 하루도 화이팅이에요! 삐약! 🐥
+        <div id="side-menu-overlay" class="overlay"></div>
+        <aside id="side-menu" class="side-menu">
+            <div class="menu-header">
+                <h2>메뉴</h2>
+                <button id="menu-close-btn" class="icon-btn">❌</button>
             </div>
+            
+            <div class="menu-content">
+                <div class="menu-section">
+                    <h3>👤 내 프로필</h3>
+                    <div id="login-area">
+                        <button id="google-login-btn" class="action-btn" style="background-color:#4285F4;">G 구글 로그인</button>
+                    </div>
+                    <div id="user-profile-area" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                            <span id="user-email-display" style="font-size:12px; color:#888;"></span>
+                            <button id="logout-btn" style="font-size:12px; padding:4px 8px; border-radius:4px;">로그아웃</button>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="nickname-input" placeholder="새 닉네임 입력">
+                            <button id="save-nickname-btn" class="action-btn">변경</button>
+                        </div>
+                        <div id="profile-status" style="font-size:12px; color:#ff6b6b; margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <h3>⚙️ 꼬꼬 설정</h3>
+                    <div class="setting-item">
+                        <span>글꼴</span>
+                        <select id="font-select">
+                            <option value="'Pretendard', sans-serif">기본 깔끔체</option>
+                            <option value="'Jua', sans-serif">주아체</option>
+                            <option value="'Nanum Pen Script', cursive">손글씨</option>
+                            <option value="'Dongle', sans-serif">동글체</option>
+                        </select>
+                    </div>
+                    <div class="setting-item">
+                        <span>크기</span>
+                        <select id="size-select">
+                            <option value="font-small">작게</option>
+                            <option value="font-normal" selected>보통</option>
+                            <option value="font-large">크게</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <h3>📮 고객센터</h3>
+                    <button id="open-feedback-btn" class="action-btn" style="background-color:#74b9ff;">개발자에게 쪽지 보내기</button>
+                </div>
+
+                <div id="admin-feedback-area" class="menu-section" style="display:none; border:2px solid #ff9f43; background:#fffaf0;">
+                    <h3 style="color:#d35400;">👑 도착한 쪽지함</h3>
+                    <div id="admin-feedback-list" style="max-height:150px; overflow-y:auto; gap:8px; display:flex; flex-direction:column; font-size:13px;"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="koko-zone">
+            <div class="speech-bubble" id="koko-speech">주인님, 오늘 하루도 화이팅이에요! 삐약! 🐥</div>
             <img src="koko.png" alt="껌딱지 꼬꼬" class="koko-character" id="koko">
         </main>
 
-        <section class="bottom-panel">
-            
-            <div class="profile-section">
-                <h3>👤 내 프로필</h3>
-                
-                <div id="login-area" style="text-align: center; margin-bottom: 15px;">
-                    <p style="font-size: 13px; color: #666;">로그인하고 내 데이터를 안전하게 저장하세요!</p>
-                    <button id="google-login-btn" style="background-color: #4285F4; color: white;">
-                        G 구글 계정으로 로그인
-                    </button>
-                </div>
-
-                <div id="user-profile-area" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <span id="user-email-display" style="font-size: 12px; color: #888;"></span>
-                        <button id="logout-btn" style="width: auto; padding: 5px 10px; background-color: #ddd; color: #333; font-size: 12px;">로그아웃</button>
-                    </div>
-                    
-                    <div class="nickname-setup">
-                        <input type="text" id="nickname-input" placeholder="사용할 닉네임 (중복 불가)">
-                        <button id="save-nickname-btn">등록</button>
-                    </div>
-                    <div id="profile-status" style="font-size:12px; color:#ff6b6b; margin-top:5px;"></div>
-                </div>
-            </div>
-
-            <div class="dm-section">
-                <div class="chat-header">
-                    <h3>💬 꼬꼬 채팅방</h3>
-                    <div class="chat-tabs">
-                        <button id="tab-global" class="active">전체 채팅</button>
-                        <button id="tab-room">1:1 비밀방</button>
-                    </div>
-                </div>
-
-                <div id="room-code-area" style="display:none; margin-bottom:10px;">
-                    <div style="display:flex; gap:8px;">
-                        <input type="text" id="room-code-input" placeholder="비밀방 코드 입력 (예: 환이방)">
-                        <button id="join-room-btn" style="width:auto; background-color:#a29bfe;">입장</button>
-                    </div>
-                </div>
-
-                <div class="chat-box" id="chat-box">
-                    <div style="text-align:center; color:#888; font-size:12px; margin-top:50px;">
-                        프로필에서 닉네임을 등록해야 채팅이 가능해요!
-                    </div>
-                </div>
-                
-                <div id="megaphone-area" style="margin-bottom:8px; font-size:13px;">
-                    <label style="cursor:pointer; color:#ff9f43; font-weight:bold;">
-                        <input type="checkbox" id="megaphone-check"> 📢 확성기로 크게 말하기 (전체)
-                    </label>
-                </div>
-
-                <div class="chat-input-group">
-                    <input type="text" id="chat-input" placeholder="닉네임을 먼저 등록해주세요" disabled>
-                    <button id="send-chat-btn" disabled>전송</button>
-                </div>
-            </div>
-
-            <div class="todo-section">
-                <h3>📝 오늘의 할 일 (모이 주기)</h3>
-                <div class="todo-input-group">
-                    <input type="text" id="new-todo-input" placeholder="새로운 할 일을 적어주세요!">
-                    <button id="add-todo-btn">추가</button>
-                </div>
-                <ul id="todo-list"></ul>
-                <button id="feed-btn" disabled>꼬꼬에게 모이 주기 🌾</button>
-            </div>
-
-            <div class="alarm-section">
-                <h3>🩺 건강 챙기미 알림</h3>
-                <div class="alarm-item"><span>💧 물 마시기 (1시간)</span><input type="checkbox" checked></div>
-                <div class="alarm-item"><span>🧘 스트레칭 (2시간)</span><input type="checkbox" checked></div>
-            </div>
-
-            <div class="fortune-section">
-                <h3>✨ 오늘의 운세</h3>
-                <button id="fortune-btn">꼬꼬가 물어온 포춘쿠키 열기 🥠</button>
-            </div>
-
-            <div class="dday-setup-section">
-                <h3>🚩 디데이 설정</h3>
-                <div class="dday-inputs">
-                    <input type="text" id="dday-title-input" placeholder="어떤 날인가요? (예: 내 생일)">
-                    <input type="date" id="dday-date-input">
-                    <button id="save-dday-btn">저장</button>
-                </div>
-                <ul id="dday-list-display" class="dday-list"></ul> 
-            </div>
-
-            <div class="feedback-section" style="margin-top: 20px; border-top: 1px dashed #eee; padding-top: 15px;">
-                <h3>📮 개발자에게 바란다!</h3>
-                <button id="open-feedback-btn" style="background-color: #74b9ff;">개발자에게 쪽지 보내기 ✉️</button>
-            </div>
-
-            <div id="admin-feedback-area" style="display: none; margin-top: 20px; border: 2px solid #ff9f43; padding: 15px; border-radius: 15px; background-color: #fffaf0;">
-                <h3 style="color: #d35400;">👑 [관리자 전용] 도착한 쪽지함</h3>
-                <div id="admin-feedback-list" style="max-height: 200px; overflow-y: auto; font-size: 13px; display: flex; flex-direction: column; gap: 8px;">
-                    </div>
-            </div>
-
-            <div class="settings-section">
-                <h3>⚙️ 꼬꼬 설정</h3>
-                <div class="setting-item">
-                    <span>✏️ 글꼴 변경</span>
-                    <select id="font-select">
-                        <option value="'Pretendard', sans-serif">기본 깔끔체</option>
-                        <option value="'Jua', sans-serif">동글동글 주아체</option>
-                        <option value="'Nanum Pen Script', cursive">사각사각 손글씨</option>
-                        <option value="'Dongle', sans-serif">귀염뽀짝 동글체</option>
-                    </select>
-                </div>
-                <div class="setting-item">
-                    <span>🔍 글씨 크기</span>
-                    <select id="size-select">
-                        <option value="font-small">작게</option>
-                        <option value="font-normal" selected>보통 (기본)</option>
-                        <option value="font-large">크게</option>
-                    </select>
-                </div>
-            </div>
-        </section>
-    </div>
-
-    <div id="feedback-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-        <div style="background: white; padding: 20px; border-radius: 15px; width: 85%; max-width: 320px; box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
-            <h3 style="margin-top: 0; color: #74b9ff;">쪽지 보내기</h3>
-            <p style="font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 15px;">
-                피드백, 추가되었으면 하는 기능 등 <strong>개발자에게 보내고 싶은 내용</strong>을 써 주세요. 이 쪽지는 <strong>개발자에게 다이렉트로 전송</strong>되는 기능이며, 욕설/비속어 등을 적어서 보낼 시 운영 정책에 따라 조치를 취할 수 있다는 점 참고 바랍니다.
-            </p>
-            <textarea id="feedback-text" rows="5" placeholder="여기에 내용을 입력해주세요..." style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; resize: none;"></textarea>
-            
-            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                <button id="close-feedback-btn" style="background-color: #ccc; color: #333;">취소</button>
-                <button id="send-feedback-btn" style="background-color: #74b9ff;">전송하기</button>
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
-    
-    <script src="script.js"></script>
-</body>
-</html>
+        <section class="tab-container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-target="tab-todo">📝 할 일</button
