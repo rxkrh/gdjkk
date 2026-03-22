@@ -305,4 +305,27 @@ document.getElementById('attendance-btn').addEventListener('click', () => { cons
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; document.getElementById(`quest-${questNum}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } }
 checkAttendanceUI(); 
 
-function renderTodos() { const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false; todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer
+function renderTodos() { const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false; todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; }); document.getElementById('feed-btn').disabled = !anyChecked; }
+document.getElementById('add-todo-btn').addEventListener('click', () => { const txt = document.getElementById('new-todo-input').value.trim(); if (!txt) return; todos.push({ text: txt, checked: false }); document.getElementById('new-todo-input').value=''; renderTodos(); syncToCloud(); });
+window.toggleTodo = i => { todos[i].checked = !todos[i].checked; renderTodos(); syncToCloud(); if(todos[i].checked) completeQuest(3); };
+window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
+document.getElementById('feed-btn').addEventListener('click', () => { kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); });
+renderTodos();
+
+function renderDdays() { const list = document.getElementById('dday-list-display'); list.innerHTML = ''; if (ddays.length === 0) { document.querySelector('.d-day-info').innerHTML = "<img src='icon-pin.png' class='ui-icon'> 디데이를 추가해보세요!"; return; } const today = new Date(); today.setHours(0,0,0,0); const calc = ddays.map(d => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, diff: Math.ceil((t-today)/86400000) }; }); calc.forEach((d, i) => { let badge = d.diff === 0 ? `<span style="color:#ff6b6b;font-weight:bold;">D-Day<img src="icon-party.png" class="ui-icon"></span>` : (d.diff > 0 ? `<span style="color:#ff9f43;font-weight:bold;">D-${d.diff}</span>` : `<span style="color:#888;font-weight:bold;">D+${Math.abs(d.diff)}</span>`); list.innerHTML += `<li><span><strong>${d.title}</strong> <span style="font-size:12px;color:#999;">(${d.date})</span> ${badge}</span><button class="delete-btn" onclick="deleteDday(${i})">❌</button></li>`; }); const cl = calc.reduce((p, c) => Math.abs(c.diff) < Math.abs(p.diff) ? c : p); document.querySelector('.d-day-info').innerHTML = cl.diff === 0 ? `<img src="icon-pin.png" class="ui-icon"> ${cl.title} D-Day!` : (cl.diff > 0 ? `<img src="icon-pin.png" class="ui-icon"> ${cl.title} D-${cl.diff}` : `<img src="icon-pin.png" class="ui-icon"> ${cl.title} D+${Math.abs(cl.diff)}`); }
+document.getElementById('save-dday-btn').addEventListener('click', () => { const t=document.getElementById('dday-title-input').value; const d=document.getElementById('dday-date-input').value; if(t&&d){ ddays.push({title:t, date:d}); renderDdays(); syncToCloud(); }});
+window.deleteDday = i => { ddays.splice(i, 1); renderDdays(); syncToCloud(); };
+renderDdays();
+
+function getKokoWeather() { if(navigator.geolocation) navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ document.querySelector('.weather-info').innerHTML=`<img src="${d.current_weather.weathercode<=1?'icon-sun.png':(d.current_weather.weathercode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; }); }); }
+getKokoWeather();
+
+const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
+document.getElementById('fortune-btn').addEventListener('click', () => { kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
+kokoChar.addEventListener('click', () => { completeQuest(1); const h=new Date().getHours(); kokoSpeech.innerHTML= h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); });
+
+// 초기 렌더링 호출
+renderCalendar();
+
+// 🌟 확인용 콘솔 출력 (이 메시지가 보이면 완벽하게 복사된 것입니다!)
+console.log("껌딱지 꼬꼬 V2.3 스크립트가 잘림 없이 완벽하게 로드되었습니다! 🐥✨");
