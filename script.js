@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 (에러 해결의 핵심! 무조건 맨 위에서 초기화)
+// 🌟 1. 전역 변수 선언 (무조건 맨 위에서 초기화)
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -30,7 +30,6 @@ let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
 let attendance = JSON.parse(localStorage.getItem('koko_attendance')) || { lastDate: "", streak: 0 };
 let dailyQuests = { q1: false, q2: false, q3: false }; 
 
-// 스케줄 & 달력 관련 변수 (맨 위로 이동!)
 let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || {};
 if (Array.isArray(schedules)) schedules = {}; // 구버전 데이터 초기화
 let currentCalDate = new Date();
@@ -66,7 +65,7 @@ tabBtns.forEach(btn => {
         tabContents.forEach(c => c.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.target).classList.add('active');
-        if(btn.dataset.target === 'tab-schedule') renderCalendar(); // 캘린더 탭 클릭 시 새로고침
+        if(btn.dataset.target === 'tab-schedule') renderCalendar(); 
     });
 });
 
@@ -88,7 +87,6 @@ chatHeaderBar.addEventListener('click', () => {
 // 📅 3. 캘린더 및 스케줄 로직
 // ==========================================
 function renderCalendar() {
-    // 혹시라도 HTML 로드 전이라면 중단 (에러 방지)
     if (!document.getElementById('current-month-display')) return; 
 
     const year = currentCalDate.getFullYear();
@@ -140,7 +138,6 @@ function renderSchedulesForSelected() {
     });
 }
 
-// 캘린더 화살표 버튼 이벤트
 if(document.getElementById('prev-month-btn')) {
     document.getElementById('prev-month-btn').addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
     document.getElementById('next-month-btn').addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() + 1); renderCalendar(); });
@@ -230,4 +227,82 @@ if (localStorage.getItem('koko_font_size')) { document.body.className = localSto
 sizeSelect.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); kokoSpeech.innerHTML = "글씨 크기 조절 완료! <img src='icon-sparkle.png' class='ui-icon'>"; });
 
 document.getElementById('open-feedback-btn').addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
-document.getElementById('close-feedback-btn').addEventListener('click', () => document.
+document.getElementById('close-feedback-btn').addEventListener('click', () => document.getElementById('feedback-modal').style.display = 'none');
+document.getElementById('send-feedback-btn').addEventListener('click', async () => {
+    const txt = document.getElementById('feedback-text').value.trim(); if (!txt) return;
+    await db.collection('feedbacks').add({ text: txt, senderUid: myUid, senderNickname: myNickname || '익명', timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    alert("전송 완료! 🐥"); document.getElementById('feedback-modal').style.display = 'none'; document.getElementById('feedback-text').value = '';
+});
+function loadAdminFeedbacks() {
+    db.collection('feedbacks').orderBy('timestamp', 'desc').onSnapshot(snap => {
+        const list = document.getElementById('admin-feedback-list'); list.innerHTML = '';
+        snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;"><img src="icon-profile.png" class="ui-icon"> ${d.senderNickname}</div><div>${d.text}</div></div>`; });
+    });
+}
+
+// ==========================================
+// 💬 5. 채팅 로직
+// ==========================================
+function enableChat() { document.getElementById('chat-input').disabled = false; document.getElementById('send-chat-btn').disabled = false; document.getElementById('chat-input').placeholder = "메시지 입력..."; loadMessages(); }
+if(myNickname) enableChat();
+
+document.getElementById('tab-global').addEventListener('click', e => { 
+    currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room').classList.remove('active'); 
+    document.getElementById('room-code-area').style.display = 'none'; document.getElementById('megaphone-label').style.display = 'flex'; loadMessages(); 
+});
+document.getElementById('tab-room').addEventListener('click', e => { 
+    currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global').classList.remove('active'); 
+    document.getElementById('room-code-area').style.display = 'flex'; document.getElementById('megaphone-label').style.display = 'none'; 
+    document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:12px; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; if(chatUnsubscribe) chatUnsubscribe(); 
+});
+document.getElementById('join-room-btn').addEventListener('click', () => { currentRoomCode = document.getElementById('room-code-input').value.trim(); loadMessages(); kokoSpeech.innerHTML = `"${currentRoomCode}" 방 입장! 쉿! <img src="icon-shh.png" class="ui-icon">`; });
+
+function loadMessages() {
+    if (!myNickname) return;
+    if (chatUnsubscribe) chatUnsubscribe(); document.getElementById('chat-box').innerHTML = ''; 
+    let queryRef = currentChatMode === 'global' ? db.collection('global_messages') : (currentRoomCode ? db.collection('secret_rooms').doc(currentRoomCode).collection('messages') : null);
+    if (!queryRef) return;
+    let isInit = true; 
+
+    chatUnsubscribe = queryRef.orderBy('timestamp').onSnapshot(snap => {
+        snap.docChanges().forEach(change => {
+            if (change.type === 'added') {
+                const data = change.doc.data();
+                document.getElementById('chat-preview-text').innerHTML = `<img src="icon-chat.png" class="ui-icon"> ${data.sender}: ${data.text}`;
+                const isMe = data.uid ? (data.uid === myUid) : (data.sender === myNickname);
+                const shakeClass = (data.megaphone && !isInit) ? 'shake' : '';
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-message ${isMe ? 'me' : 'other'} ${data.megaphone ? 'megaphone' : ''} ${shakeClass}`;
+                if (!isMe) { const sDiv = document.createElement('div'); sDiv.className = 'chat-sender'; sDiv.innerText = data.sender; msgDiv.appendChild(sDiv); }
+                const tDiv = document.createElement('div');
+                if (data.megaphone) { tDiv.innerHTML = '<img src="icon-mega.png" class="ui-icon"> '; tDiv.appendChild(document.createTextNode(data.text)); } 
+                else { tDiv.innerText = data.text; }
+                msgDiv.appendChild(tDiv); document.getElementById('chat-box').appendChild(msgDiv);
+            }
+        });
+        isInit = false; document.getElementById('chat-box').scrollTop = document.getElementById('chat-box').scrollHeight;
+    });
+}
+document.getElementById('send-chat-btn').addEventListener('click', () => {
+    const text = document.getElementById('chat-input').value.trim(); if (!text || !myNickname) return;
+    const isMega = document.getElementById('megaphone-check').checked;
+    const data = { text: text, sender: myNickname, uid: myUid, megaphone: isMega, timestamp: firebase.firestore.FieldValue.serverTimestamp() };
+    if (currentChatMode === 'global') db.collection('global_messages').add(data); else db.collection('secret_rooms').doc(currentRoomCode).collection('messages').add(data);
+    document.getElementById('chat-input').value = ''; document.getElementById('megaphone-check').checked = false;
+});
+
+// ==========================================
+// 🏆 6. 퀘스트, 투두, 디데이, 날씨 로직
+// ==========================================
+function checkAttendanceUI() {
+    const todayStr = new Date().toDateString();
+    const btn = document.getElementById('attendance-btn');
+    document.getElementById('attendance-streak').innerText = attendance.streak;
+    if (attendance.lastDate === todayStr) { btn.innerHTML = `오늘 출석 완료! <img src="icon-fire.png" class="ui-icon">`; btn.disabled = true; btn.style.backgroundColor = "#aaa"; completeQuest(2); } 
+    else { btn.innerHTML = `오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1);">`; btn.disabled = false; btn.style.backgroundColor = "#2ecc71"; }
+}
+document.getElementById('attendance-btn').addEventListener('click', () => { const todayStr = new Date().toDateString(); attendance.lastDate = todayStr; attendance.streak += 1; localStorage.setItem('koko_attendance', JSON.stringify(attendance)); syncToCloud(); checkAttendanceUI(); kokoSpeech.innerHTML = `출석 도장 꾹! 연속 ${attendance.streak}일째! <img src="icon-party.png" class="ui-icon">`; });
+function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; document.getElementById(`quest-${questNum}`).innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } }
+checkAttendanceUI(); 
+
+function renderTodos() { const list = document.getElementById('todo-list'); list.innerHTML = ''; let anyChecked = false; todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer
