@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V2.8</title>
+    <title>껌딱지 꼬꼬 V2.9</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -39,7 +39,7 @@
                             <input type="text" id="nickname-input" placeholder="새 닉네임 입력">
                             <button id="save-nickname-btn" class="action-btn" style="width: auto; padding: 8px 15px;">변경</button>
                         </div>
-                        <div id="profile-status" style="font-size:12px; color:#ff6b6b; margin-top:5px;"></div>
+                        <div id="profile-status" style="font-size:12px; font-weight:bold; margin-top:5px;"></div>
                     </div>
                 </div>
 
@@ -62,6 +62,11 @@
                             <option value="font-large">크게</option>
                         </select>
                     </div>
+                </div>
+
+                <div class="menu-section">
+                    <h3>🎮 꼬꼬 게임</h3>
+                    <button id="open-game-btn" class="action-btn" style="background-color:#f1c40f; color:#333;">🥚 달걀 지뢰찾기 (Play!)</button>
                 </div>
 
                 <div class="menu-section">
@@ -89,13 +94,22 @@
                 <button class="tab-btn" data-target="tab-quest"><img src="icon-sparkle.png" class="ui-icon"> 퀘스트</button>
             </div>
 
-            <div id="tab-todo" class="tab-content active">
-                <div class="input-group">
-                    <input type="text" id="new-todo-input" placeholder="새로운 할 일을 적어주세요!">
-                    <button id="add-todo-btn" class="action-btn" style="width: auto; padding: 8px 15px;">추가</button>
+            <div id="tab-todo" class="tab-content active flex-column-tab">
+                <div class="folder-header">
+                    <select id="todo-folder-select" class="folder-select"></select>
+                    <button id="add-folder-btn" class="icon-btn" style="background:#0984e3; color:white; border-radius:8px; padding:0 8px; font-size:12px;">➕ 폴더</button>
+                    <button id="del-folder-btn" class="icon-btn" style="background:#ff6b6b; color:white; border-radius:8px; padding:0 8px; font-size:12px;">🗑️</button>
                 </div>
-                <ul id="todo-list" class="item-list"></ul>
-                <button id="feed-btn" class="action-btn feed-action" disabled>꼬꼬에게 모이 주기 <img src="icon-seed.png" class="ui-icon"></button>
+                <div class="scroll-wrapper">
+                    <ul id="todo-list" class="item-list"></ul>
+                </div>
+                <div class="sticky-bottom-input">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <input type="text" id="new-todo-input" placeholder="이 폴더에 할 일 추가!">
+                        <button id="add-todo-btn" class="action-btn" style="width: auto; padding: 8px 15px;">추가</button>
+                    </div>
+                    <button id="feed-btn" class="action-btn feed-action" disabled>선택된 할 일 완료! (모이 주기 🐣)</button>
+                </div>
             </div>
 
             <div id="tab-schedule" class="tab-content">
@@ -127,7 +141,6 @@
                     <div style="text-align:center; font-size:11px; color:#aaa; margin-bottom:5px;">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
                 </div>
-                
                 <div class="sticky-bottom-input">
                     <div class="dday-one-line">
                         <select id="dday-icon-select" class="dday-compact-select">
@@ -204,6 +217,18 @@
             <div style="display:flex; gap:10px; margin-top:15px;">
                 <button id="close-feedback-btn" class="action-btn" style="background-color:#ccc; color:#333;">취소</button>
                 <button id="send-feedback-btn" class="action-btn" style="background-color:#74b9ff;">전송하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="game-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div style="background:white; padding:20px; border-radius:15px; width:90%; max-width:320px; text-align:center;">
+            <h3 style="margin-top:0; color:#f39c12;">🥚 달걀 지뢰찾기</h3>
+            <p id="game-status" style="font-size:13px; color:#555; margin-bottom:10px;">안전한 달걀을 찾아주세요! (폭탄 5개)</p>
+            <div id="minesweeper-grid" class="minesweeper-grid"></div>
+            <div style="display:flex; gap:10px; margin-top:15px;">
+                <button id="close-game-btn" class="action-btn" style="background-color:#ccc; color:#333;">닫기</button>
+                <button id="reset-game-btn" class="action-btn" style="background-color:#f39c12;">다시하기</button>
             </div>
         </div>
     </div>

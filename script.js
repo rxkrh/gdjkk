@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언
+// 🌟 1. 전역 변수 선언 (투두 폴더 구조 변경)
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -25,7 +25,16 @@ let currentChatMode = 'global';
 let currentRoomCode = ''; 
 let chatUnsubscribe = null;
 
-let todos = JSON.parse(localStorage.getItem('koko_todos')) || [];
+// 🌟 투두리스트 폴더형 데이터 구조 마이그레이션
+let todoData = JSON.parse(localStorage.getItem('koko_todo_data'));
+if (!todoData) {
+    let oldTodos = JSON.parse(localStorage.getItem('koko_todos'));
+    if (oldTodos && Array.isArray(oldTodos)) { todoData = { "기본": oldTodos }; } 
+    else { todoData = { "기본": [] }; }
+    localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
+}
+let currentTodoFolder = "기본";
+
 let ddays = JSON.parse(localStorage.getItem('koko_ddays')) || [];
 let attendance = JSON.parse(localStorage.getItem('koko_attendance')) || { lastDate: "", streak: 0 };
 let dailyQuests = { q1: false, q2: false, q3: false }; 
@@ -42,7 +51,7 @@ const kokoChar = document.getElementById('koko');
 function syncToCloud() {
     if (auth.currentUser) {
         db.collection('users').doc(auth.currentUser.uid).set({ 
-            todos: todos, ddays: ddays, schedules: schedules, attendance: attendance
+            todoData: todoData, ddays: ddays, schedules: schedules, attendance: attendance
         }, { merge: true });
     }
 }
@@ -83,7 +92,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직
+// 📅 3. 캘린더 및 스케줄 로직 (🌟 달력 동기화 포함)
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display');
@@ -148,7 +157,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 피드백
+// 🔐 4. 로그인, 프로필, 피드백 (🌟 동기화 텍스트 초록색 반영 & 달력/투두데이터 완벽 연동)
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -163,11 +172,24 @@ auth.onAuthStateChanged((user) => {
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
                 const data = doc.data();
-                if (data.todos) { todos = data.todos; renderTodos(); }
+                
+                // 🌟 구버전 투두 마이그레이션 호환 처리
+                if (data.todoData) { todoData = data.todoData; } 
+                else if (data.todos) { todoData = { "기본": data.todos }; }
+                
                 if (data.ddays) { ddays = data.ddays; renderDdays(); }
-                if (data.schedules) { schedules = data.schedules; renderCalendar(); }
+                if (data.schedules) { schedules = data.schedules; }
                 if (data.attendance) { attendance = data.attendance; checkAttendanceUI(); }
-                if (data.nickname) { myNickname = data.nickname; localStorage.setItem('koko_nickname', myNickname); document.getElementById('nickname-input').value = myNickname; document.getElementById('profile-status').innerText = "✅ 동기화 완료"; enableChat(); }
+                
+                renderTodoFolders(); renderCalendar(); // 데이터 수신 후 렌더링
+                
+                if (data.nickname) { 
+                    myNickname = data.nickname; localStorage.setItem('koko_nickname', myNickname); 
+                    document.getElementById('nickname-input').value = myNickname; 
+                    const statusObj = document.getElementById('profile-status');
+                    if(statusObj) { statusObj.innerText = "✅ 동기화 완료"; statusObj.style.color = "#2ecc71"; } // 🟢 초록색 변경
+                    enableChat(); 
+                }
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
@@ -181,9 +203,9 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
     const nickInput = document.getElementById('nickname-input'); const statusObj = document.getElementById('profile-status');
     if(!nickInput || !statusObj) return;
     const name = nickInput.value.trim(); if (!name || name === myNickname) return;
-    if (lastChangeDate) { const diff = (new Date() - lastChangeDate) / 86400000; if (diff < 7) { statusObj.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; return; } }
+    if (lastChangeDate) { const diff = (new Date() - lastChangeDate) / 86400000; if (diff < 7) { statusObj.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; statusObj.style.color = "#ff6b6b"; return; } }
     const nameRef = db.collection('nicknames').doc(name); const doc = await nameRef.get();
-    if (doc.exists && doc.data().uid !== myUid) { statusObj.innerText = "❌ 사용 중인 이름!"; return; }
+    if (doc.exists && doc.data().uid !== myUid) { statusObj.innerText = "❌ 사용 중인 이름!"; statusObj.style.color = "#ff6b6b"; return; }
 
     if (myNickname) await db.collection('nicknames').doc(myNickname).delete();
     await nameRef.set({ uid: myUid }); await db.collection('users').doc(myUid).set({ nickname: name, lastNicknameChange: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
@@ -215,7 +237,7 @@ function loadAdminFeedbacks() {
 }
 
 // ==========================================
-// 💬 5. 채팅 로직 (🌟 노란색 확성기 개선)
+// 💬 5. 채팅 로직
 // ==========================================
 function enableChat() { 
     const input = document.getElementById('chat-input'); const btn = document.getElementById('send-chat-btn');
@@ -265,7 +287,6 @@ function loadMessages() {
                     sDiv.className = 'chat-sender'; 
                     let devIcon = isDeveloper ? `<img src="icon-wrench.png" class="ui-icon" style="width:12px; height:12px; margin-right:2px; filter: grayscale(100%);">` : '';
                     
-                    // 🌟 확성기면 밝은 노란색(#FFFF00)으로 강렬하게 표시!
                     if (data.megaphone) {
                         sDiv.innerHTML = `${devIcon} <span style="color:#FFFF00; text-shadow: 1px 1px 0px rgba(0,0,0,0.3); font-weight:bold;">${data.sender}</span>`;
                     } else if (isDeveloper) {
@@ -294,7 +315,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 날씨
+// 🏆 6. 퀘스트, 투두(🌟폴더 개편), 디데이, 날씨
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
@@ -311,18 +332,77 @@ document.getElementById('attendance-btn')?.addEventListener('click', () => { con
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; if(kokoChar) { kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } } }
 checkAttendanceUI(); 
 
+// 🌟 투두리스트 폴더형 로직
+function renderTodoFolders() {
+    const sel = document.getElementById('todo-folder-select'); if(!sel) return;
+    sel.innerHTML = '';
+    Object.keys(todoData).forEach(folder => {
+        let opt = document.createElement('option'); opt.value = folder; opt.text = `📁 ${folder}`;
+        if(folder === currentTodoFolder) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    renderTodos();
+}
+
+document.getElementById('todo-folder-select')?.addEventListener('change', (e) => {
+    currentTodoFolder = e.target.value; renderTodos();
+});
+
+document.getElementById('add-folder-btn')?.addEventListener('click', () => {
+    let name = prompt("새로운 폴더 이름을 입력하세요 (예: 장보기, 공부)");
+    if(name && name.trim() !== '') {
+        name = name.trim();
+        if(!todoData[name]) {
+            todoData[name] = []; currentTodoFolder = name;
+            localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
+            renderTodoFolders(); syncToCloud();
+        } else { alert("이미 있는 폴더 이름입니다!"); }
+    }
+});
+
+document.getElementById('del-folder-btn')?.addEventListener('click', () => {
+    if(currentTodoFolder === "기본") { alert("'기본' 폴더는 지울 수 없어요! 🐣"); return; }
+    if(todoData[currentTodoFolder].length > 0) { alert("폴더 안에 할 일이 남아있어요! 먼저 다 비워주세요."); return; }
+    if(confirm(`"${currentTodoFolder}" 폴더를 정말 지울까요?`)) {
+        delete todoData[currentTodoFolder]; currentTodoFolder = "기본";
+        localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
+        renderTodoFolders(); syncToCloud();
+    }
+});
+
 function renderTodos() { 
     const list = document.getElementById('todo-list'); const btn = document.getElementById('feed-btn'); if(!list) return;
     list.innerHTML = ''; let anyChecked = false; 
-    todos.forEach((t, i) => { list.innerHTML += `<li><label style="cursor:pointer; display:flex; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; if (t.checked) anyChecked = true; }); 
+    let currentList = todoData[currentTodoFolder] || [];
+    
+    // 🌟 align-items:center 로 텍스트 정중앙 정렬 완벽 적용
+    currentList.forEach((t, i) => { 
+        list.innerHTML += `<li><label style="cursor:pointer; display:flex; align-items:center; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="delete-btn" onclick="deleteTodo(${i})">❌</button></li>`; 
+        if (t.checked) anyChecked = true; 
+    }); 
     if(btn) btn.disabled = !anyChecked; 
 }
-document.getElementById('add-todo-btn')?.addEventListener('click', () => { const input = document.getElementById('new-todo-input'); if(!input) return; const txt = input.value.trim(); if (!txt) return; todos.push({ text: txt, checked: false }); input.value=''; renderTodos(); syncToCloud(); });
-window.toggleTodo = i => { todos[i].checked = !todos[i].checked; renderTodos(); syncToCloud(); if(todos[i].checked) completeQuest(3); };
-window.deleteTodo = i => { todos.splice(i, 1); renderTodos(); syncToCloud(); };
-document.getElementById('feed-btn')?.addEventListener('click', () => { if(kokoSpeech) kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; todos = todos.filter(t => !t.checked); syncToCloud(); setTimeout(()=>{ renderTodos(); if(kokoSpeech) kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); });
-renderTodos();
 
+document.getElementById('add-todo-btn')?.addEventListener('click', () => { 
+    const input = document.getElementById('new-todo-input'); if(!input) return; 
+    const txt = input.value.trim(); if (!txt) return; 
+    if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = [];
+    todoData[currentTodoFolder].push({ text: txt, checked: false }); 
+    localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
+    input.value=''; renderTodos(); syncToCloud(); 
+});
+window.toggleTodo = i => { todoData[currentTodoFolder][i].checked = !todoData[currentTodoFolder][i].checked; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); if(todoData[currentTodoFolder][i].checked) completeQuest(3); };
+window.deleteTodo = i => { todoData[currentTodoFolder].splice(i, 1); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); };
+
+document.getElementById('feed-btn')?.addEventListener('click', () => { 
+    if(kokoSpeech) kokoSpeech.innerHTML="냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; 
+    todoData[currentTodoFolder] = todoData[currentTodoFolder].filter(t => !t.checked); 
+    localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
+    syncToCloud(); setTimeout(()=>{ renderTodos(); if(kokoSpeech) kokoSpeech.innerHTML="다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";}, 2000); 
+});
+renderTodoFolders();
+
+// 🌟 디데이 롱프레스
 let currentDdayIndex = -1;
 let ddayPressTimer = null;
 let isPressing = false;
@@ -332,36 +412,23 @@ window.startDdayPress = (index, event) => {
     isPressing = true;
     ddayPressTimer = setTimeout(() => {
         if(isPressing) {
-            ddays[index].pinned = !ddays[index].pinned;
-            renderDdays(); syncToCloud();
+            ddays[index].pinned = !ddays[index].pinned; renderDdays(); syncToCloud();
             if(navigator.vibrate) navigator.vibrate(50); 
         }
     }, 500); 
 };
-
-window.cancelDdayPress = () => {
-    isPressing = false;
-    if(ddayPressTimer) clearTimeout(ddayPressTimer);
-};
+window.cancelDdayPress = () => { isPressing = false; if(ddayPressTimer) clearTimeout(ddayPressTimer); };
 
 const ddaySelect = document.getElementById('dday-icon-select');
 const optTextFull = { "": "기본", "🎂": "🎂 생일", "🔥": "🔥 마감", "💖": "💖 기념", "✈️": "✈️ 여행", "🎓": "🎓 시험", "🎯": "🎯 목표" };
 const optTextShort = { "": "기본", "🎂": "생일", "🔥": "마감", "💖": "기념", "✈️": "여행", "🎓": "시험", "🎯": "목표" };
 
-function updateDdaySelectUI() {
-    if(!ddaySelect) return;
-    Array.from(ddaySelect.options).forEach(opt => { opt.text = opt.selected ? optTextShort[opt.value] : optTextFull[opt.value]; });
-}
-function openDdaySelectUI() {
-    if(!ddaySelect) return;
-    Array.from(ddaySelect.options).forEach(opt => { opt.text = optTextFull[opt.value]; });
-}
+function updateDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = opt.selected ? optTextShort[opt.value] : optTextFull[opt.value]; }); }
+function openDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = optTextFull[opt.value]; }); }
 
 if(ddaySelect) {
-    ddaySelect.addEventListener('change', updateDdaySelectUI);
-    ddaySelect.addEventListener('blur', updateDdaySelectUI);
-    ddaySelect.addEventListener('mousedown', openDdaySelectUI);
-    ddaySelect.addEventListener('touchstart', openDdaySelectUI, {passive:true});
+    ddaySelect.addEventListener('change', updateDdaySelectUI); ddaySelect.addEventListener('blur', updateDdaySelectUI);
+    ddaySelect.addEventListener('mousedown', openDdaySelectUI); ddaySelect.addEventListener('touchstart', openDdaySelectUI, {passive:true});
     updateDdaySelectUI();
 }
 
@@ -369,78 +436,38 @@ const ddayDateInput = document.getElementById('dday-date-input');
 const dateIconSpan = document.getElementById('date-square-icon');
 if(ddayDateInput && dateIconSpan) {
     ddayDateInput.addEventListener('change', () => {
-        if(ddayDateInput.value) {
-            dateIconSpan.innerText = '✅';
-            dateIconSpan.parentElement.style.borderColor = '#2ecc71';
-            dateIconSpan.parentElement.style.background = '#eafaf1';
-        } else {
-            dateIconSpan.innerText = '📅';
-            dateIconSpan.parentElement.style.borderColor = '#ddd';
-            dateIconSpan.parentElement.style.background = '#f0f4f8';
-        }
+        if(ddayDateInput.value) { dateIconSpan.innerText = '✅'; dateIconSpan.parentElement.style.borderColor = '#2ecc71'; dateIconSpan.parentElement.style.background = '#eafaf1'; } 
+        else { dateIconSpan.innerText = '📅'; dateIconSpan.parentElement.style.borderColor = '#ddd'; dateIconSpan.parentElement.style.background = '#f0f4f8'; }
     });
 }
 
 function renderDdays() { 
-    const list = document.getElementById('dday-list-display'); 
-    const banner = document.getElementById('main-dday-banner');
-    if(!list || !banner) return;
-    list.innerHTML = ''; 
-    
+    const list = document.getElementById('dday-list-display'); const banner = document.getElementById('main-dday-banner');
+    if(!list || !banner) return; list.innerHTML = ''; 
     if (ddays.length === 0) { banner.innerHTML = `<img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!`; return; } 
     
     ddays = ddays.map(d => ({...d, pinned: d.pinned || false, isMain: d.isMain || false, icon: d.icon || ''}));
     const today = new Date(); today.setHours(0,0,0,0); 
     
-    let calc = ddays.map((d, i) => { 
-        const t = new Date(d.date); t.setHours(0,0,0,0); 
-        return { ...d, originalIndex: i, diff: Math.ceil((t-today)/86400000) }; 
-    }); 
-    
-    calc.sort((a, b) => {
-        if (a.pinned === b.pinned) return a.diff - b.diff; 
-        return a.pinned ? -1 : 1; 
-    });
+    let calc = ddays.map((d, i) => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, originalIndex: i, diff: Math.ceil((t-today)/86400000) }; }); 
+    calc.sort((a, b) => { if (a.pinned === b.pinned) return a.diff - b.diff; return a.pinned ? -1 : 1; });
 
     calc.forEach((d) => { 
         let badgeText = d.diff === 0 ? `D-Day<img src="icon-party.png" class="ui-icon" style="margin-left:2px;">` : (d.diff > 0 ? `D-${d.diff}` : `D+${Math.abs(d.diff)}`); 
         let badgeColor = d.diff === 0 ? "#ff6b6b" : (d.diff > 0 ? "#ff9f43" : "#888");
         let badge = `<span style="color:${badgeColor}; font-weight:bold; font-size:14px;">${badgeText}</span>`;
-        
         let pinIcon = d.pinned ? `<img src="icon-pin.png" class="ui-icon" style="width:14px; height:14px;"> ` : '';
         let customIcon = d.icon ? `<span style="margin-left:4px; font-size:14px;">${d.icon}</span>` : '';
         
         let li = document.createElement('li');
-        li.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <div style="display:flex; align-items:center; gap:6px;">
-                    ${pinIcon}
-                    <strong style="font-size:14px;">${d.title}</strong>
-                    <div style="display:flex; align-items:center;">
-                        ${badge}${customIcon}
-                    </div>
-                </div>
-                <span style="font-size:11px; color:#888;">${d.date}</span>
-            </div>
-            <button class="more-btn" onclick="openDdayMenu(${d.originalIndex}, event)">⋮</button>
-        `;
-        
-        li.addEventListener('mousedown', (e) => startDdayPress(d.originalIndex, e));
-        li.addEventListener('touchstart', (e) => startDdayPress(d.originalIndex, e), {passive: true});
-        li.addEventListener('mouseup', cancelDdayPress);
-        li.addEventListener('mouseleave', cancelDdayPress);
-        li.addEventListener('touchend', cancelDdayPress);
-        li.addEventListener('touchcancel', cancelDdayPress);
-        
+        li.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px;"><div style="display:flex; align-items:center; gap:6px;">${pinIcon}<strong style="font-size:14px;">${d.title}</strong><div style="display:flex; align-items:center;">${badge}${customIcon}</div></div><span style="font-size:11px; color:#888;">${d.date}</span></div><button class="more-btn" onclick="openDdayMenu(${d.originalIndex}, event)">⋮</button>`;
+        li.addEventListener('mousedown', (e) => startDdayPress(d.originalIndex, e)); li.addEventListener('touchstart', (e) => startDdayPress(d.originalIndex, e), {passive: true});
+        li.addEventListener('mouseup', cancelDdayPress); li.addEventListener('mouseleave', cancelDdayPress); li.addEventListener('touchend', cancelDdayPress); li.addEventListener('touchcancel', cancelDdayPress);
         list.appendChild(li);
     }); 
 
     let mainDday = calc.find(d => d.isMain);
-    if(!mainDday) {
-        let upcoming = calc.filter(d => d.diff >= 0).sort((a,b) => a.diff - b.diff);
-        mainDday = upcoming.length > 0 ? upcoming[0] : calc[0];
-    }
-    
+    if(!mainDday) { let upcoming = calc.filter(d => d.diff >= 0).sort((a,b) => a.diff - b.diff); mainDday = upcoming.length > 0 ? upcoming[0] : calc[0]; }
     let mainBadgeText = mainDday.diff === 0 ? `D-Day!` : (mainDday.diff > 0 ? `D-${mainDday.diff}` : `D+${Math.abs(mainDday.diff)}`);
     let crownIcon = mainDday.isMain ? `<img src="icon-crown.png" class="ui-icon"> ` : `<img src="icon-pin.png" class="ui-icon"> `;
     let mainCustomIcon = mainDday.icon ? ` <span style="font-size:14px;">${mainDday.icon}</span>` : '';
@@ -448,67 +475,68 @@ function renderDdays() {
 }
 
 document.getElementById('save-dday-btn')?.addEventListener('click', () => { 
-    const tObj = document.getElementById('dday-title-input'); 
-    const dObj = document.getElementById('dday-date-input');
-    const iObj = document.getElementById('dday-icon-select');
-    
-    if(!tObj || !dObj) return;
-    const t = tObj.value.trim(); const d = dObj.value; const iconVal = iObj ? iObj.value : '';
+    const tObj = document.getElementById('dday-title-input'); const dObj = document.getElementById('dday-date-input'); const iObj = document.getElementById('dday-icon-select');
+    if(!tObj || !dObj) return; const t = tObj.value.trim(); const d = dObj.value; const iconVal = iObj ? iObj.value : '';
     
     if(t && d){ 
-        ddays.push({title: t, date: d, pinned: false, isMain: false, icon: iconVal}); 
-        renderDdays(); syncToCloud(); 
-        
-        tObj.value=''; dObj.value=''; if(iObj) iObj.value='';
-        updateDdaySelectUI();
-        if(dateIconSpan) {
-            dateIconSpan.innerText = '📅';
-            dateIconSpan.parentElement.style.borderColor = '#ddd';
-            dateIconSpan.parentElement.style.background = '#f0f4f8';
-        }
-    } else {
-        alert("제목과 날짜를 모두 입력해주세요! 🐥");
-    }
+        ddays.push({title: t, date: d, pinned: false, isMain: false, icon: iconVal}); renderDdays(); syncToCloud(); 
+        tObj.value=''; dObj.value=''; if(iObj) iObj.value=''; updateDdaySelectUI();
+        if(dateIconSpan) { dateIconSpan.innerText = '📅'; dateIconSpan.parentElement.style.borderColor = '#ddd'; dateIconSpan.parentElement.style.background = '#f0f4f8'; }
+    } else { alert("제목과 날짜를 모두 입력해주세요! 🐥"); }
 });
 
 window.openDdayMenu = (index, event) => {
-    currentDdayIndex = index;
-    const menu = document.getElementById('dday-dropdown'); 
-    if(!menu) return;
+    currentDdayIndex = index; const menu = document.getElementById('dday-dropdown'); if(!menu) return;
     const rect = event.target.getBoundingClientRect();
-    menu.style.display = 'flex';
-    menu.style.top = `${rect.bottom + window.scrollY}px`;
-    menu.style.left = `${rect.left - 100}px`; 
+    menu.style.display = 'flex'; menu.style.top = `${rect.bottom + window.scrollY}px`; menu.style.left = `${rect.left - 100}px`; 
 };
 
-document.getElementById('dday-main-btn')?.addEventListener('click', () => {
-    ddays.forEach(d => d.isMain = false); 
-    ddays[currentDdayIndex].isMain = true;
-    renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none';
-    if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`;
-});
-
-document.getElementById('dday-del-btn')?.addEventListener('click', () => {
-    ddays.splice(currentDdayIndex, 1);
-    renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none';
-});
-
-document.addEventListener('click', (e) => {
-    const menu = document.getElementById('dday-dropdown');
-    if (menu && menu.style.display === 'flex' && !e.target.classList.contains('more-btn')) menu.style.display = 'none';
-});
+document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
+document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
+document.addEventListener('click', (e) => { const menu = document.getElementById('dday-dropdown'); if (menu && menu.style.display === 'flex' && !e.target.classList.contains('more-btn')) menu.style.display = 'none'; });
 
 renderDdays();
 
-function getKokoWeather() { 
-    if(navigator.geolocation) { navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ const wInfo = document.querySelector('.weather-info'); if(wInfo) wInfo.innerHTML=`<img src="${d.current_weather.weathercode<=1?'icon-sun.png':(d.current_weather.weathercode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; }); }); }
-}
+function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ const wInfo = document.querySelector('.weather-info'); if(wInfo) wInfo.innerHTML=`<img src="${d.current_weather.weathercode<=1?'icon-sun.png':(d.current_weather.weathercode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; }); }); } }
 getKokoWeather();
 
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kokoSpeech) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } });
 kokoChar?.addEventListener('click', () => { completeQuest(1); const h=new Date().getHours(); if(kokoSpeech) kokoSpeech.innerHTML= h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } });
 
-renderCalendar();
-console.log("🛠️ 껌딱지 꼬꼬 V2.8 로드 완료! (1줄 완벽 배열, 캘린더 사각 버튼, 스마트 카테고리 적용)");
+// ==========================================
+// 🎮 7. 꼬꼬 게임 (달걀 지뢰찾기) 로직
+// ==========================================
+document.getElementById('open-game-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
+document.getElementById('close-game-btn')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'none'; });
+document.getElementById('reset-game-btn')?.addEventListener('click', () => { initMinesweeper(); });
+
+let mineBoard = []; let mineRevealed = []; let mineGameOver = false; let safeCellsCount = 0; const MINE_SIZE = 6; const MINES_COUNT = 5;
+
+function initMinesweeper() {
+    const grid = document.getElementById('minesweeper-grid'); if(!grid) return; grid.innerHTML = '';
+    document.getElementById('game-status').innerText = `안전한 달걀을 찾아주세요! (폭탄 ${MINES_COUNT}개)`; document.getElementById('game-status').style.color = "#555";
+    mineBoard = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(0)); mineRevealed = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(false));
+    mineGameOver = false; safeCellsCount = (MINE_SIZE * MINE_SIZE) - MINES_COUNT;
+    let placed = 0; while(placed < MINES_COUNT) { let r = Math.floor(Math.random()*MINE_SIZE); let c = Math.floor(Math.random()*MINE_SIZE); if(mineBoard[r][c] !== 'M') { mineBoard[r][c] = 'M'; placed++; } }
+    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { if(mineBoard[r][c] === 'M') continue; let count=0; for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nr<MINE_SIZE && nc>=0 && nc<MINE_SIZE && mineBoard[nr][nc]==='M') count++; } } mineBoard[r][c] = count; } }
+    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { let cell = document.createElement('div'); cell.className = 'mine-cell'; cell.id = `mine-${r}-${c}`; cell.innerText = '🥚'; cell.addEventListener('click', () => revealMine(r,c)); grid.appendChild(cell); } }
+}
+
+function revealMine(r, c) {
+    if(mineGameOver || mineRevealed[r][c]) return;
+    mineRevealed[r][c] = true; let cell = document.getElementById(`mine-${r}-${c}`); cell.classList.add('revealed');
+    
+    if(mineBoard[r][c] === 'M') {
+        cell.innerText = '💥'; mineGameOver = true;
+        document.getElementById('game-status').innerText = "앗! 상한 달걀이에요! 😭"; document.getElementById('game-status').style.color = "#e74c3c";
+        for(let ir=0; ir<MINE_SIZE; ir++){ for(let ic=0; ic<MINE_SIZE; ic++){ if(mineBoard[ir][ic]==='M' && !mineRevealed[ir][ic]) { let c = document.getElementById(`mine-${ir}-${ic}`); c.innerText = '💥'; c.classList.add('revealed'); } } }
+    } else {
+        safeCellsCount--; cell.innerText = mineBoard[r][c] > 0 ? mineBoard[r][c] : '';
+        if(mineBoard[r][c] === 0) { for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nr<MINE_SIZE && nc>=0 && nc<MINE_SIZE) revealMine(nr,nc); } } }
+        if(safeCellsCount === 0) { mineGameOver = true; document.getElementById('game-status').innerText = "대성공! 맛있는 달걀을 다 찾았어요! 🐣✨"; document.getElementById('game-status').style.color = "#2ecc71"; if(kokoSpeech) kokoSpeech.innerHTML = "와! 지뢰찾기 고수시네요! <img src='icon-party.png' class='ui-icon'>"; }
+    }
+}
+
+console.log("🚀 껌딱지 꼬꼬 V2.9 로드 완료! (동기화 보강, 투두 폴더 추가, 지뢰찾기 추가)");
 // --- 파일 끝 ---

@@ -38,11 +38,14 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .flex-column-tab.active { display: flex; flex-direction: column; padding: 15px 15px 0 15px; }
 .scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
-.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 10px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
+.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 8px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; }
 
-/* 🌟 디데이 1줄 완벽 비율 (가로 스크롤 완전 차단) */
+/* 🌟 투두리스트 폴더 UI */
+.folder-header { display: flex; gap: 6px; margin-bottom: 10px; }
+.folder-select { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; }
+
 .dday-one-line { display: flex; gap: 5px; align-items: center; width: 100%; margin: 0; }
 .dday-compact-select { flex: 0 0 15%; min-width: 45px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
 .dday-one-line input[type="text"] { flex: 1 1 auto; min-width: 0; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; }
@@ -79,6 +82,12 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .schedule-input-area { border-top: 1px dashed #eee; padding-top: 10px; }
 .schedule-time-badge { background: #0984e3; color: white; padding: 3px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px; }
 .schedule-time-badge.allday { background: #ff9f43; }
+
+/* 🌟 지뢰찾기 게임 그리드 스타일 */
+.minesweeper-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; max-width: 250px; margin-left: auto; margin-right: auto; }
+.mine-cell { aspect-ratio: 1; background: #f0f4f8; border: 1px solid #ddd; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; transition: 0.1s; }
+.mine-cell:active { background: #e0e6ed; }
+.mine-cell.revealed { background: #fff; border-color: #bbb; cursor: default; }
 
 .chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; display: flex; flex-direction: column; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
