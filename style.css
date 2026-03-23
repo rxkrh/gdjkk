@@ -24,7 +24,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .setting-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
 
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 10px; min-height: 120px; }
-.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 85%; font-size: 14px; }
+/* 🌟 말풍선 부드러운 색상 전환(transition) 추가 */
+.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 85%; font-size: 14px; transition: background-color 0.3s; }
 .koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; }
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
@@ -42,9 +43,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; }
 
-/* 🌟 투두리스트 폴더 UI */
-.folder-header { display: flex; gap: 6px; margin-bottom: 10px; }
-.folder-select { flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; }
+.folder-header { display: flex; gap: 6px; margin-bottom: 5px; }
+.folder-select { flex-grow: 1; padding: 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 13px; outline: none; }
 
 .dday-one-line { display: flex; gap: 5px; align-items: center; width: 100%; margin: 0; }
 .dday-compact-select { flex: 0 0 15%; min-width: 45px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 8px; font-size: 13px; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
@@ -83,7 +83,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .schedule-time-badge { background: #0984e3; color: white; padding: 3px 6px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px; }
 .schedule-time-badge.allday { background: #ff9f43; }
 
-/* 🌟 지뢰찾기 게임 그리드 스타일 */
 .minesweeper-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; max-width: 250px; margin-left: auto; margin-right: auto; }
 .mine-cell { aspect-ratio: 1; background: #f0f4f8; border: 1px solid #ddd; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; cursor: pointer; user-select: none; transition: 0.1s; }
 .mine-cell:active { background: #e0e6ed; }
