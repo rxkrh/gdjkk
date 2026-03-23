@@ -156,7 +156,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 피드백 
+// 🔐 4. 로그인, 프로필, 피드백
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -171,10 +171,9 @@ auth.onAuthStateChanged((user) => {
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
                 const data = doc.data();
-                if (data.todoData) { todoData = data.todoData; } 
-                else if (data.todos) { todoData = { "기본": data.todos }; }
+                if (data.todoData) { todoData = data.todoData; } else if (data.todos) { todoData = { "기본": data.todos }; }
                 if (data.ddays) { ddays = data.ddays; renderDdays(); }
-                if (data.schedules) { schedules = data.schedules; }
+                if (data.schedules) { schedules = data.schedules; renderCalendar(); }
                 if (data.attendance) { attendance = data.attendance; checkAttendanceUI(); }
                 
                 renderTodoFolders(); renderCalendar(); 
@@ -274,7 +273,6 @@ function loadMessages() {
                 if (!isMe) { 
                     const sDiv = document.createElement('div'); sDiv.className = 'chat-sender'; 
                     let devIcon = isDeveloper ? `<img src="icon-wrench.png" class="ui-icon" style="width:12px; height:12px; margin-right:2px; filter: grayscale(100%);">` : '';
-                    
                     if (data.megaphone) { sDiv.innerHTML = `${devIcon} <span style="color:#FFFF00; text-shadow: 1px 1px 0px rgba(0,0,0,0.3); font-weight:bold;">${data.sender}</span>`; } 
                     else if (isDeveloper) { sDiv.innerHTML = `${devIcon} <span style="color:#e74c3c; font-weight:bold;">${data.sender}</span>`; } 
                     else { sDiv.innerHTML = `${devIcon} ${data.sender}`; }
@@ -298,7 +296,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두(🌟터치모이 기능 추가), 디데이, 날씨
+// 🏆 6. 퀘스트, 투두, 디데이
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString();
@@ -315,7 +313,6 @@ document.getElementById('attendance-btn')?.addEventListener('click', () => { con
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; if(kokoChar) { kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } } }
 checkAttendanceUI(); 
 
-// 🌟 투두리스트 폴더 로직
 function renderTodoFolders() {
     const sel = document.getElementById('todo-folder-select'); if(!sel) return;
     sel.innerHTML = '';
@@ -336,14 +333,12 @@ document.getElementById('add-folder-btn')?.addEventListener('click', () => {
         else { alert("이미 있는 폴더 이름입니다!"); }
     }
 });
-
 document.getElementById('del-folder-btn')?.addEventListener('click', () => {
     if(currentTodoFolder === "기본") { alert("'기본' 폴더는 지울 수 없어요! 🐣"); return; }
     if(todoData[currentTodoFolder].length > 0) { alert("폴더 안에 할 일이 남아있어요! 먼저 다 비워주세요."); return; }
     if(confirm(`"${currentTodoFolder}" 폴더를 정말 지울까요?`)) { delete todoData[currentTodoFolder]; currentTodoFolder = "기본"; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); }
 });
 
-// 🌟 꼬꼬 모이주기 인터랙션 로직
 function renderTodos() { 
     const list = document.getElementById('todo-list'); if(!list) return;
     list.innerHTML = ''; let anyChecked = false; 
@@ -354,7 +349,6 @@ function renderTodos() {
         if (t.checked) anyChecked = true; 
     }); 
     
-    // 할일 체크 여부에 따라 꼬꼬 말풍선 노란색으로 변경!
     if(kokoSpeech) {
         if (anyChecked) {
             kokoSpeech.style.backgroundColor = "#ffd070";
@@ -364,21 +358,13 @@ function renderTodos() {
             if(kokoSpeech.dataset.feedMode === "true") {
                 kokoSpeech.style.backgroundColor = "white";
                 kokoSpeech.dataset.feedMode = "false";
-                const h = new Date().getHours();
-                kokoSpeech.innerHTML = h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>");
+                updateKokoAppearance(); // 모이주기 해제 시 날씨/시간에 맞는 멘트로 원상복구
             }
         }
     }
 }
 
-document.getElementById('add-todo-btn')?.addEventListener('click', () => { 
-    const input = document.getElementById('new-todo-input'); if(!input) return; 
-    const txt = input.value.trim(); if (!txt) return; 
-    if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = [];
-    todoData[currentTodoFolder].push({ text: txt, checked: false }); 
-    localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
-    input.value=''; renderTodos(); syncToCloud(); 
-});
+document.getElementById('add-todo-btn')?.addEventListener('click', () => { const input = document.getElementById('new-todo-input'); if(!input) return; const txt = input.value.trim(); if (!txt) return; if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = []; todoData[currentTodoFolder].push({ text: txt, checked: false }); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); input.value=''; renderTodos(); syncToCloud(); });
 window.toggleTodo = i => { todoData[currentTodoFolder][i].checked = !todoData[currentTodoFolder][i].checked; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); if(todoData[currentTodoFolder][i].checked) completeQuest(3); };
 window.deleteTodo = i => { todoData[currentTodoFolder].splice(i, 1); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); };
 
@@ -407,10 +393,8 @@ function renderDdays() {
     const list = document.getElementById('dday-list-display'); const banner = document.getElementById('main-dday-banner');
     if(!list || !banner) return; list.innerHTML = ''; 
     if (ddays.length === 0) { banner.innerHTML = `<img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!`; return; } 
-    
     ddays = ddays.map(d => ({...d, pinned: d.pinned || false, isMain: d.isMain || false, icon: d.icon || ''}));
     const today = new Date(); today.setHours(0,0,0,0); 
-    
     let calc = ddays.map((d, i) => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, originalIndex: i, diff: Math.ceil((t-today)/86400000) }; }); 
     calc.sort((a, b) => { if (a.pinned === b.pinned) return a.diff - b.diff; return a.pinned ? -1 : 1; });
 
@@ -454,53 +438,121 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 document.addEventListener('click', (e) => { const menu = document.getElementById('dday-dropdown'); if (menu && menu.style.display === 'flex' && !e.target.classList.contains('more-btn')) menu.style.display = 'none'; });
-
 renderDdays();
 
-function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.getCurrentPosition(p=>{ fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ const wInfo = document.querySelector('.weather-info'); if(wInfo) wInfo.innerHTML=`<img src="${d.current_weather.weathercode<=1?'icon-sun.png':(d.current_weather.weathercode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; }); }); } }
-getKokoWeather();
+// ==========================================
+// 🌦️ 7. 날씨 감지 및 꼬꼬 변신 로직 (NEW ✨)
+// ==========================================
+let currentWeatherCode = -1;
+
+function getKokoWeather() { 
+    if(navigator.geolocation) { 
+        navigator.geolocation.getCurrentPosition(p => { 
+            fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`)
+            .then(r=>r.json())
+            .then(d=>{ 
+                const wInfo = document.querySelector('.weather-info'); 
+                currentWeatherCode = d.current_weather.weathercode;
+                if(wInfo) wInfo.innerHTML=`<img src="${currentWeatherCode<=1?'icon-sun.png':(currentWeatherCode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; 
+                updateKokoAppearance(); // 날씨 가져온 후 외형 업데이트
+            }); 
+        }, () => { updateKokoAppearance(); }); // 위치 차단 시에도 시간 기반 외형 업데이트
+    } else {
+        updateKokoAppearance(); 
+    }
+}
+
+// 시간에 따른 기본 멘트 반환 함수
+function getDefaultSpeech() {
+    const h = new Date().getHours(); 
+    return h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>");
+}
+
+// 🌟 핵심: 꼬꼬 이미지 & 기본 멘트 업데이트
+function updateKokoAppearance() {
+    const hour = new Date().getHours();
+    const kokoImg = document.getElementById('koko');
+    if(!kokoImg) return;
+
+    // 밤 10시 ~ 아침 6시: 수면 모드 (1순위)
+    if (hour >= 22 || hour < 6) {
+        kokoImg.src = "koko-sleep.png";
+        if(kokoSpeech && kokoSpeech.dataset.feedMode !== "true") {
+            kokoSpeech.innerHTML = "쿨쿨... 꼬꼬는 꿈나라 여행 중... 💤";
+        }
+        return;
+    }
+
+    // 날씨에 따른 변화 (2순위)
+    if (currentWeatherCode !== -1) {
+        if (currentWeatherCode <= 1) kokoImg.src = "koko-cool.png"; // 맑음 (선글라스)
+        else if (currentWeatherCode >= 51 && currentWeatherCode <= 67 || currentWeatherCode >= 80) kokoImg.src = "koko-umbrella.png"; // 비
+        else if (currentWeatherCode >= 71 && currentWeatherCode <= 77) kokoImg.src = "koko-snow.png"; // 눈 (목도리/눈사람)
+        else kokoImg.src = "koko.png"; // 흐림 등 기본
+    } else {
+        kokoImg.src = "koko.png"; // 기본
+    }
+
+    // 낮 시간대 기본 멘트 적용 (모이주기 상태가 아닐 때만)
+    if(kokoSpeech && kokoSpeech.dataset.feedMode !== "true") {
+        kokoSpeech.innerHTML = getDefaultSpeech();
+    }
+}
 
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('fortune-btn')?.addEventListener('click', () => { 
-    // 모이주기 모드일 때는 운세 버튼도 막기 (선택사항이지만 자연스럽게)
     if(kokoSpeech && kokoSpeech.dataset.feedMode === "true") return; 
     if(kokoSpeech) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; 
     if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } 
 });
 
-// 🌟 대망의 꼬꼬 클릭 로직 (모이주기 상호작용 적용)
+// 🌟 대망의 꼬꼬 클릭 로직 (수면 모드 및 상호작용 적용)
 kokoChar?.addEventListener('click', () => { 
+    // 1. 모이주기 모드일 때
     if (kokoSpeech && kokoSpeech.dataset.feedMode === "true") {
-        // 모이 먹기 액션 발동!
         kokoSpeech.style.backgroundColor = "white";
         kokoSpeech.innerHTML = "냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>";
         kokoSpeech.dataset.feedMode = "false";
         
-        // 체크된 할 일 삭제
         if (todoData[currentTodoFolder]) {
             todoData[currentTodoFolder] = todoData[currentTodoFolder].filter(t => !t.checked);
             localStorage.setItem('koko_todo_data', JSON.stringify(todoData));
             syncToCloud();
         }
-        
         if(kokoChar) { kokoChar.style.transform="scale(1.2)"; setTimeout(()=>kokoChar.style.transform="scale(1)", 300); }
         
         setTimeout(() => {
             renderTodos();
-            if(kokoSpeech) kokoSpeech.innerHTML = "다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";
+            updateKokoAppearance(); // 먹고 나면 원래 상태(수면/날씨)로 복귀
         }, 2000);
-        return; // 모이주기가 발동되면 아래 기본 클릭 액션은 무시함
+        return; 
     }
 
-    // 기본 클릭 액션 (쓰다듬기)
+    // 2. 일반 터치 (퀘스트 완료)
     completeQuest(1); 
-    const h=new Date().getHours(); 
-    if(kokoSpeech) kokoSpeech.innerHTML= h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); 
-    if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } 
+    const h = new Date().getHours(); 
+    
+    // 밤에 터치했을 때 (잠꼬대 반응)
+    if (h >= 22 || h < 6) {
+        if(kokoSpeech) kokoSpeech.innerHTML = "음냐... 주인님도 얼른 주무세요... 💤";
+        kokoChar.src = "koko.png"; // 터치하면 깜짝 놀라서 기본 이미지(눈 뜸)로 변경
+        
+        if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } 
+        
+        // 2초 뒤 다시 쿨쿨 잠듦
+        setTimeout(() => { 
+            updateKokoAppearance(); 
+        }, 2000); 
+    } 
+    // 낮에 터치했을 때
+    else {
+        if(kokoSpeech) kokoSpeech.innerHTML = getDefaultSpeech();
+        if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); } 
+    }
 });
 
 // ==========================================
-// 🎮 7. 꼬꼬 게임 (달걀 지뢰찾기) 로직
+// 🎮 8. 꼬꼬 게임 (달걀 지뢰찾기) 로직
 // ==========================================
 document.getElementById('open-game-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
 document.getElementById('close-game-btn')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'none'; });
@@ -533,5 +585,10 @@ function revealMine(r, c) {
     }
 }
 
-console.log("🛠️ 껌딱지 꼬꼬 V3.0 로드 완료! (터치 모이주기 인터랙션 적용, 팝업버튼 오버플로우 수정)");
+// 🌟 초기 실행
+getKokoWeather(); 
+updateKokoAppearance(); // 날씨 로딩 전 시간 기반으로 먼저 세팅
+renderCalendar();
+
+console.log("🌟 껌딱지 꼬꼬 V3.1 로드 완료! (날씨/시간별 꼬꼬 변신 모드 탑재!)");
 // --- 파일 끝 ---

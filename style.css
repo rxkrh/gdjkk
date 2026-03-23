@@ -23,9 +23,14 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .menu-section h3 { margin-top: 0; font-size: 15px; color: #555; display: flex; align-items: center; }
 .setting-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
 
-.koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 10px; min-height: 120px; }
-/* 🌟 말풍선 부드러운 색상 전환(transition) 추가 */
-.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 85%; font-size: 14px; transition: background-color 0.3s; }
+/* 🌟 꼬꼬 무대: 상단 여백(padding-top)을 추가해 상단바와 거리 확보 */
+.koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; }
+
+/* 🌟 말풍선: 최대 높이(max-height) 75px 제한 및 내부 스크롤(overflow-y) 적용 */
+.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; text-align: center; font-weight: bold; color: #333; max-width: 85%; font-size: 14px; transition: background-color 0.3s; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+/* 스크롤바 숨기기 (웹킷 기반 브라우저용) */
+.speech-bubble::-webkit-scrollbar { display: none; }
+
 .koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; }
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
