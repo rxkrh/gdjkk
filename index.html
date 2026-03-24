@@ -96,6 +96,7 @@
                 <button class="tab-btn active" data-target="tab-todo"><img src="icon-todo.png" class="ui-icon"> 할 일</button>
                 <button class="tab-btn" data-target="tab-schedule"><img src="icon-schedule.png" class="ui-icon"> 스케줄</button>
                 <button class="tab-btn" data-target="tab-dday"><img src="icon-dday.png" class="ui-icon"> 디데이</button>
+                <button class="tab-btn" data-target="tab-vocab"><img src="icon-book.png" class="ui-icon"> 단어장</button>
                 <button class="tab-btn" data-target="tab-quest"><img src="icon-sparkle.png" class="ui-icon"> 퀘스트</button>
             </div>
 
@@ -145,7 +146,6 @@
                     <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
                 </div>
-                
                 <div class="sticky-bottom-input">
                     <div class="dday-one-line">
                         <select id="dday-icon-select" class="dday-compact-select">
@@ -163,6 +163,31 @@
                             <input type="date" id="dday-date-input" title="날짜 선택">
                         </div>
                         <button id="save-dday-btn" class="action-btn dday-save-btn">저장</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-vocab" class="tab-content flex-column-tab">
+                <div class="folder-header">
+                    <select id="vocab-folder-select" class="folder-select"></select>
+                    <button id="add-vocab-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;">➕ 폴더</button>
+                    <button id="del-vocab-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b;">🗑️</button>
+                </div>
+                
+                <div style="display:flex; justify-content:flex-end; margin-bottom:5px;">
+                    <label class="switch-label">
+                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer;"> 🙈 뜻 숨기기 (터치해서 보기)
+                    </label>
+                </div>
+
+                <div class="scroll-wrapper">
+                    <ul id="vocab-list" class="item-list"></ul>
+                </div>
+                <div class="sticky-bottom-input">
+                    <div class="dday-one-line">
+                        <input type="text" id="new-vocab-word" placeholder="단어 (예: Apple)" style="flex:1;">
+                        <input type="text" id="new-vocab-mean" placeholder="뜻 (예: 사과)" style="flex:1;">
+                        <button id="add-vocab-btn" class="action-btn dday-save-btn" style="background-color:#9b59b6;">추가</button>
                     </div>
                 </div>
             </div>
@@ -246,6 +271,11 @@
     <div id="dday-dropdown" class="dday-dropdown">
         <button id="dday-main-btn">👑 대표 지정</button>
         <button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button>
+    </div>
+
+    <div id="vocab-dropdown" class="dday-dropdown">
+        <button id="vocab-edit-btn">✏️ 수정</button>
+        <button id="vocab-del-btn" style="color:#ff6b6b;">❌ 삭제</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
