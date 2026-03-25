@@ -58,7 +58,6 @@ function loadCustomFonts() {
 }
 loadCustomFonts();
 
-// 🌟 상단 퀵 메뉴 관리 로직
 const shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
@@ -75,7 +74,6 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
 });
 document.getElementById('icon-game')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
 
-// 🌟 탭 메뉴 편집 로직
 const defaultTabs = [
     { id: 'tab-todo', label: '할 일', icon: 'icon-todo.png', enabled: true },
     { id: 'tab-schedule', label: '스케줄', icon: 'icon-schedule.png', enabled: true },
@@ -136,43 +134,19 @@ function renderTabButtons() {
 
 document.getElementById('tab-edit-list')?.addEventListener('change', (e) => {
     if(e.target.classList.contains('tab-enable-chk')) {
-        const index = e.target.dataset.index;
-        tabConfig[index].enabled = e.target.checked;
-        localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig));
-        renderTabButtons();
+        const index = e.target.dataset.index; tabConfig[index].enabled = e.target.checked; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabButtons();
     }
 });
 
 function bindTabDragEvents() {
-    const list = document.getElementById('tab-edit-list');
-    let dragEl = null;
-
-    list.addEventListener('dragstart', e => {
-        dragEl = e.target.closest('li');
-        e.dataTransfer.effectAllowed = 'move';
-        setTimeout(() => dragEl.style.opacity = '0.5', 0);
-    });
-    list.addEventListener('dragover', e => {
-        e.preventDefault();
-        const target = e.target.closest('li');
-        if(target && target !== dragEl) {
-            const rect = target.getBoundingClientRect();
-            const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
-            list.insertBefore(dragEl, next && target.nextSibling || target);
-        }
-    });
-    list.addEventListener('dragend', e => {
-        dragEl.style.opacity = '1';
-        const newConfig = [];
-        list.querySelectorAll('li').forEach(li => { newConfig.push(tabConfig[+li.dataset.index]); });
-        tabConfig = newConfig;
-        localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig));
-        renderTabEditor(); renderTabButtons();
-    });
+    const list = document.getElementById('tab-edit-list'); let dragEl = null;
+    list.addEventListener('dragstart', e => { dragEl = e.target.closest('li'); e.dataTransfer.effectAllowed = 'move'; setTimeout(() => dragEl.style.opacity = '0.5', 0); });
+    list.addEventListener('dragover', e => { e.preventDefault(); const target = e.target.closest('li'); if(target && target !== dragEl) { const rect = target.getBoundingClientRect(); const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5; list.insertBefore(dragEl, next && target.nextSibling || target); } });
+    list.addEventListener('dragend', e => { dragEl.style.opacity = '1'; const newConfig = []; list.querySelectorAll('li').forEach(li => { newConfig.push(tabConfig[+li.dataset.index]); }); tabConfig = newConfig; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabEditor(); renderTabButtons(); });
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직
+// 📱 2. UI 동작 로직 (🌟 슬라이딩 & 이미지 회전)
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -183,17 +157,16 @@ document.getElementById('side-menu-overlay')?.addEventListener('click', closeMen
 document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     const container = document.getElementById('main-tab-container');
     const zone = document.getElementById('koko-zone-main');
-    const icon = document.getElementById('tab-drag-icon');
-    if(!container || !zone || !icon) return;
     
+    if(!container || !zone) return;
+    
+    // 클래스만 토글해주면, CSS가 회전(transform: rotate) 애니메이션과 슬라이딩을 모두 알아서 처리합니다!
     container.classList.toggle('expanded');
-    zone.classList.toggle('compact');
+    zone.classList.toggle('compact'); 
     
     if(container.classList.contains('expanded')) {
-        icon.src = 'icon-down.png';
         if(kokoChar) kokoChar.style.animation = 'none'; 
     } else {
-        icon.src = 'icon-up.png';
         if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; 
     }
 });
@@ -631,6 +604,7 @@ function revealMine(r, c) {
     }
 }
 
+// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V3.5 로드 완료! (말풍선 고정 및 탭 비율, 확장 애니메이션 버그 수정 완료!)");
+console.log("🌟 껌딱지 꼬꼬 V3.6 로드 완료! (탭 너비 완전 고정, 말풍선 원상복구 및 오버랩 최적화)");
 // --- 파일 끝 ---
