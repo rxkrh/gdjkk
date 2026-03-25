@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 (단어장 데이터 추가)
+// 🌟 1. 전역 변수 선언 
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -25,8 +25,6 @@ let currentChatMode = 'global'; let currentRoomCode = ''; let chatUnsubscribe = 
 
 let todoData = JSON.parse(localStorage.getItem('koko_todo_data')) || { "기본": [] };
 let currentTodoFolder = "기본";
-
-// 🌟 단어장 변수
 let vocabData = JSON.parse(localStorage.getItem('koko_vocab_data')) || { "기본": [] };
 let currentVocabFolder = "기본";
 let isVocabBlindMode = false;
@@ -60,8 +58,25 @@ function loadCustomFonts() {
 }
 loadCustomFonts();
 
+// 🌟 상단 퀵 메뉴(바로가기) 관리 로직
+const shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
+function applyShortcuts() {
+    document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
+    document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
+    document.getElementById('icon-game').style.display = shortcuts.game ? 'flex' : 'none';
+    document.querySelectorAll('.chk-shortcut').forEach(chk => { chk.checked = shortcuts[chk.dataset.key]; });
+}
+applyShortcuts();
+document.querySelectorAll('.chk-shortcut').forEach(chk => {
+    chk.addEventListener('change', (e) => {
+        shortcuts[e.target.dataset.key] = e.target.checked;
+        localStorage.setItem('koko_shortcuts', JSON.stringify(shortcuts)); applyShortcuts();
+    });
+});
+document.getElementById('icon-game')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
+
 // ==========================================
-// 📱 2. UI 동작 로직 (🌟 꼬꼬 스케줄 브리핑 추가)
+// 📱 2. UI 동작 로직 (🌟 탭 드래그 패널 확장 포함)
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -78,33 +93,39 @@ tabBtns.forEach(btn => {
         btn.classList.add('active');
         const targetId = btn.dataset.target;
         if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
-        
-        // 🌟 탭 변경 시 이벤트 분기
-        if(targetId === 'tab-schedule') {
-            renderCalendar(); 
-            kokoScheduleCheck(); // 꼬꼬가 오늘 일정 브리핑
-        } else if (targetId === 'tab-vocab') {
-            renderVocabFolders(); // 단어장 로드
-            if(kokoSpeech) kokoSpeech.innerHTML = "단어 암기 화이팅! 📖 <img src='icon-sparkle.png' class='ui-icon'>";
-        } else {
-            updateKokoAppearance(); // 다른 탭으로 가면 기본 날씨 멘트로 복귀
-        }
+        if(targetId === 'tab-schedule') { renderCalendar(); kokoScheduleCheck(); } 
+        else if (targetId === 'tab-vocab') { renderVocabFolders(); if(kokoSpeech) kokoSpeech.innerHTML = "단어 암기 화이팅! 📖 <img src='icon-sparkle.png' class='ui-icon'>"; } 
+        else { updateKokoAppearance(); }
     });
 });
 
-// 🌟 꼬꼬 스케줄 브리핑 함수
+// 🌟 패널 슬라이딩(확장) 이벤트
+document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
+    const container = document.getElementById('main-tab-container');
+    const zone = document.getElementById('koko-zone-main');
+    const icon = document.getElementById('tab-drag-icon');
+    
+    if(!container || !zone || !icon) return;
+    
+    container.classList.toggle('expanded');
+    zone.classList.toggle('compact');
+    
+    if(container.classList.contains('expanded')) {
+        icon.src = 'icon-down.png';
+        if(kokoChar) kokoChar.style.animation = 'none'; // 확장시 붕붕 애니메이션 해제
+    } else {
+        icon.src = 'icon-up.png';
+        if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; // 접으면 부활
+    }
+});
+
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
     if(kokoSpeech) {
-        kokoSpeech.style.backgroundColor = "white"; // 기본색
-        kokoSpeech.dataset.feedMode = "false";
-        if(todaysSchedules.length === 0) {
-            kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>";
-        } else {
-            // 첫 번째 일정 제목을 알려줌
-            kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`;
-        }
+        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.dataset.feedMode = "false";
+        if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
+        else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
     }
     if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); }
 }
@@ -164,7 +185,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 설정 (단어장 동기화 포함)
+// 🔐 4. 로그인, 프로필, 설정 
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -179,7 +200,7 @@ auth.onAuthStateChanged((user) => {
             if (doc.exists) {
                 const data = doc.data();
                 if (data.todoData) { todoData = data.todoData; } 
-                if (data.vocabData) { vocabData = data.vocabData; } // 단어장 데이터
+                if (data.vocabData) { vocabData = data.vocabData; } 
                 if (data.ddays) { ddays = data.ddays; renderDdays(); }
                 if (data.schedules) { schedules = data.schedules; }
                 if (data.attendance) { attendance = data.attendance; checkAttendanceUI(); }
@@ -215,6 +236,11 @@ if (localStorage.getItem('koko_font') && fontSelect) { document.body.style.fontF
 fontSelect?.addEventListener('change', e => { document.body.style.fontFamily = e.target.value; localStorage.setItem('koko_font', e.target.value); });
 if (localStorage.getItem('koko_font_size') && sizeSelect) { document.body.className = localStorage.getItem('koko_font_size'); sizeSelect.value = localStorage.getItem('koko_font_size'); }
 sizeSelect?.addEventListener('change', e => { document.body.className = e.target.value; localStorage.setItem('koko_font_size', e.target.value); if(kokoSpeech) kokoSpeech.innerHTML = "글씨 크기 조절 완료! <img src='icon-sparkle.png' class='ui-icon'>"; });
+
+// 🌟 채팅창 전용 글씨 크기 로직
+const chatFontSelect = document.getElementById('chat-font-size-select'); const chatBox = document.getElementById('chat-box');
+if (localStorage.getItem('koko_chat_font') && chatFontSelect) { chatFontSelect.value = localStorage.getItem('koko_chat_font'); if(chatBox) chatBox.style.fontSize = chatFontSelect.value; }
+chatFontSelect?.addEventListener('change', e => { localStorage.setItem('koko_chat_font', e.target.value); if(chatBox) chatBox.style.fontSize = e.target.value; });
 
 document.getElementById('add-custom-font-btn')?.addEventListener('click', () => {
     const url = prompt("🔗 구글 폰트(Google Fonts) URL을 입력하세요.\n(예: https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap)"); if (!url) return;
@@ -293,7 +319,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장 (🌟 1줄 요약)
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -307,7 +333,6 @@ document.getElementById('attendance-btn')?.addEventListener('click', () => { con
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; if(kokoChar) { kokoChar.style.transform="scale(1.1)"; setTimeout(()=>kokoChar.style.transform="scale(1)",300); } } }
 checkAttendanceUI(); 
 
-// 투두 폴더 로직
 function renderTodoFolders() {
     const sel = document.getElementById('todo-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(todoData).forEach(folder => { let opt = document.createElement('option'); opt.value = folder; opt.text = `📁 ${folder}`; if(folder === currentTodoFolder) opt.selected = true; sel.appendChild(opt); }); renderTodos();
@@ -320,7 +345,7 @@ function renderTodos() {
     const list = document.getElementById('todo-list'); if(!list) return; list.innerHTML = ''; let anyChecked = false; 
     let currentList = todoData[currentTodoFolder] || [];
     currentList.forEach((t, i) => { 
-        list.innerHTML += `<li><label style="cursor:pointer; display:flex; align-items:center; gap:8px;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="more-btn todo-more-btn" onclick="openTodoMenu(${i}, event)">⋮</button></li>`; 
+        list.innerHTML += `<li><label style="cursor:pointer; display:flex; align-items:center; gap:8px; width:100%;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="flex-grow:1; ${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="more-btn todo-more-btn" onclick="openTodoMenu(${i}, event)">⋮</button></li>`; 
         if (t.checked) anyChecked = true; 
     }); 
     if(kokoSpeech) {
@@ -395,7 +420,7 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
-// 🌟 단어장 (Vocab) 로직 (NEW!)
+// 🌟 단어장(Vocab) 1줄 개편 (뜻 먼저)
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -429,12 +454,13 @@ function renderVocabs() {
             ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` 
             : `<span class="vocab-meaning">${v.mean}</span>`;
 
+        // 🌟 1줄 정렬: [체크박스] - [뜻(블라인드)] - [단어] - [메뉴]
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1;">
-                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="margin:0; width:1.2em; height:1.2em; flex-shrink:0;">
-                <div style="display:flex; flex-direction:column; gap:4px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; overflow:hidden;">
+                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
+                <div style="display:flex; align-items:center; gap:6px; flex-grow:1; overflow:hidden; white-space:nowrap;">
+                    <span style="flex-shrink:0;">${meaningHtml}</span>
                     <span class="vocab-word">${v.word}</span>
-                    <div>${meaningHtml}</div>
                 </div>
             </div>
             <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
@@ -464,7 +490,7 @@ document.getElementById('vocab-edit-btn')?.addEventListener('click', () => {
 });
 document.getElementById('vocab-del-btn')?.addEventListener('click', () => { vocabData[currentVocabFolder].splice(currentVocabIndex, 1); localStorage.setItem('koko_vocab_data', JSON.stringify(vocabData)); renderVocabs(); syncToCloud(); document.getElementById('vocab-dropdown').style.display = 'none'; });
 
-// 화면 빈곳 누르면 팝업창 닫기 (단어장 포함)
+// 화면 빈곳 누르면 팝업창 닫기
 document.addEventListener('click', (e) => { 
     const dmenu = document.getElementById('dday-dropdown'); if (dmenu && dmenu.style.display === 'flex' && !e.target.classList.contains('more-btn')) dmenu.style.display = 'none'; 
     const tmenu = document.getElementById('todo-dropdown'); if (tmenu && tmenu.style.display === 'flex' && !e.target.classList.contains('todo-more-btn')) tmenu.style.display = 'none'; 
@@ -529,11 +555,11 @@ function revealMine(r, c) {
         for(let ir=0; ir<MINE_SIZE; ir++){ for(let ic=0; ic<MINE_SIZE; ic++){ if(mineBoard[ir][ic]==='M' && !mineRevealed[ir][ic]) { let c = document.getElementById(`mine-${ir}-${ic}`); c.innerText = '💥'; c.classList.add('revealed'); } } }
     } else {
         safeCellsCount--; cell.innerText = mineBoard[r][c] > 0 ? mineBoard[r][c] : '';
-        if(mineBoard[r][c] === 0) { for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nr<MINE_SIZE && nc>=0 && nc<MINE_SIZE) revealMine(nr,nc); } } }
+        if(mineBoard[r][c] === 0) { for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nc>=0 && nr<MINE_SIZE && nc<MINE_SIZE) revealMine(nr,nc); } } }
         if(safeCellsCount === 0) { mineGameOver = true; document.getElementById('game-status').innerText = "대성공! 맛있는 달걀을 다 찾았어요! 🐣✨"; document.getElementById('game-status').style.color = "#2ecc71"; if(kokoSpeech) kokoSpeech.innerHTML = "와! 지뢰찾기 고수시네요! <img src='icon-party.png' class='ui-icon'>"; }
     }
 }
 
 getKokoWeather(); updateKokoAppearance(); renderCalendar();
-console.log("🌟 껌딱지 꼬꼬 V3.2 로드 완료! (꼬꼬 스케줄 브리핑 & 플래시카드 단어장 시스템 구축 완료!)");
+console.log("🌟 껌딱지 꼬꼬 V3.3 로드 완료! (슬라이딩 확장 패널 & 채팅 크기 & 단어장 1줄 개편 완료)");
 // --- 파일 끝 ---
