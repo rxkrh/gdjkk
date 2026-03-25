@@ -58,6 +58,7 @@ function loadCustomFonts() {
 }
 loadCustomFonts();
 
+// 상단 퀵 메뉴 관리 로직
 const shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
@@ -74,6 +75,7 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
 });
 document.getElementById('icon-game')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
 
+// 탭 메뉴 편집 로직
 const defaultTabs = [
     { id: 'tab-todo', label: '할 일', icon: 'icon-todo.png', enabled: true },
     { id: 'tab-schedule', label: '스케줄', icon: 'icon-schedule.png', enabled: true },
@@ -89,13 +91,7 @@ function renderTabEditor() {
     tabConfig.forEach((tab, index) => {
         const li = document.createElement('li');
         li.className = 'tab-edit-item'; li.dataset.index = index; li.draggable = true;
-        li.innerHTML = `
-            <span style="color:#aaa; cursor:grab; margin-right:5px;">🟰</span>
-            <label style="display:flex; align-items:center; gap:5px; flex-grow:1; cursor:pointer;">
-                <input type="checkbox" class="tab-enable-chk" data-index="${index}" ${tab.enabled ? 'checked' : ''}>
-                <img src="${tab.icon}" class="ui-icon" style="width:16px;height:16px;"> ${tab.label}
-            </label>
-        `;
+        li.innerHTML = `<span style="color:#aaa; cursor:grab; margin-right:5px;">🟰</span><label style="display:flex; align-items:center; gap:5px; flex-grow:1; cursor:pointer;"><input type="checkbox" class="tab-enable-chk" data-index="${index}" ${tab.enabled ? 'checked' : ''}><img src="${tab.icon}" class="ui-icon" style="width:16px;height:16px;"> ${tab.label}</label>`;
         list.appendChild(li);
     });
     bindTabDragEvents();
@@ -133,9 +129,7 @@ function renderTabButtons() {
 }
 
 document.getElementById('tab-edit-list')?.addEventListener('change', (e) => {
-    if(e.target.classList.contains('tab-enable-chk')) {
-        const index = e.target.dataset.index; tabConfig[index].enabled = e.target.checked; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabButtons();
-    }
+    if(e.target.classList.contains('tab-enable-chk')) { const index = e.target.dataset.index; tabConfig[index].enabled = e.target.checked; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabButtons(); }
 });
 
 function bindTabDragEvents() {
@@ -146,7 +140,7 @@ function bindTabDragEvents() {
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직 (🌟 슬라이딩 & 이미지 회전)
+// 📱 2. UI 동작 로직
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -155,20 +149,12 @@ document.getElementById('menu-close-btn')?.addEventListener('click', closeMenu);
 document.getElementById('side-menu-overlay')?.addEventListener('click', closeMenu);
 
 document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
-    const container = document.getElementById('main-tab-container');
-    const zone = document.getElementById('koko-zone-main');
-    
+    const container = document.getElementById('main-tab-container'); const zone = document.getElementById('koko-zone-main');
     if(!container || !zone) return;
+    container.classList.toggle('expanded'); zone.classList.toggle('compact'); 
     
-    // 클래스만 토글해주면, CSS가 회전(transform: rotate) 애니메이션과 슬라이딩을 모두 알아서 처리합니다!
-    container.classList.toggle('expanded');
-    zone.classList.toggle('compact'); 
-    
-    if(container.classList.contains('expanded')) {
-        if(kokoChar) kokoChar.style.animation = 'none'; 
-    } else {
-        if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; 
-    }
+    if(container.classList.contains('expanded')) { if(kokoChar) kokoChar.style.animation = 'none'; } 
+    else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
 function kokoScheduleCheck() {
@@ -179,6 +165,7 @@ function kokoScheduleCheck() {
         if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
         else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
     }
+    // 🌟 CSS에서 transition이 분리되어, 다시 3.5버전처럼 즉각적으로 쫀득하게 점프합니다!
     if(kokoChar) { kokoChar.style.transform="translateY(-20px)"; setTimeout(()=>kokoChar.style.transform="translateY(0)",200); }
 }
 
@@ -370,7 +357,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장 (🌟 순서 및 정렬 개편)
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -471,6 +458,7 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
+// 🌟 단어장 1줄 및 우측 정렬 개편 로직
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -500,15 +488,19 @@ function renderVocabs() {
         let li = document.createElement('li');
         li.className = `vocab-item ${v.memorized ? 'memorized' : ''}`;
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
+        
+        // 🌟 1줄 구조 [체크박스] - [단어] ----- 여백 ----- [뜻] - [메뉴]
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; overflow:hidden;">
-                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
-                <div style="display:flex; align-items:center; gap:6px; flex-grow:1; overflow:hidden; white-space:nowrap;">
-                    <span style="flex-shrink:0;">${meaningHtml}</span>
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-grow:1; overflow:hidden; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
+                    <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0;">
                     <span class="vocab-word">${v.word}</span>
                 </div>
+                <div style="flex-shrink:0; text-align:right;">
+                    ${meaningHtml}
+                </div>
             </div>
-            <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
+            <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)" style="margin-left:5px;">⋮</button>
         `;
         list.appendChild(li);
     }); 
@@ -604,7 +596,6 @@ function revealMine(r, c) {
     }
 }
 
-// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V3.6 로드 완료! (탭 너비 완전 고정, 말풍선 원상복구 및 오버랩 최적화)");
+console.log("🌟 껌딱지 꼬꼬 V3.7 로드 완료! (탭 버튼 고정, 황금비율 적용, 단어장 정렬 개편 완료)");
 // --- 파일 끝 ---

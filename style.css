@@ -10,7 +10,6 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
-/* 🌟 채팅 박스(50px)와 딱 떨어지도록 padding-bottom을 50px로 일치! */
 .app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
@@ -40,11 +39,11 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .tab-edit-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; margin-bottom: 5px; cursor: grab; font-size: 0.85em; font-weight: bold; color: #555; transition: background 0.2s; }
 .tab-edit-item:active { cursor: grabbing; background: #f0f4f8; }
 
-/* 🌟 꼬꼬 무대 (애니메이션 곡선 추가하여 더 부드럽게) */
+/* 🌟 꼬꼬 무대 (애니메이션 최적화) */
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-/* 🌟 말풍선 원본 복구 및 무조건 중앙 정렬 고정 */
+/* 🌟 말풍선 원본 고정 (가로 여백 12px, 정중앙 정렬) */
 .speech-bubble { 
     background: white; 
     padding: 10px 12px; 
@@ -67,27 +66,26 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
     -ms-overflow-style: none; 
 }
 .speech-bubble::-webkit-scrollbar { display: none; }
-/* 창이 펼쳐져도(.compact) 말풍선 스타일은 건드리지 않아 원본 유지됨! */
+.koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 
+/* 🌟 꼬꼬 황금비율 (1:1.618) 반 가리기 로직 + 3.5버전 모션 완벽 복구 */
 .koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; transition: margin-bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-/* 🌟 꼬꼬가 창 밑으로 1/2 숨어들어감 */
-.koko-zone.compact .koko-character { margin-bottom: -55px; } 
+/* 110px 중 42px 가림 -> 딱 예쁘게 68px(1.618 비율)만 창 위로 빼꼼 나옵니다! */
+.koko-zone.compact .koko-character { margin-bottom: -42px; } 
 
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
-/* 🌟 하단 탭 (margin-bottom 제거하여 채팅 박스 위에 딱 붙음) */
+/* 🌟 하단 탭 (margin-bottom 0으로 채팅창과 완벽 접합) */
 .tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1), flex 0.6s cubic-bezier(0.16, 1, 0.3, 1); margin-bottom: 0; }
 .tab-container.expanded { flex: 1 1 auto; height: 100%; } 
 
-.tab-drag-handle { width: 100%; height: 24px; display: flex; justify-content: center; align-items: center; cursor: pointer; padding-top: 5px; background: white; border-radius: 25px 25px 0 0; }
-/* 🌟 화살표 아이콘 부드러운 회전 */
+/* 🌟 화살표 아이콘과 탭 버튼 간격 흔들림 원천 차단 */
+.tab-drag-handle { width: 100%; height: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: white; border-radius: 25px 25px 0 0; flex-shrink: 0; margin: 0; padding-top: 4px; padding-bottom: 4px;}
 .drag-icon-img { width: 24px; height: 24px; opacity: 0.7; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
 
-.tab-buttons { display: flex; width: 100%; border-bottom: 1px solid #eee; overflow-x: hidden; }
-
-/* 🌟 탭 가로길이 무조건 20%로 고정! (스크롤 유무에 따른 밀림 방지) */
-.tab-btn { flex: 0 0 20%; width: 20%; max-width: 20%; padding: 10px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
+.tab-buttons { display: flex; width: 100%; height: 45px; border-bottom: 1px solid #eee; overflow-x: hidden; flex-shrink: 0; margin: 0; padding: 0;}
+.tab-btn { flex: 0 0 20%; width: 20%; max-width: 20%; padding: 6px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
 .tab-content { display: none; padding: 15px; overflow-y: auto; flex-grow: 1; width: 100%; }
@@ -125,8 +123,9 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 2px 6px; border-radius: 4px; white-space: nowrap; }
+/* 🌟 단어장 [단어-뜻] 우측 정렬 완벽 적용 */
+.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
+.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
 .vocab-meaning.blind { background-color: #d1d8e0; color: transparent; cursor: pointer; user-select: none; }
 .vocab-meaning.blind.revealed { background-color: transparent; color: #0984e3; font-weight: bold; }
 .vocab-item.memorized .vocab-word, .vocab-item.memorized .vocab-meaning { text-decoration: line-through; color: #aaa; }
@@ -165,7 +164,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .mine-cell:active { background: #e0e6ed; }
 .mine-cell.revealed { background: #fff; border-color: #bbb; cursor: default; }
 
-/* 🌟 채팅 박스: 높이 50px 및 상단 모서리 둥글게 유지, app-container 50px과 만나 딱 떨어짐 */
 .chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; flex-direction: column; font-family: inherit; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
 .chat-drawer.expanded { height: 65%; }
