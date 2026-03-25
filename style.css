@@ -10,6 +10,7 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
+/* 🌟 채팅 박스(50px)와 딱 떨어지도록 padding-bottom을 50px로 일치! */
 .app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
@@ -32,7 +33,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .setting-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; }
 
 #user-email-display { font-size: 0.85em; color: #888; }
-/* 🌟 모든 버튼은 높이값을 강제하고, 내부를 flex로 중앙정렬하여 폰트 쳐짐 방지! */
 .sub-btn { display: flex; align-items: center; justify-content: center; height: 26px; font-size: 0.85em; padding: 0 8px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-family: inherit; line-height: 1; margin: 0;}
 .scroll-list { max-height: 150px; overflow-y: auto; gap: 8px; display: flex; flex-direction: column; font-size: 0.85em; }
 
@@ -40,42 +40,75 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .tab-edit-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; margin-bottom: 5px; cursor: grab; font-size: 0.85em; font-weight: bold; color: #555; transition: background 0.2s; }
 .tab-edit-item:active { cursor: grabbing; background: #f0f4f8; }
 
-.koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; z-index: 1;}
+/* 🌟 꼬꼬 무대 (부드러운 이징 곡선 유지) */
+.koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: all 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+/* 🌟 말풍선 원본 100% 보존 (가로 여백 12px, 정중앙 정렬) */
+.speech-bubble { 
+    background: white; 
+    padding: 10px 12px; 
+    border-radius: 20px; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    margin-bottom: 15px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    text-align: center; 
+    font-weight: bold; 
+    color: #333; 
+    max-width: 85%; 
+    min-height: 40px; 
+    font-size: 0.95em; 
+    transition: background-color 0.4s ease; 
+    max-height: 75px; 
+    overflow-y: auto; 
+    scrollbar-width: none; 
+    -ms-overflow-style: none; 
+}
 .speech-bubble::-webkit-scrollbar { display: none; }
-.koko-zone.compact .speech-bubble { margin-bottom: 5px; }
+.koko-zone.compact .speech-bubble { margin-bottom: 5px; } /* 패널이 올라와도 말풍선은 줄어들지 않음! */
 
-/* 🌟 황금비율 적용 (110px 중 하단 42px 가림 -> 상단 68px 남음. 68:42 ≒ 1.618) */
-.koko-character { width: 110px; cursor: pointer; transition: margin-bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+/* 🌟 꼬꼬 황금비율 (1:1.618) 반 가리기 로직 */
+.koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; transition: margin-bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+/* 110px 중 42px 가림 -> 딱 예쁘게 68px(황금비율)만 창 위로 빼꼼 나옵니다! */
 .koko-zone.compact .koko-character { margin-bottom: -42px; } 
-/* 스케줄 꼬꼬 점프를 위해 float 애니메이션은 별도 분리! JS에서 직접 제어합니다. */
 
-.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1), flex 0.6s cubic-bezier(0.16, 1, 0.3, 1); margin-bottom: 0; }
+@keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
+
+/* 🌟 하단 탭 (margin-bottom 0으로 채팅창과 완벽 접합) */
+.tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1), flex 0.5s cubic-bezier(0.25, 1, 0.5, 1); margin-bottom: 0; }
 .tab-container.expanded { flex: 1 1 auto; height: 100%; } 
 
-.tab-drag-handle { width: 100%; height: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: white; border-radius: 25px 25px 0 0; flex-shrink: 0; margin: 0; padding-top: 4px; padding-bottom: 4px;}
-.drag-icon-img { width: 24px; height: 24px; opacity: 0.7; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+/* 🌟 화살표 아이콘 프리미엄 알약(Pill) 스타일 & 회전 모션 */
+.tab-drag-handle { width: 100%; height: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: white; border-radius: 25px 25px 0 0; flex-shrink: 0; margin: 0; padding-top: 6px; padding-bottom: 2px;}
+.drag-handle-pill { width: 50px; height: 18px; background: #f0f4f8; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05); }
+.drag-icon-img { width: 14px; height: 14px; opacity: 0.6; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
 
 .tab-buttons { display: flex; width: 100%; height: 45px; border-bottom: 1px solid #eee; overflow-x: hidden; flex-shrink: 0; margin: 0; padding: 0;}
+
+/* 🌟 탭 가로길이 무조건 20%로 고정! (스크롤 유무에 따른 밀림 완벽 차단) */
 .tab-btn { flex: 0 0 20%; width: 20%; max-width: 20%; padding: 6px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
-.tab-content { display: none; padding: 15px; overflow-y: auto; flex-grow: 1; width: 100%; }
+.tab-content { display: none; padding: 15px 15px 0 15px; overflow-y: auto; flex-grow: 1; width: 100%; } /* 패딩 하단 0으로 맞춤 */
 .tab-content.active { display: block; }
 
-.flex-column-tab.active { display: flex; flex-direction: column; padding: 15px 15px 0 15px; }
-.scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
-.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 8px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
+.flex-column-tab.active { display: flex; flex-direction: column; }
+.scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; padding-bottom: 5px;}
+
+/* 🌟 입력칸 창 & 채팅박스 틈새 0px 접합 완벽 처리 (margin-left/right를 통해 좌우 꽉 채움) */
+.sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 10px 15px 15px 15px; margin: auto -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1em; display: flex; align-items: center; justify-content: center;}
 .guide-text { text-align: center; font-size: 0.75em; color: #aaa; margin-bottom: 5px; }
 
+/* 🌟 단어장 폭(Width) 정밀 세팅 */
 .folder-header { display: flex; gap: 6px; margin-bottom: 5px; align-items: center; }
 .folder-select { flex-grow: 1; height: 32px; padding: 0 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; outline: none; }
-.folder-btn { display: flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 8px; height: 32px; font-size: 0.85em; line-height: 1; margin: 0;}
+.folder-add-btn { flex: 0 0 65px; height: 32px; padding: 0; justify-content: center; background: #0984e3; color: white;}
+.folder-del-btn { flex: 0 0 32px; height: 32px; padding: 0; justify-content: center; background: #ff6b6b; color: white;}
 
 .dday-one-line { display: flex; gap: 5px; align-items: center; width: 100%; margin: 0; }
 .dday-compact-select { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0 2px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
@@ -98,18 +131,21 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-/* 🌟 단어장 정렬 마법 (체크박스 열과 뜻 열을 완벽하게 맞춤) */
-.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; padding-right: 25px; /* 더보기 버튼 공간 미리 확보 */ }
-.vocab-align-box { width: 100px; display: flex; justify-content: center; align-items: center; } /* 100px 박스로 고정 */
+/* 🌟 단어장 정렬 마법 (체크박스 열과 뜻 열을 완벽하게 맞춤!) */
+.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; }
+.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px; padding-right: 5px;}
+.switch-label input { margin: 0; }
 
-.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; }
-.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 4px 6px; border-radius: 4px; white-space: nowrap; text-align: center; width: 100%;}
+.vocab-item { position: relative; } /* 자식 절대 좌표 기준점 */
+.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 90px; } /* 뜻 박스 공간 확보 */
+/* 🌟 뜻 박스를 우측 여백 94px에 중심을 두고 배치 (폴더 틈새와 수직 일치) */
+.vocab-meaning-box { position: absolute; right: 94px; transform: translateX(50%); display: flex; justify-content: center; align-items: center; z-index: 2; width: 80px;}
+.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 2px 6px; border-radius: 4px; white-space: nowrap; text-align: center; }
 .vocab-meaning.blind { background-color: #d1d8e0; color: transparent; cursor: pointer; user-select: none; }
 .vocab-meaning.blind.revealed { background-color: transparent; color: #0984e3; font-weight: bold; }
 .vocab-item.memorized .vocab-word, .vocab-item.memorized .vocab-meaning { text-decoration: line-through; color: #aaa; }
 .vocab-item.memorized .vocab-meaning.blind { background-color: transparent; color: #aaa; }
-.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; }
-.switch-label input { margin: 0 4px 0 0; }
+.vocab-more-btn { position: absolute; right: 8px; } /* 더보기 버튼 우측 고정 */
 
 .dday-dropdown { position: absolute; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 2000; overflow: hidden; min-width: 120px; font-family: inherit; }
 .dday-dropdown button { padding: 12px 15px; border: none; background: none; text-align: left; font-size: 0.9em; cursor: pointer; font-weight: bold; color: #555; font-family: inherit; }
@@ -128,8 +164,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .calendar-day.selected { background-color: #0984e3; color: white; font-weight: bold; }
 .calendar-day.has-schedule::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ff6b6b; border-radius: 50%; }
 
-.schedule-input-area { border-top: 1px dashed #eee; padding-top: 10px; }
-#selected-date-info { font-weight:bold; color:#0984e3; margin-bottom:8px; font-size: 0.85em; }
 .schedule-time-badge { display: inline-flex; align-items: center; justify-content: center; background: #0984e3; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.75em; font-weight: bold; margin-right: 8px; line-height: 1;}
 .schedule-time-badge.allday { background: #ff9f43; }
 
@@ -143,7 +177,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .mine-cell:active { background: #e0e6ed; }
 .mine-cell.revealed { background: #fff; border-color: #bbb; cursor: default; }
 
-.chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; flex-direction: column; font-family: inherit; }
+.chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1); z-index: 100; display: flex; flex-direction: column; font-family: inherit; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
 .chat-drawer.expanded { height: 65%; }
 .chat-header-bar { height: 50px; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; font-weight: bold; color: #555; border-bottom: 1px solid #e1e8ed; cursor: pointer; background: white; border-radius: 20px 20px 0 0; flex-shrink: 0; font-size: 0.9em; }

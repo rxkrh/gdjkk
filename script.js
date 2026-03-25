@@ -157,15 +157,13 @@ document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     if(!container || !zone) return;
     container.classList.toggle('expanded'); zone.classList.toggle('compact'); 
     
-    // 애니메이션은 이제 CSS transform이 알아서 처리! (koko 붕붕이 vs 멈춤 유지)
     if(container.classList.contains('expanded')) { if(kokoChar) kokoChar.style.animation = 'none'; } 
     else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
-// 🌟 꼬꼬 점프 로직 (3.5버전 복구)
+// 🌟 스케줄 꼬꼬 점프 모션 (transform으로 즉각 점프 효과!)
 function jumpKoko() {
     if(kokoChar) {
-        // CSS transform(이동)만 순간적으로 줘서 점프하는 효과!
         kokoChar.style.transform = "translateY(-20px)";
         setTimeout(() => { kokoChar.style.transform = "translateY(0)"; }, 200);
     }
@@ -179,7 +177,7 @@ function kokoScheduleCheck() {
         if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
         else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
     }
-    jumpKoko(); // 쫀득하게 튀어오름!
+    jumpKoko(); // 누르는 즉시 통통!
 }
 
 const chatDrawer = document.getElementById('chat-drawer'); const chatToggleIcon = document.getElementById('chat-toggle-icon');
@@ -370,7 +368,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장 (🌟 단어장 정렬 방식 변경 적용!)
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장 (🌟 정렬 개편)
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -471,6 +469,7 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
+// 🌟 단어장 1줄 및 우측 정렬 개편 로직 (세로열 완벽 일치!)
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -501,16 +500,14 @@ function renderVocabs() {
         li.className = `vocab-item ${v.memorized ? 'memorized' : ''}`;
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
-        // 🌟 1줄 구조 [체크박스] - [단어] - (자동여백) - [뜻(100px박스)] - [메뉴버튼]
+        // 🌟 절대 좌표를 통해 뜻(Meaning)을 상단 폴더 틈새와 완벽한 세로열로 일치시킵니다.
         li.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; flex-grow:1; overflow:hidden; gap:10px;">
-                <div style="display:flex; align-items:center; gap:8px; overflow:hidden;">
-                    <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
-                    <span class="vocab-word">${v.word}</span>
-                </div>
-                <div class="vocab-align-box" style="flex-shrink:0;">
-                    ${meaningHtml}
-                </div>
+            <div style="display:flex; align-items:center; gap:8px; width:100%;">
+                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
+                <span class="vocab-word">${v.word}</span>
+            </div>
+            <div class="vocab-meaning-box">
+                ${meaningHtml}
             </div>
             <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
         `;
@@ -610,5 +607,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V3.7 로드 완료! (버튼 중앙정렬 마법 & 단어장 뜻 정렬 적용 완료)");
+console.log("🌟 껌딱지 꼬꼬 V3.8 로드 완료! (탭 여백 고정, 회전 모션, 꼬꼬 황금비율 세팅 완벽 적용)");
 // --- 파일 끝 ---
