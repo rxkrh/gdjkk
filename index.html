@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V3.3</title>
+    <title>껌딱지 꼬꼬 V3.4</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -12,10 +12,9 @@
         
         <header class="top-bar">
             <button id="menu-open-btn" class="icon-btn"><img src="icon-menu.png" class="ui-icon" alt="메뉴"></button>
-            <div class="top-right-icons" id="top-shortcut-area">
-                <span class="weather-info" id="icon-weather"><img src="icon-sun.png" class="ui-icon" id="weather-icon-img"> 날씨 로딩중...</span>
-                <button id="icon-fortune" class="icon-btn"><img src="icon-fortune.png" class="ui-icon" alt="운세"></button>
-                <button id="icon-game" class="icon-btn" style="display:none; font-size:1.2em;">🎮</button>
+            <div class="top-right-icons">
+                <span class="weather-info"><img src="icon-sun.png" class="ui-icon" id="weather-icon-img"> 날씨 로딩중...</span>
+                <button id="fortune-btn" class="icon-btn"><img src="icon-fortune.png" class="ui-icon" alt="운세"></button>
             </div>
         </header>
 
@@ -71,12 +70,9 @@
                 </div>
 
                 <div class="menu-section">
-                    <h3>📌 상단 바로가기 편집</h3>
-                    <div style="display:flex; gap:12px; font-size:13px; font-weight:bold; color:#555;">
-                        <label><input type="checkbox" class="chk-shortcut" data-key="weather"> 날씨</label>
-                        <label><input type="checkbox" class="chk-shortcut" data-key="fortune"> 운세</label>
-                        <label><input type="checkbox" class="chk-shortcut" data-key="game"> 게임</label>
-                    </div>
+                    <h3>📌 하단 탭 메뉴 편집</h3>
+                    <p style="font-size:11px; color:#888; margin:0 0 10px 0;">🟰 버튼을 잡고 드래그하여 순서를 바꾸세요.</p>
+                    <ul id="tab-edit-list" class="tab-edit-list"></ul>
                 </div>
 
                 <div class="menu-section">
@@ -106,13 +102,7 @@
                 <img src="icon-up.png" id="tab-drag-icon" style="width: 20px; height: 20px; opacity: 0.5;">
             </div>
 
-            <div class="tab-buttons">
-                <button class="tab-btn active" data-target="tab-todo"><img src="icon-todo.png" class="ui-icon"> 할 일</button>
-                <button class="tab-btn" data-target="tab-schedule"><img src="icon-schedule.png" class="ui-icon"> 스케줄</button>
-                <button class="tab-btn" data-target="tab-dday"><img src="icon-dday.png" class="ui-icon"> 디데이</button>
-                <button class="tab-btn" data-target="tab-vocab"><img src="icon-book.png" class="ui-icon"> 단어장</button>
-                <button class="tab-btn" data-target="tab-quest"><img src="icon-sparkle.png" class="ui-icon"> 퀘스트</button>
-            </div>
+            <div class="tab-buttons" id="main-tab-buttons"></div>
 
             <div id="tab-todo" class="tab-content active flex-column-tab">
                 <div class="folder-header">
@@ -160,6 +150,7 @@
                     <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
                 </div>
+                
                 <div class="sticky-bottom-input">
                     <div class="dday-one-line">
                         <select id="dday-icon-select" class="dday-compact-select">
@@ -229,29 +220,30 @@
                         <button id="tab-global" class="active">전체 채팅</button>
                         <button id="tab-room">1:1 비밀방</button>
                     </div>
-                    <select id="chat-font-size-select" style="padding: 2px 6px; font-size: 0.85em; border-radius: 5px; border: 1px solid #ddd; font-family: inherit;">
-                        <option value="0.75em">채팅 작게</option>
-                        <option value="0.85em" selected>채팅 보통</option>
-                        <option value="1em">채팅 크게</option>
-                        <option value="1.15em">채팅 매우 크게</option>
-                    </select>
-                </div>
-                <div id="room-code-area" style="display:none; margin-bottom: 8px;">
-                    <div class="input-group" style="margin: 0;">
-                        <input type="text" id="room-code-input" placeholder="방 코드">
-                        <button id="join-room-btn" class="action-btn auto-width" style="background-color:#a29bfe;">입장</button>
+                    <div id="room-code-area" style="display:none; flex-grow: 1;">
+                        <div class="input-group" style="margin: 0;">
+                            <input type="text" id="room-code-input" placeholder="방 코드">
+                            <button id="join-room-btn" class="action-btn auto-width" style="background-color:#a29bfe;">입장</button>
+                        </div>
                     </div>
                 </div>
-                <div class="chat-box" id="chat-box" style="font-size: 0.85em;">
+                <div class="chat-box" id="chat-box">
                     <div class="guide-text" style="margin-top:30px;">닉네임을 등록해야 채팅이 가능해요!</div>
                 </div>
                 <label id="megaphone-label">
                     <input type="checkbox" id="megaphone-check"> 
                     <img src="icon-mega.png" class="ui-icon" style="margin: 0 4px 0 0;"> 확성기로 크게 말하기
                 </label>
+                
                 <div class="input-group" style="margin-bottom: 0;">
                     <input type="text" id="chat-input" placeholder="닉네임 등록 필요" disabled>
                     <button id="send-chat-btn" class="action-btn auto-width" disabled>전송</button>
+                    <select id="chat-font-size-select" style="padding: 0 8px; font-size: 0.85em; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; width: auto; background: white; outline: none;">
+                        <option value="0.75em">작게</option>
+                        <option value="0.85em" selected>보통</option>
+                        <option value="1em">크게</option>
+                        <option value="1.15em">아주 크게</option>
+                    </select>
                 </div>
             </div>
         </section>
