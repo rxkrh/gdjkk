@@ -32,54 +32,29 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .setting-item { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 0.95em; }
 
 #user-email-display { font-size: 0.85em; color: #888; }
-.sub-btn { font-size: 0.85em; padding: 4px 8px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-family: inherit; }
+/* 🌟 모든 버튼은 높이값을 강제하고, 내부를 flex로 중앙정렬하여 폰트 쳐짐 방지! */
+.sub-btn { display: flex; align-items: center; justify-content: center; height: 26px; font-size: 0.85em; padding: 0 8px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-family: inherit; line-height: 1; margin: 0;}
 .scroll-list { max-height: 150px; overflow-y: auto; gap: 8px; display: flex; flex-direction: column; font-size: 0.85em; }
 
 .tab-edit-list { list-style: none; padding: 0; margin: 0; }
 .tab-edit-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; margin-bottom: 5px; cursor: grab; font-size: 0.85em; font-weight: bold; color: #555; transition: background 0.2s; }
 .tab-edit-item:active { cursor: grabbing; background: #f0f4f8; }
 
-/* 🌟 꼬꼬 무대 (애니메이션 최적화) */
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-/* 🌟 말풍선 원본 고정 (가로 여백 12px, 정중앙 정렬) */
-.speech-bubble { 
-    background: white; 
-    padding: 10px 12px; 
-    border-radius: 20px; 
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-    margin-bottom: 15px; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center; 
-    font-weight: bold; 
-    color: #333; 
-    max-width: 85%; 
-    min-height: 40px; 
-    font-size: 0.95em; 
-    transition: all 0.4s ease; 
-    max-height: 75px; 
-    overflow-y: auto; 
-    scrollbar-width: none; 
-    -ms-overflow-style: none; 
-}
+.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: all 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .speech-bubble::-webkit-scrollbar { display: none; }
 .koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 
-/* 🌟 꼬꼬 황금비율 (1:1.618) 반 가리기 로직 + 3.5버전 모션 완벽 복구 */
-.koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; transition: margin-bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
-/* 110px 중 42px 가림 -> 딱 예쁘게 68px(1.618 비율)만 창 위로 빼꼼 나옵니다! */
+/* 🌟 황금비율 적용 (110px 중 하단 42px 가림 -> 상단 68px 남음. 68:42 ≒ 1.618) */
+.koko-character { width: 110px; cursor: pointer; transition: margin-bottom 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
 .koko-zone.compact .koko-character { margin-bottom: -42px; } 
+/* 스케줄 꼬꼬 점프를 위해 float 애니메이션은 별도 분리! JS에서 직접 제어합니다. */
 
-@keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
-
-/* 🌟 하단 탭 (margin-bottom 0으로 채팅창과 완벽 접합) */
 .tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1), flex 0.6s cubic-bezier(0.16, 1, 0.3, 1); margin-bottom: 0; }
 .tab-container.expanded { flex: 1 1 auto; height: 100%; } 
 
-/* 🌟 화살표 아이콘과 탭 버튼 간격 흔들림 원천 차단 */
 .tab-drag-handle { width: 100%; height: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: white; border-radius: 25px 25px 0 0; flex-shrink: 0; margin: 0; padding-top: 4px; padding-bottom: 4px;}
 .drag-icon-img { width: 24px; height: 24px; opacity: 0.7; transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
@@ -95,42 +70,46 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .scroll-wrapper { flex-grow: 1; overflow-y: auto; margin-bottom: 10px; }
 .sticky-bottom-input { position: sticky; bottom: 0; background: white; padding: 8px 0; border-top: 1px solid #f0f0f0; margin-top: auto; z-index: 10; }
 
-.d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1em; }
+.d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1em; display: flex; align-items: center; justify-content: center;}
 .guide-text { text-align: center; font-size: 0.75em; color: #aaa; margin-bottom: 5px; }
 
 .folder-header { display: flex; gap: 6px; margin-bottom: 5px; align-items: center; }
-.folder-select { flex-grow: 1; padding: 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; outline: none; }
-.folder-btn { padding: 0 10px; border-radius: 8px; height: 30px; font-size: 0.85em; }
+.folder-select { flex-grow: 1; height: 32px; padding: 0 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; outline: none; }
+.folder-btn { display: flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 8px; height: 32px; font-size: 0.85em; line-height: 1; margin: 0;}
 
 .dday-one-line { display: flex; gap: 5px; align-items: center; width: 100%; margin: 0; }
-.dday-compact-select { flex: 0 0 15%; min-width: 45px; padding: 6px 2px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
-.dday-one-line input[type="text"] { flex: 1 1 auto; min-width: 0; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; }
+.dday-compact-select { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0 2px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; text-align: center; outline: none; background: white; appearance: none; -webkit-appearance: none; }
+.dday-one-line input[type="text"] { flex: 1 1 auto; min-width: 0; height: 34px; padding: 0 8px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; }
 .date-square-wrapper { flex: 0 0 10%; min-width: 32px; max-width: 36px; height: 34px; background: #f0f4f8; border: 1px solid #ddd; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.05em; overflow: hidden; transition: 0.2s; position: relative; }
 .date-square-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-.dday-save-btn { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0; background-color: #ff6b6b; font-family: inherit; font-size: 0.85em; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+.dday-save-btn { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0; background-color: #ff6b6b; font-family: inherit; font-size: 0.85em; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; margin: 0;}
 
 .input-group { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; }
-.input-group input { flex-grow: 1; width: 100%; padding: 8px 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; }
-.action-btn { width: 100%; padding: 10px; background-color: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 0.9em; flex-shrink: 0; }
+.input-group input { flex-grow: 1; width: 100%; height: 36px; padding: 0 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; }
+.action-btn { width: 100%; display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; background-color: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 0.9em; flex-shrink: 0; line-height: 1; margin: 0;}
 .action-btn:disabled { background-color: #e0e0e0; cursor: not-allowed; }
-.auto-width { width: auto; padding: 8px 15px; }
-.font-add-btn { padding: 4px 8px; font-size: 0.75em; background-color: #a29bfe; }
+.auto-width { width: auto; padding: 0 15px; }
+.font-add-btn { height: 26px; padding: 0 8px; font-size: 0.75em; background-color: #a29bfe; }
 
 .item-list { list-style: none; padding: 0; margin: 0; width: 100%; }
 .item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9em; width: 100%; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;}
 .item-list li label input[type="checkbox"] { margin: 0; width: 1.2em; height: 1.2em; flex-shrink: 0; cursor: pointer; }
 
-.delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold;}
+.delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-/* 🌟 단어장 [단어-뜻] 우측 정렬 완벽 적용 */
-.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
-.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 2px 6px; border-radius: 4px; white-space: nowrap; flex-shrink: 0; }
+/* 🌟 단어장 정렬 마법 (체크박스 열과 뜻 열을 완벽하게 맞춤) */
+.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; padding-right: 25px; /* 더보기 버튼 공간 미리 확보 */ }
+.vocab-align-box { width: 100px; display: flex; justify-content: center; align-items: center; } /* 100px 박스로 고정 */
+
+.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; }
+.vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 4px 6px; border-radius: 4px; white-space: nowrap; text-align: center; width: 100%;}
 .vocab-meaning.blind { background-color: #d1d8e0; color: transparent; cursor: pointer; user-select: none; }
 .vocab-meaning.blind.revealed { background-color: transparent; color: #0984e3; font-weight: bold; }
 .vocab-item.memorized .vocab-word, .vocab-item.memorized .vocab-meaning { text-decoration: line-through; color: #aaa; }
 .vocab-item.memorized .vocab-meaning.blind { background-color: transparent; color: #aaa; }
-.switch-label { display: flex; align-items: center; gap: 5px; font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; }
+.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; }
+.switch-label input { margin: 0 4px 0 0; }
 
 .dday-dropdown { position: absolute; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 2000; overflow: hidden; min-width: 120px; font-family: inherit; }
 .dday-dropdown button { padding: 12px 15px; border: none; background: none; text-align: left; font-size: 0.9em; cursor: pointer; font-weight: bold; color: #555; font-family: inherit; }
@@ -139,10 +118,10 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .calendar-wrapper { margin-bottom: 15px; }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
-.calendar-header h3 { font-size: 1.1em; }
+.calendar-header h3 { font-size: 1.1em; display: flex; align-items: center;}
 .calendar-days-of-week { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.75em; font-weight: bold; color: #888; margin-bottom: 5px; }
 .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
-.calendar-day { text-align: center; padding: 5px 0; font-size: 0.85em; cursor: pointer; border-radius: 5px; transition: background 0.2s; position: relative; }
+.calendar-day { display: flex; align-items: center; justify-content: center; height: 28px; font-size: 0.85em; cursor: pointer; border-radius: 5px; transition: background 0.2s; position: relative; }
 .calendar-day:hover { background-color: #f0f4f8; }
 .calendar-day.empty { cursor: default; background: transparent; }
 .calendar-day.today { font-weight: bold; color: #0984e3; }
@@ -151,7 +130,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .schedule-input-area { border-top: 1px dashed #eee; padding-top: 10px; }
 #selected-date-info { font-weight:bold; color:#0984e3; margin-bottom:8px; font-size: 0.85em; }
-.schedule-time-badge { background: #0984e3; color: white; padding: 3px 6px; border-radius: 12px; font-size: 0.75em; font-weight: bold; margin-right: 8px; }
+.schedule-time-badge { display: inline-flex; align-items: center; justify-content: center; background: #0984e3; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.75em; font-weight: bold; margin-right: 8px; line-height: 1;}
 .schedule-time-badge.allday { background: #ff9f43; }
 
 .quest-header-section { text-align:center; margin-bottom: 15px; padding-bottom:15px; border-bottom:1px dashed #eee; }
@@ -160,7 +139,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .quest-title { margin: 0 0 10px 0; color: #555; display: flex; align-items: center; font-size: 1em; }
 
 .minesweeper-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; max-width: 250px; margin-left: auto; margin-right: auto; }
-.mine-cell { aspect-ratio: 1; background: #f0f4f8; border: 1px solid #ddd; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; cursor: pointer; user-select: none; transition: 0.1s; }
+.mine-cell { aspect-ratio: 1; background: #f0f4f8; border: 1px solid #ddd; border-radius: 6px; display: flex; justify-content: center; align-items: center; font-size: 1.5em; font-weight: bold; cursor: pointer; user-select: none; transition: 0.1s; line-height: 1;}
 .mine-cell:active { background: #e0e6ed; }
 .mine-cell.revealed { background: #fff; border-color: #bbb; cursor: default; }
 
@@ -173,7 +152,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .chat-drawer.expanded .chat-drawer-body { opacity: 1; }
 .chat-controls-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
 .chat-tabs { display: flex; gap: 5px; margin: 0; flex-shrink: 0; }
-.chat-tabs button { padding: 6px 12px; font-size: 0.8em; background: #ddd; color: #555; border-radius: 15px; border: none; cursor: pointer; font-family: inherit; }
+.chat-tabs button { display: flex; align-items: center; justify-content: center; height: 28px; padding: 0 12px; font-size: 0.8em; background: #ddd; color: #555; border-radius: 15px; border: none; cursor: pointer; font-family: inherit; line-height: 1;}
 .chat-tabs button.active { background: #ff9f43; color: white; }
 .chat-box { flex-grow: 1; background: white; border-radius: 12px; padding: 10px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; border: 1px solid #e1e8ed; font-size: 0.85em; transition: font-size 0.3s;}
 
