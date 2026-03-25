@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V3.8</title>
+    <title>껌딱지 꼬꼬 V3.9</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -32,7 +32,7 @@
                         <button id="google-login-btn" class="action-btn" style="background-color:#4285F4;">G 구글 로그인</button>
                     </div>
                     <div id="user-profile-area" style="display:none;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
                             <span id="user-email-display" style="color:#888;"></span>
                             <button id="logout-btn" class="sub-btn">로그아웃</button>
                         </div>
@@ -58,7 +58,7 @@
                             <option value="'Dongle', sans-serif">동글체</option>
                         </select>
                     </div>
-                    <div class="setting-item" style="margin-top: 10px;">
+                    <div class="setting-item" style="margin-top: 10px; align-items:center;">
                         <span>크기</span>
                         <select id="size-select">
                             <option value="font-xsmall">매우 작게</option>
@@ -72,10 +72,10 @@
 
                 <div class="menu-section">
                     <h3>📌 상단 바로가기 편집</h3>
-                    <div style="display:flex; gap:12px; font-size:13px; font-weight:bold; color:#555;">
-                        <label><input type="checkbox" class="chk-shortcut" data-key="weather"> 날씨</label>
-                        <label><input type="checkbox" class="chk-shortcut" data-key="fortune"> 운세</label>
-                        <label><input type="checkbox" class="chk-shortcut" data-key="game"> 게임</label>
+                    <div style="display:flex; gap:12px; font-size:13px; font-weight:bold; color:#555; align-items:center;">
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="weather"> 날씨</label>
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="fortune"> 운세</label>
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="game"> 게임</label>
                     </div>
                 </div>
 
@@ -96,7 +96,7 @@
                 </div>
 
                 <div id="admin-feedback-area" class="menu-section" style="display:none; border:2px solid #ff9f43; background:#fffaf0;">
-                    <h3 style="color:#d35400;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h3>
+                    <h3 style="color:#d35400; display:flex; align-items:center;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h3>
                     <div id="admin-feedback-list" class="scroll-list"></div>
                 </div>
             </div>
@@ -109,9 +109,7 @@
 
         <section class="tab-container" id="main-tab-container">
             <div class="tab-drag-handle" id="tab-drag-handle">
-                <div class="drag-handle-pill">
-                    <img src="icon-up.png" id="tab-drag-icon" class="drag-icon-img" alt="펼치기">
-                </div>
+                <img src="icon-up.png" id="tab-drag-icon" class="drag-icon-img" alt="펼치기">
             </div>
 
             <div class="tab-buttons" id="main-tab-buttons"></div>
@@ -193,13 +191,11 @@
                     <button id="add-vocab-folder-btn" class="action-btn folder-add-btn">➕ 폴더</button>
                     <button id="del-vocab-folder-btn" class="action-btn folder-del-btn">🗑️</button>
                 </div>
-                
                 <div class="vocab-top-controls">
                     <label class="switch-label">
-                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer;"> 뜻 가리기
+                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer;"> 🙈 뜻 가리기 (터치 확인)
                     </label>
                 </div>
-                
                 <div class="scroll-wrapper">
                     <ul id="vocab-list" class="item-list"></ul>
                 </div>
