@@ -161,7 +161,6 @@ document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
-// 🌟 꼬꼬 점프 복원
 function jumpKoko() {
     if(kokoChar) {
         kokoChar.classList.remove('jump');
@@ -492,7 +491,6 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
-// 🌟 단어장 정밀 수직 정렬 완료
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -605,6 +603,7 @@ function revealMine(r, c) {
     }
 }
 
+// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.0 로드 완료! (수직 완벽 정렬, 스크롤 및 입력칸 오류 완전 수정!)");
+console.log("🌟 껌딱지 꼬꼬 V4.1 로드 완료! (좌측 정렬 복구 완료)");
 // --- 파일 끝 ---
