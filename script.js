@@ -44,6 +44,7 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
+// 🌟 버그 수정: set(merge) 대신 전체 데이터를 update 하여 사라진 폴더가 서버에서 부활하는 현상 완벽 차단!
 function syncToCloud() {
     if (auth.currentUser) {
         const dataToSync = { 
@@ -114,13 +115,7 @@ function renderTabEditor() {
     tabConfig.forEach((tab, index) => {
         const li = document.createElement('li');
         li.className = 'tab-edit-item'; li.dataset.index = index; li.draggable = true;
-        li.innerHTML = `
-            <span style="color:#aaa; cursor:grab; margin-right:5px;">🟰</span>
-            <label style="display:flex; align-items:center; gap:5px; flex-grow:1; cursor:pointer;">
-                <input type="checkbox" class="tab-enable-chk" data-index="${index}" ${tab.enabled ? 'checked' : ''}>
-                <img src="${tab.icon}" class="ui-icon" style="width:16px;height:16px;"> ${tab.label}
-            </label>
-        `;
+        li.innerHTML = `<span style="color:#aaa; cursor:grab; margin-right:5px;">🟰</span><label style="display:flex; align-items:center; gap:5px; flex-grow:1; cursor:pointer;"><input type="checkbox" class="tab-enable-chk" data-index="${index}" ${tab.enabled ? 'checked' : ''}><img src="${tab.icon}" class="ui-icon" style="width:16px;height:16px;"> ${tab.label}</label>`;
         list.appendChild(li);
     });
     bindTabDragEvents();
@@ -163,7 +158,7 @@ function renderTabButtons() {
                     kokoSpeech.innerHTML = "꼬꼬를 터치하여 암기 테스트하기 📝"; kokoSpeech.dataset.testMode = "true";
                 }
             } 
-            else if (targetId === 'tab-todo') { renderTodos(); } // 🌟 수정된 로직이 적용되어 여기서 알아서 흰색 말풍선+대사 초기화가 일어납니다!
+            else if (targetId === 'tab-todo') { renderTodos(); }
             else { updateKokoAppearance(); }
         });
     });
@@ -181,7 +176,7 @@ function bindTabDragEvents() {
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직 
+// 📱 2. UI 동작 로직
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -278,11 +273,17 @@ window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localSto
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
 
+// 🌟 에러 수정: 관리자 도구(admin-tools-area) ID 매핑 완벽 복구
 auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
-        if (user.uid === ADMIN_UID) { document.getElementById('admin-feedback-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-feedback-area').style.display = 'none'; }
+        
+        const adminArea = document.getElementById('admin-tools-area');
+        if (adminArea) {
+            if (user.uid === ADMIN_UID) { adminArea.style.display = 'block'; loadAdminFeedbacks(); } 
+            else { adminArea.style.display = 'none'; }
+        }
 
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
@@ -302,8 +303,12 @@ auth.onAuthStateChanged((user) => {
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
-        });
-    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-feedback-area').style.display = 'none'; }
+        }).catch(err => { console.error("Data Load Error:", err); });
+    } else { 
+        document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; 
+        const adminArea = document.getElementById('admin-tools-area');
+        if(adminArea) adminArea.style.display = 'none'; 
+    }
 });
 
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
@@ -350,30 +355,6 @@ function loadAdminFeedbacks() {
         snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;"><img src="icon-profile.png" class="ui-icon"> ${d.senderNickname}</div><div>${d.text}</div></div>`; });
     });
 }
-
-// 🌟 관리자 도구 기능 (칼로리 & 음악)
-let totalCals = 0;
-document.getElementById('add-cal-btn')?.addEventListener('click', () => {
-    const food = document.getElementById('cal-food-input').value; const kcal = parseInt(document.getElementById('cal-kcal-input').value);
-    if(food && kcal) { totalCals += kcal; document.getElementById('cal-total-display').innerText = totalCals; document.getElementById('cal-list').innerHTML += `<div style="padding:2px 0;">- ${food}: ${kcal}kcal</div>`; document.getElementById('cal-food-input').value = ''; document.getElementById('cal-kcal-input').value = ''; }
-});
-
-let playlistFiles = []; let currentAudioIndex = 0; const audioPlayer = document.getElementById('audio-player');
-document.getElementById('music-upload-input')?.addEventListener('change', (e) => {
-    playlistFiles = Array.from(e.target.files); const playlistUl = document.getElementById('music-playlist'); playlistUl.innerHTML = '';
-    playlistFiles.forEach((file, index) => {
-        const li = document.createElement('li'); li.innerText = `🎵 ${file.name}`; li.style.cursor = 'pointer'; li.style.fontSize = '11px'; li.style.padding = '5px 8px'; li.style.borderBottom = '1px solid #eee';
-        li.addEventListener('click', () => playMusic(index)); playlistUl.appendChild(li);
-    });
-    if(playlistFiles.length > 0) playMusic(0);
-});
-function playMusic(index) {
-    if(index >= 0 && index < playlistFiles.length) {
-        currentAudioIndex = index; const file = playlistFiles[index]; const url = URL.createObjectURL(file); audioPlayer.src = url; audioPlayer.play();
-        Array.from(document.getElementById('music-playlist').children).forEach((li, i) => { li.style.fontWeight = i === index ? 'bold' : 'normal'; li.style.color = i === index ? '#0984e3' : '#555'; li.style.background = i === index ? '#f0f4f8' : 'white'; });
-    }
-}
-audioPlayer?.addEventListener('ended', () => { playMusic(currentAudioIndex + 1); });
 
 // ==========================================
 // 💬 5. 채팅 로직
@@ -430,7 +411,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장 
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -444,15 +425,29 @@ document.getElementById('attendance-btn')?.addEventListener('click', () => { con
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; jumpKoko(); } }
 checkAttendanceUI(); 
 
+// 🌟 폴더 이름 변경(수정) 기능 추가 (할 일)
 function renderTodoFolders() {
     const sel = document.getElementById('todo-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(todoData).forEach(folder => { let opt = document.createElement('option'); opt.value = folder; opt.text = `📁 ${folder}`; if(folder === currentTodoFolder) opt.selected = true; sel.appendChild(opt); }); renderTodos();
 }
 document.getElementById('todo-folder-select')?.addEventListener('change', (e) => { currentTodoFolder = e.target.value; renderTodos(); });
-document.getElementById('add-folder-btn')?.addEventListener('click', () => { let name = prompt("새로운 폴더 이름을 입력하세요 (예: 장보기, 공부)"); if(name && name.trim() !== '') { name = name.trim(); if(!todoData[name]) { todoData[name] = []; currentTodoFolder = name; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); } else { alert("이미 있는 폴더 이름입니다!"); } } });
+document.getElementById('add-folder-btn')?.addEventListener('click', () => { 
+    let name = prompt("새로운 폴더 이름을 입력하세요 (예: 장보기, 공부)"); 
+    if(name && name.trim() !== '') { name = name.trim(); if(!todoData[name]) { todoData[name] = []; currentTodoFolder = name; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); } else { alert("이미 있는 폴더 이름입니다!"); } } 
+});
+document.getElementById('edit-folder-btn')?.addEventListener('click', () => {
+    if(currentTodoFolder === "기본") { alert("'기본' 폴더는 이름 변경이 불가능해요! 🐣"); return; }
+    let newName = prompt("변경할 폴더 이름을 입력하세요:", currentTodoFolder);
+    if(newName && newName.trim() !== '' && newName !== currentTodoFolder) {
+        newName = newName.trim();
+        if(todoData[newName]) { alert("이미 존재하는 폴더 이름입니다!"); return; }
+        todoData[newName] = todoData[currentTodoFolder];
+        delete todoData[currentTodoFolder]; currentTodoFolder = newName;
+        localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud();
+    }
+});
 document.getElementById('del-folder-btn')?.addEventListener('click', () => { if(currentTodoFolder === "기본") { alert("'기본' 폴더는 지울 수 없어요! 🐣"); return; } if(todoData[currentTodoFolder].length > 0) { alert("폴더 안에 할 일이 남아있어요! 먼저 다 비워주세요."); return; } if(confirm(`"${currentTodoFolder}" 폴더를 정말 지울까요?`)) { delete todoData[currentTodoFolder]; currentTodoFolder = "기본"; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); } });
 
-// 🌟 할 일 탭 로직 (흰색 말풍선 꼬임 완벽 방지)
 function renderTodos() { 
     const list = document.getElementById('todo-list'); if(!list) return; list.innerHTML = ''; let anyChecked = false; 
     let currentList = todoData[currentTodoFolder] || [];
@@ -461,19 +456,8 @@ function renderTodos() {
         if (t.checked) anyChecked = true; 
     }); 
     if(kokoSpeech) {
-        if (anyChecked) { 
-            kokoSpeech.style.backgroundColor = "#ffd070"; 
-            kokoSpeech.style.color = "#333";
-            kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; 
-            kokoSpeech.dataset.feedMode = "true"; 
-        } 
-        else { 
-            // 피드 모드가 꺼졌거나, 다른 탭에서 왔을 때 모두 기본 말풍선으로 안전하게 덮어씌움
-            kokoSpeech.style.backgroundColor = "white"; 
-            kokoSpeech.style.color = "#333";
-            kokoSpeech.dataset.feedMode = "false"; 
-            updateKokoAppearance(); 
-        }
+        if (anyChecked) { kokoSpeech.style.backgroundColor = "#ffd070"; kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; kokoSpeech.dataset.feedMode = "true"; } 
+        else { if(kokoSpeech.dataset.feedMode === "true") { kokoSpeech.style.backgroundColor = "white"; kokoSpeech.dataset.feedMode = "false"; updateKokoAppearance(); } }
     }
 }
 document.getElementById('add-todo-btn')?.addEventListener('click', () => { const input = document.getElementById('new-todo-input'); if(!input) return; const txt = input.value.trim(); if (!txt) return; if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = []; todoData[currentTodoFolder].push({ text: txt, checked: false }); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); input.value=''; renderTodos(); syncToCloud(); });
@@ -543,6 +527,7 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
+// 🌟 폴더 이름 변경(수정) 기능 추가 (단어장)
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -555,6 +540,17 @@ document.getElementById('vocab-folder-select')?.addEventListener('change', (e) =
 document.getElementById('add-vocab-folder-btn')?.addEventListener('click', () => {
     let name = prompt("새로운 단어장 폴더 이름을 입력하세요 (예: 영어, 역사)");
     if(name && name.trim() !== '') { name = name.trim(); if(!vocabData[name]) { vocabData[name] = []; currentVocabFolder = name; localStorage.setItem('koko_vocab_data', JSON.stringify(vocabData)); renderVocabFolders(); syncToCloud(); } else { alert("이미 있는 폴더 이름입니다!"); } }
+});
+document.getElementById('edit-vocab-folder-btn')?.addEventListener('click', () => {
+    if(currentVocabFolder === "기본") { alert("'기본' 폴더는 이름 변경이 불가능해요! 🐣"); return; }
+    let newName = prompt("변경할 폴더 이름을 입력하세요:", currentVocabFolder);
+    if(newName && newName.trim() !== '' && newName !== currentVocabFolder) {
+        newName = newName.trim();
+        if(vocabData[newName]) { alert("이미 존재하는 폴더 이름입니다!"); return; }
+        vocabData[newName] = vocabData[currentVocabFolder];
+        delete vocabData[currentVocabFolder]; currentVocabFolder = newName;
+        localStorage.setItem('koko_vocab_data', JSON.stringify(vocabData)); renderVocabFolders(); syncToCloud();
+    }
 });
 document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () => {
     if(currentVocabFolder === "기본") { alert("'기본' 폴더는 지울 수 없어요! 🐣"); return; }
@@ -683,16 +679,34 @@ function updateKokoAppearance() {
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kokoSpeech && (kokoSpeech.dataset.feedMode === "true" || kokoSpeech.dataset.testMode === "true")) return; if(kokoSpeech) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; jumpKoko(); });
 
+// 🌟 꼬꼬 터치 인터랙션 (할 일 모이주기 & 단어장 테스트 연동 완성)
 kokoChar?.addEventListener('click', () => { 
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
         jumpKoko(); return;
     }
     if (kokoSpeech && kokoSpeech.dataset.feedMode === "true") {
-        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = "냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; kokoSpeech.dataset.feedMode = "false";
-        if (todoData[currentTodoFolder]) { todoData[currentTodoFolder] = todoData[currentTodoFolder].filter(t => !t.checked); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); syncToCloud(); }
+        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; 
+        kokoSpeech.innerHTML = "냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; 
+        kokoSpeech.dataset.feedMode = "false";
+        
+        if (todoData[currentTodoFolder]) { 
+            todoData[currentTodoFolder] = todoData[currentTodoFolder].filter(t => !t.checked); 
+            localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); 
+            syncToCloud(); 
+        }
         if(kokoChar) { kokoChar.style.transform="scale(1.2)"; setTimeout(()=>kokoChar.style.transform="scale(1)", 300); }
-        setTimeout(() => { renderTodos(); updateKokoAppearance(); }, 2000); return; 
+        
+        setTimeout(() => { 
+            renderTodos(); 
+            // 🌟 폴더에 할 일이 남아있는지 확인하고 멘트 분기
+            if (todoData[currentTodoFolder] && todoData[currentTodoFolder].length > 0) {
+                if(kokoSpeech) kokoSpeech.innerHTML = "다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";
+            } else {
+                updateKokoAppearance(); // 할 일 끝났으면 날씨 멘트로 복귀
+            }
+        }, 2000); 
+        return; 
     }
     completeQuest(1); const h = new Date().getHours(); 
     if (h >= 22 || h < 6) {
@@ -734,5 +748,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.7 로드 완료! (탭 전환 시 말풍선 초기화 및 뜻 가리기 우측 원상복구 완료)");
+console.log("🌟 껌딱지 꼬꼬 V4.8 로드 완료! (동기화 버그 픽스, 폴더 수정 추가, 모이주기 로직 완성!)");
 // --- 파일 끝 ---
