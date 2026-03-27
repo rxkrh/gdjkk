@@ -55,21 +55,23 @@ function syncToCloud() {
     }
 }
 
-// 🌟 다국어 스마트 TTS 로직 🌟
+// 🌟 글로벌 다국어 스마트 TTS 감지 로직 🌟
 window.speakWord = (text) => {
     if (!window.speechSynthesis) { alert("현재 브라우저에서는 음성 기능을 지원하지 않습니다."); return; }
     const utterance = new SpeechSynthesisUtterance(text);
     
-    // 정규식으로 단어의 언어를 스마트하게 감지하여 발음 언어 자동 설정
-    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)) {
-        utterance.lang = 'ko-KR'; // 한국어
-    } else if (/[\u3040-\u30ff]/.test(text)) {
-        utterance.lang = 'ja-JP'; // 일본어 (히라가나/가타카나)
-    } else if (/[\u4e00-\u9faf]/.test(text)) {
-        utterance.lang = 'zh-CN'; // 중국어 (한자)
-    } else {
-        utterance.lang = 'en-US'; // 그 외 (영어 등 알파벳 우선)
-    }
+    // 글자(유니코드)의 특징을 잡아내어 해당 국가의 발음 엔진으로 자동 연결!
+    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)) utterance.lang = 'ko-KR'; // 한국어
+    else if (/[\u3040-\u30ff]/.test(text)) utterance.lang = 'ja-JP'; // 일본어 (히라가나/가타카나)
+    else if (/[\u4e00-\u9faf]/.test(text)) utterance.lang = 'zh-CN'; // 중국어 (한자)
+    else if (/[\u0400-\u04FF]/.test(text)) utterance.lang = 'ru-RU'; // 러시아어 (키릴 문자)
+    else if (/[\u0600-\u06FF]/.test(text)) utterance.lang = 'ar-SA'; // 아랍어
+    else if (/[\u0E00-\u0E7F]/.test(text)) utterance.lang = 'th-TH'; // 태국어
+    else if (/[áàảãạăâắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ]/i.test(text)) utterance.lang = 'vi-VN'; // 베트남어 (고유 성조)
+    else if (/[ñ¿¡]/i.test(text)) utterance.lang = 'es-ES'; // 스페인어 (고유 기호)
+    else if (/[äöüß]/i.test(text)) utterance.lang = 'de-DE'; // 독일어 (움라우트 등)
+    else if (/[çœ]/i.test(text)) utterance.lang = 'fr-FR'; // 프랑스어 (고유 기호)
+    else utterance.lang = 'en-US'; // 구분 안되는 기본 알파벳은 모두 영어 발음으로 처리
     
     window.speechSynthesis.speak(utterance);
 };
@@ -182,7 +184,7 @@ function bindTabDragEvents() {
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직 
+// 📱 2. UI 동작 로직
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -194,6 +196,9 @@ document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     const container = document.getElementById('main-tab-container'); const zone = document.getElementById('koko-zone-main');
     if(!container || !zone) return;
     container.classList.toggle('expanded'); zone.classList.toggle('compact'); 
+    
+    if(container.classList.contains('expanded')) { if(kokoChar) kokoChar.style.animation = 'none'; } 
+    else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
 function jumpKoko() {
@@ -271,7 +276,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 설정 (어드민 패널 유지)
+// 🔐 4. 로그인, 프로필, 설정 
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -280,8 +285,7 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
-        if (user.uid === ADMIN_UID) { document.getElementById('admin-tools-area').style.display = 'block'; loadAdminFeedbacks(); } 
-        else { document.getElementById('admin-tools-area').style.display = 'none'; }
+        if (user.uid === ADMIN_UID) { document.getElementById('admin-tools-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-tools-area').style.display = 'none'; }
 
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
@@ -328,6 +332,13 @@ const chatFontSelect = document.getElementById('chat-font-size-select'); const c
 if (localStorage.getItem('koko_chat_font') && chatFontSelect) { chatFontSelect.value = localStorage.getItem('koko_chat_font'); if(chatBox) chatBox.style.fontSize = chatFontSelect.value; }
 chatFontSelect?.addEventListener('change', e => { localStorage.setItem('koko_chat_font', e.target.value); if(chatBox) chatBox.style.fontSize = e.target.value; });
 
+document.getElementById('add-custom-font-btn')?.addEventListener('click', () => {
+    const url = prompt("🔗 구글 폰트(Google Fonts) URL을 입력하세요.\n(예: https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap)"); if (!url) return;
+    const name = prompt("📝 폰트 이름(font-family)을 정확히 입력하세요.\n(예: Gowun Dodum)"); if (!name) return;
+    let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || []; customFonts.push({url, name}); localStorage.setItem('koko_custom_fonts', JSON.stringify(customFonts));
+    alert("폰트가 추가되었습니다! 목록에서 선택해보세요. 🐣"); location.reload();
+});
+
 document.getElementById('open-feedback-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
 document.getElementById('close-feedback-btn')?.addEventListener('click', () => { document.getElementById('feedback-modal').style.display = 'none'; });
 document.getElementById('send-feedback-btn')?.addEventListener('click', async () => {
@@ -343,7 +354,7 @@ function loadAdminFeedbacks() {
     });
 }
 
-// 개발자 도구 기능 (칼로리 & 음악)
+// 🌟 관리자 도구 기능 (칼로리 & 음악)
 let totalCals = 0;
 document.getElementById('add-cal-btn')?.addEventListener('click', () => {
     const food = document.getElementById('cal-food-input').value; const kcal = parseInt(document.getElementById('cal-kcal-input').value);
@@ -524,7 +535,7 @@ document.getElementById('dday-main-btn')?.addEventListener('click', () => { dday
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
 // ==========================================
-// 🌟 7. 단어장 및 암기 테스트 로직 
+// 🌟 7. 단어장 및 테스트 로직
 // ==========================================
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
@@ -600,8 +611,7 @@ window.startVocabTest = (mode) => {
     if(testQueue.length === 0) testQueue = list.map((v, i) => ({...v, originalIndex: i})); 
     
     testQueue = testQueue.sort(() => Math.random() - 0.5);
-    currentTestMode = mode;
-    currentTestIndex = 0;
+    currentTestMode = mode; currentTestIndex = 0;
     
     document.getElementById('vocab-test-select-modal').style.display = 'none';
     document.getElementById('vocab-test-modal').style.display = 'flex';
@@ -609,10 +619,7 @@ window.startVocabTest = (mode) => {
 };
 
 function showTestQuestion() {
-    if(currentTestIndex >= testQueue.length) {
-        alert("테스트를 모두 완료했습니다! 🎉");
-        closeVocabTest(); return;
-    }
+    if(currentTestIndex >= testQueue.length) { alert("테스트를 모두 완료했습니다! 🎉"); closeVocabTest(); return; }
     const q = testQueue[currentTestIndex];
     document.getElementById('test-progress').innerText = `${currentTestIndex + 1} / ${testQueue.length}`;
     document.getElementById('test-question-text').innerText = currentTestMode === 'meanToWord' ? q.mean : q.word;
@@ -624,31 +631,21 @@ function showTestQuestion() {
 window.submitVocabTestAnswer = () => {
     const input = document.getElementById('test-answer-input').value.trim();
     if(!input) return;
-    
     const q = testQueue[currentTestIndex];
     const correctAnswer = currentTestMode === 'meanToWord' ? q.word : q.mean;
     const feedback = document.getElementById('test-feedback-text');
     
     if(input.toLowerCase() === correctAnswer.toLowerCase()) {
-        feedback.innerText = '정답이에요! 🟢';
-        feedback.style.color = '#2ecc71';
+        feedback.innerText = '정답이에요! 🟢'; feedback.style.color = '#2ecc71';
         setTimeout(() => { currentTestIndex++; showTestQuestion(); }, 500);
     } else {
-        feedback.innerText = '오답이에요! 🔴';
-        feedback.style.color = '#e74c3c';
+        feedback.innerText = '오답이에요! 🔴'; feedback.style.color = '#e74c3c';
         const modalBox = document.querySelector('#vocab-test-modal .modal-box');
-        modalBox.classList.remove('shake');
-        void modalBox.offsetWidth;
-        modalBox.classList.add('shake');
+        modalBox.classList.remove('shake'); void modalBox.offsetWidth; modalBox.classList.add('shake');
     }
 };
 
-window.skipVocabTestQuestion = () => {
-    const skipped = testQueue.splice(currentTestIndex, 1)[0];
-    testQueue.push(skipped);
-    showTestQuestion(); 
-};
-
+window.skipVocabTestQuestion = () => { const skipped = testQueue.splice(currentTestIndex, 1)[0]; testQueue.push(skipped); showTestQuestion(); };
 window.closeVocabTestSelect = () => { document.getElementById('vocab-test-select-modal').style.display = 'none'; };
 window.closeVocabTest = () => { document.getElementById('vocab-test-modal').style.display = 'none'; };
 
@@ -671,9 +668,7 @@ function updateKokoAppearance() {
     } else { kokoImg.src = "koko.png"; }
     
     if(kokoSpeech && kokoSpeech.dataset.feedMode !== "true" && kokoSpeech.dataset.testMode !== "true") {
-        kokoSpeech.style.backgroundColor = "white";
-        kokoSpeech.style.color = "#333";
-        kokoSpeech.innerHTML = getDefaultSpeech();
+        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = getDefaultSpeech();
     }
 }
 
@@ -683,8 +678,7 @@ document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kok
 kokoChar?.addEventListener('click', () => { 
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
-        jumpKoko();
-        return;
+        jumpKoko(); return;
     }
     if (kokoSpeech && kokoSpeech.dataset.feedMode === "true") {
         kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = "냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; kokoSpeech.dataset.feedMode = "false";
@@ -730,7 +724,6 @@ function revealMine(r, c) {
     }
 }
 
-// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.6 로드 완료! (스마트 다국어 TTS 및 범용 아이콘 적용)");
+console.log("🌟 껌딱지 꼬꼬 V4.6 로드 완료! (다국어 스마트 감지 TTS 및 범용 아이콘 적용 완료)");
 // --- 파일 끝 ---
