@@ -42,7 +42,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: background-color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: all 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .speech-bubble::-webkit-scrollbar { display: none; }
 .koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 
@@ -104,19 +104,21 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0; width: 100%; padding-right: 5px;}
-.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px; padding-right: 5px;}
-.switch-label input { margin: 0; width: 16px; height: 16px;}
-
+/* 🌟 단어장 103px 정렬 & 🔊 TTS 버튼 추가 세팅 */
+.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0; }
 .vocab-item { position: relative; } 
-.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 150px; } 
+.vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 170px; } 
 .vocab-meaning-box { position: absolute; right: 103px; transform: translateX(50%); display: flex; justify-content: center; align-items: center; z-index: 2; width: 80px; }
 .vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 4px 6px; border-radius: 4px; white-space: nowrap; text-align: center; width: 100%;}
 .vocab-meaning.blind { background-color: #d1d8e0; color: transparent; cursor: pointer; user-select: none; }
 .vocab-meaning.blind.revealed { background-color: transparent; color: #0984e3; font-weight: bold; }
 .vocab-item.memorized .vocab-word, .vocab-item.memorized .vocab-meaning { text-decoration: line-through; color: #aaa; }
 .vocab-item.memorized .vocab-meaning.blind { background-color: transparent; color: #aaa; }
-.vocab-more-btn { position: absolute; right: 8px; }
+
+/* 🌟 TTS 듣기 버튼: 뜻(103px)과 메뉴(8px)의 정가운데(40px) 완벽 배치 */
+.vocab-tts-btn { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 1.1em; opacity: 0.6; transition: 0.2s; padding: 5px; }
+.vocab-tts-btn:hover { opacity: 1; transform: translateY(-50%) scale(1.1); }
+.vocab-more-btn { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); }
 
 .dday-dropdown { position: absolute; background: white; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; flex-direction: column; z-index: 2000; overflow: hidden; min-width: 120px; font-family: inherit; }
 .dday-dropdown button { padding: 12px 15px; border: none; background: none; text-align: left; font-size: 0.9em; cursor: pointer; font-weight: bold; color: #555; font-family: inherit; }
@@ -165,8 +167,9 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .chat-message.me { background-color: #ffd070; align-self: flex-end; border-bottom-right-radius: 2px; }
 .chat-message.other { background-color: #f1f3f5; align-self: flex-start; border-bottom-left-radius: 2px; }
 .chat-message.megaphone { background-color: #ff6b6b; color: white; font-weight: bold; border: 2px solid #ff4757; }
-.chat-message.shake { animation: shake 0.5s ease-in-out; }
-@keyframes shake { 0% {transform: translateX(0);} 25% {transform: translateX(-3px);} 50% {transform: translateX(3px);} 75% {transform: translateX(-3px);} 100% {transform: translateX(0);} }
+/* 🌟 흔들림 애니메이션 (단어장 오답 시 사용 가능하도록 독립 클래스로 빼둠) */
+.shake { animation: shake 0.5s ease-in-out; }
+@keyframes shake { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
 .chat-sender { font-size: 0.75em; color: #666; margin-bottom: 3px; font-weight: bold; }
 
 #megaphone-label { font-size: 0.8em; cursor: pointer; color: #ff9f43; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; }
