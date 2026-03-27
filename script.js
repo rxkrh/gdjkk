@@ -370,7 +370,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장 (🌟 정렬 개편)
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -471,7 +471,6 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
-// 🌟 단어장 1줄 및 우측 106px 완벽 정렬 개편 로직
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -502,7 +501,7 @@ function renderVocabs() {
         li.className = `vocab-item ${v.memorized ? 'memorized' : ''}`;
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
-        // 🌟 완벽한 106px 수직 정렬을 위한 HTML 뼈대
+        // 🌟 절대 좌표를 통해 뜻(Meaning)을 상단 폴더 추가 버튼 틈새와 완벽한 세로열로 일치시킵니다.
         li.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px; width:100%;">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
@@ -608,5 +607,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V3.9 로드 완료! (입력칸 바닥 고정, 스크롤 해결, 단어장 완벽 정렬)");
+console.log("🌟 껌딱지 꼬꼬 V4.0 로드 완료! (입력칸 완벽 고정 & 단어장 뜻 정렬 동기화)");
 // --- 파일 끝 ---

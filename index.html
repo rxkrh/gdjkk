@@ -116,7 +116,7 @@
 
             <div class="tab-buttons" id="main-tab-buttons"></div>
 
-            <div id="tab-todo" class="tab-content active">
+            <div id="tab-todo" class="tab-content active flex-column-tab">
                 <div class="folder-header">
                     <select id="todo-folder-select" class="folder-select"></select>
                     <button id="add-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;">➕ 폴더</button>
@@ -133,7 +133,7 @@
                 </div>
             </div>
 
-            <div id="tab-schedule" class="tab-content">
+            <div id="tab-schedule" class="tab-content flex-column-tab">
                 <div class="calendar-wrapper" style="flex-shrink: 0;">
                     <div class="calendar-header">
                         <button id="prev-month-btn" class="icon-btn">◀</button>
@@ -160,8 +160,8 @@
                 </div>
             </div>
 
-            <div id="tab-dday" class="tab-content">
-                <div class="d-day-info center-flex" id="main-dday-banner"><img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!</div>
+            <div id="tab-dday" class="tab-content flex-column-tab">
+                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;"><img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!</div>
                 <div class="scroll-wrapper">
                     <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
@@ -187,19 +187,18 @@
                 </div>
             </div>
 
-            <div id="tab-vocab" class="tab-content">
+            <div id="tab-vocab" class="tab-content flex-column-tab">
                 <div class="folder-header">
                     <select id="vocab-folder-select" class="folder-select"></select>
                     <button id="add-vocab-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;">➕ 폴더</button>
                     <button id="del-vocab-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b;">🗑️</button>
                 </div>
                 
-                <div style="display:flex; justify-content:flex-end; align-items:center; margin-bottom:5px; padding-right:12px;">
-                    <span style="font-size:0.8em; font-weight:bold; color:#555; margin-right:4px;">🙈 뜻 가리기</span>
-                    <div style="width:80px; display:flex; justify-content:center; align-items:center;">
-                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer; margin:0; width:1.2em; height:1.2em;">
+                <div style="position: relative; height: 20px; margin-bottom: 10px; width: 100%; flex-shrink: 0;">
+                    <div style="position: absolute; right: 103px; transform: translateX(8px); display: flex; align-items: center;">
+                        <input type="checkbox" id="vocab-blind-check" style="margin: 0; width: 16px; height: 16px; cursor: pointer; flex-shrink:0;">
+                        <label for="vocab-blind-check" style="margin-left: 6px; font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; white-space: nowrap;">뜻 가리기</label>
                     </div>
-                    <div style="width:24px; margin-left:8px;"></div>
                 </div>
                 
                 <div class="scroll-wrapper">
@@ -214,7 +213,7 @@
                 </div>
             </div>
 
-            <div id="tab-quest" class="tab-content">
+            <div id="tab-quest" class="tab-content flex-column-tab">
                 <div class="scroll-wrapper" style="margin-bottom:0;">
                     <div class="quest-header-section">
                         <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71;">오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;"></button>
