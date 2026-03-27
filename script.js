@@ -144,7 +144,7 @@ function bindTabDragEvents() {
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직 (🌟 애니메이션 점프 기능 적용)
+// 📱 2. UI 동작 로직
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -161,7 +161,7 @@ document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
-// 🌟 꼬꼬 점프 로직 (CSS 키프레임을 사용하여 매끄럽게 튀어오름!)
+// 🌟 꼬꼬 점프 로직 복구
 function jumpKoko() {
     if(kokoChar) {
         kokoChar.classList.remove('jump');
@@ -237,7 +237,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 설정 
+// 🔐 4. 로그인 및 관리자 도구 (칼로리 & 음악)
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -246,7 +246,8 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
-        if (user.uid === ADMIN_UID) { document.getElementById('admin-feedback-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-feedback-area').style.display = 'none'; }
+        if (user.uid === ADMIN_UID) { document.getElementById('admin-tools-area').style.display = 'block'; loadAdminFeedbacks(); } 
+        else { document.getElementById('admin-tools-area').style.display = 'none'; }
 
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
@@ -267,7 +268,7 @@ auth.onAuthStateChanged((user) => {
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
         });
-    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-feedback-area').style.display = 'none'; }
+    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-tools-area').style.display = 'none'; }
 });
 
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
@@ -314,6 +315,56 @@ function loadAdminFeedbacks() {
         snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;"><img src="icon-profile.png" class="ui-icon"> ${d.senderNickname}</div><div>${d.text}</div></div>`; });
     });
 }
+
+// 🌟 관리자 도구 기능 (칼로리 & 음악)
+let totalCals = 0;
+document.getElementById('add-cal-btn')?.addEventListener('click', () => {
+    const food = document.getElementById('cal-food-input').value;
+    const kcal = parseInt(document.getElementById('cal-kcal-input').value);
+    if(food && kcal) {
+        totalCals += kcal;
+        document.getElementById('cal-total-display').innerText = totalCals;
+        document.getElementById('cal-list').innerHTML += `<div style="padding:2px 0;">- ${food}: ${kcal}kcal</div>`;
+        document.getElementById('cal-food-input').value = '';
+        document.getElementById('cal-kcal-input').value = '';
+    }
+});
+
+let playlistFiles = [];
+let currentAudioIndex = 0;
+const audioPlayer = document.getElementById('audio-player');
+document.getElementById('music-upload-input')?.addEventListener('change', (e) => {
+    playlistFiles = Array.from(e.target.files);
+    const playlistUl = document.getElementById('music-playlist');
+    playlistUl.innerHTML = '';
+    playlistFiles.forEach((file, index) => {
+        const li = document.createElement('li');
+        li.innerText = `🎵 ${file.name}`;
+        li.style.cursor = 'pointer';
+        li.style.fontSize = '11px';
+        li.style.padding = '5px 8px';
+        li.style.borderBottom = '1px solid #eee';
+        li.addEventListener('click', () => playMusic(index));
+        playlistUl.appendChild(li);
+    });
+    if(playlistFiles.length > 0) playMusic(0);
+});
+
+function playMusic(index) {
+    if(index >= 0 && index < playlistFiles.length) {
+        currentAudioIndex = index;
+        const file = playlistFiles[index];
+        const url = URL.createObjectURL(file);
+        audioPlayer.src = url;
+        audioPlayer.play();
+        Array.from(document.getElementById('music-playlist').children).forEach((li, i) => {
+            li.style.fontWeight = i === index ? 'bold' : 'normal';
+            li.style.color = i === index ? '#0984e3' : '#555';
+            li.style.background = i === index ? '#f0f4f8' : 'white';
+        });
+    }
+}
+audioPlayer?.addEventListener('ended', () => { playMusic(currentAudioIndex + 1); });
 
 // ==========================================
 // 💬 5. 채팅 로직
@@ -501,7 +552,7 @@ function renderVocabs() {
         li.className = `vocab-item ${v.memorized ? 'memorized' : ''}`;
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
-        // 🌟 절대 좌표를 통해 뜻(Meaning)을 상단 폴더 추가 버튼 틈새와 완벽한 세로열로 일치시킵니다.
+        // 🌟 완벽한 103px 수직 정렬 뼈대! (폴더 추가 버튼의 좌측 라인과 일치)
         li.innerHTML = `
             <div style="display:flex; align-items:center; gap:8px; width:100%;">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
@@ -605,7 +656,6 @@ function revealMine(r, c) {
     }
 }
 
-// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.0 로드 완료! (입력칸 완벽 고정 & 단어장 뜻 정렬 동기화)");
+console.log("🌟 껌딱지 꼬꼬 V4.1 로드 완료! (관리자 오프라인 음악 플레이어 및 칼로리 계산기 탑재)");
 // --- 파일 끝 ---

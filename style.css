@@ -10,7 +10,6 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
-/* 채팅 박스(50px)와 딱 떨어지도록 padding-bottom을 50px로 일치! */
 .app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
@@ -35,62 +34,53 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 #user-email-display { font-size: 0.85em; color: #888; }
 .sub-btn { display: flex; align-items: center; justify-content: center; height: 26px; font-size: 0.85em; padding: 0 8px; border-radius: 4px; border: 1px solid #ddd; background: white; cursor: pointer; font-family: inherit; line-height: 1; margin: 0;}
 .scroll-list { max-height: 150px; overflow-y: auto; gap: 8px; display: flex; flex-direction: column; font-size: 0.85em; }
+/* 🌟 음악 플레이어 리스트 호버 효과 */
+#music-playlist li:hover { background-color: #f0f4f8; }
 
 .tab-edit-list { list-style: none; padding: 0; margin: 0; }
 .tab-edit-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; margin-bottom: 5px; cursor: grab; font-size: 0.85em; font-weight: bold; color: #555; transition: background 0.2s; }
 .tab-edit-item:active { cursor: grabbing; background: #f0f4f8; }
 
-/* 🌟 꼬꼬 무대 (부드러운 이징 곡선 유지) */
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-/* 말풍선 원본 고정 (가로 여백 12px, 정중앙 정렬) */
 .speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: background-color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .speech-bubble::-webkit-scrollbar { display: none; }
 .koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 
-/* 🌟 꼬꼬 황금비율 (1:1.618) 반 가리기 로직 */
 .koko-character { width: 110px; cursor: pointer; animation: floating 2s ease-in-out infinite; transition: margin-bottom 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
 .koko-zone.compact .koko-character { margin-bottom: -42px; animation: none; } 
 
-/* 🌟 쫀득하게 튀어오르는 키프레임 점프 완벽 복구 */
 .koko-character.jump { animation: jump-koko 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important; }
 @keyframes jump-koko { 0% { transform: translateY(0); } 50% { transform: translateY(-25px); } 100% { transform: translateY(0); } }
 @keyframes floating { 0% { transform: translateY(0); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0); } }
 
-/* 🌟 하단 탭 전체 창 설정 */
 .tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1), flex 0.5s cubic-bezier(0.25, 1, 0.5, 1); margin-bottom: 0; }
 .tab-container.expanded { flex: 1 1 auto; height: 100%; } 
 
-/* 🌟 화살표 아이콘 프리미엄 알약(Pill) 스타일 복원 및 회전 모션 */
 .tab-drag-handle { width: 100%; height: 26px; display: flex; justify-content: center; align-items: center; cursor: pointer; background: transparent; flex-shrink: 0; margin: 0; padding-top: 6px; padding-bottom: 2px;}
 .drag-handle-pill { width: 50px; height: 18px; background: #e1e8ed; border-radius: 10px; display: flex; align-items: center; justify-content: center; transition: background 0.3s;}
 .drag-handle-pill:active { background: #d1d8e0; }
 .drag-icon-img { width: 14px; height: 14px; opacity: 0.6; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
 
-/* 🌟 탭 버튼 가로 여백 요동침 원천 차단 */
 .tab-buttons { display: flex; width: 100%; height: 45px; border-bottom: 1px solid #eee; overflow: hidden; flex-shrink: 0; margin: 0; padding: 0;}
 .tab-btn { flex: 0 0 20%; width: 20%; max-width: 20%; padding: 6px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
 
-/* 🌟 내부 스크롤 및 입력칸 바닥 강제 고정을 위한 완벽한 플렉스 구조 */
 .tab-content { display: none; padding: 15px 15px 0 15px; width: 100%; flex: 1 1 0px; min-height: 0; overflow: hidden; } 
 .tab-content.active { display: flex; flex-direction: column; } 
 .flex-column-tab { flex-direction: column; }
 
-/* 🌟 스크롤바 공간을 차지하지 않게 투명처리하여 여백 밀림 원천 차단! */
 .scroll-wrapper { flex: 1 1 0px; overflow-y: auto; margin-bottom: 10px; padding-bottom: 5px; min-height: 0; scrollbar-width: none; -ms-overflow-style: none; }
 .scroll-wrapper::-webkit-scrollbar { display: none; }
 
-/* 🌟 입력칸 바닥 강제 고정 (flex-shrink: 0) */
 .sticky-bottom-input { flex: 0 0 auto; background: white; padding: 10px 15px 15px 15px; margin: 0 -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1em; display: flex; align-items: center; justify-content: center;}
 .guide-text { text-align: center; font-size: 0.75em; color: #aaa; margin-bottom: 5px; }
 
-/* 🌟 폴더 추가/삭제 버튼 스타일 구버전으로 완벽 롤백 */
 .folder-header { display: flex; gap: 6px; margin-bottom: 5px; align-items: center; flex-shrink: 0; }
 .folder-select { flex-grow: 1; height: 32px; padding: 0 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; outline: none; }
 .folder-btn { display: flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 8px; height: 32px; font-size: 0.85em; line-height: 1; margin: 0; color: white; font-weight: bold; flex-shrink: 0;}
@@ -116,12 +106,12 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-/* 🌟 단어장 정렬 마법 (우측에서 정확히 103px 지점에 뜻 박스 중앙이 오도록 고정) */
 .vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0;}
+.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px; padding-right: 5px;}
+.switch-label input { margin: 0; }
 
-.vocab-item { position: relative; } /* 절대 좌표 기준점 */
+.vocab-item { position: relative; } 
 .vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 150px; } 
-/* 🌟 103px 고정: 이미지에서 지정하신 '추가버튼-목록버튼 사이 틈새' 위치와 완벽 일치! */
 .vocab-meaning-box { position: absolute; right: 103px; transform: translateX(50%); display: flex; justify-content: center; align-items: center; z-index: 2; width: 80px; }
 .vocab-meaning { font-size: 0.9em; color: #555; transition: 0.2s; padding: 4px 6px; border-radius: 4px; white-space: nowrap; text-align: center; width: 100%;}
 .vocab-meaning.blind { background-color: #d1d8e0; color: transparent; cursor: pointer; user-select: none; }
