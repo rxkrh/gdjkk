@@ -44,27 +44,33 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
-// 🌟 핵심 개편: 지워진 폴더가 서버에서 다시 살아나는 좀비 버그 해결!
 function syncToCloud() {
     if (auth.currentUser) {
         const dataToSync = { 
-            todoData: todoData, 
-            vocabData: vocabData, 
-            ddays: ddays, 
-            schedules: schedules, 
-            attendance: attendance 
+            todoData: todoData, vocabData: vocabData, ddays: ddays, schedules: schedules, attendance: attendance 
         };
-        // merge:true 대신 update를 사용하여 사라진 Key값도 완벽하게 덮어쓰기 삭제!
         db.collection('users').doc(auth.currentUser.uid).update(dataToSync).catch(() => {
             db.collection('users').doc(auth.currentUser.uid).set(dataToSync, { merge: true });
         });
     }
 }
 
+// 🌟 다국어 스마트 TTS 로직 🌟
 window.speakWord = (text) => {
     if (!window.speechSynthesis) { alert("현재 브라우저에서는 음성 기능을 지원하지 않습니다."); return; }
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US'; 
+    
+    // 정규식으로 단어의 언어를 스마트하게 감지하여 발음 언어 자동 설정
+    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)) {
+        utterance.lang = 'ko-KR'; // 한국어
+    } else if (/[\u3040-\u30ff]/.test(text)) {
+        utterance.lang = 'ja-JP'; // 일본어 (히라가나/가타카나)
+    } else if (/[\u4e00-\u9faf]/.test(text)) {
+        utterance.lang = 'zh-CN'; // 중국어 (한자)
+    } else {
+        utterance.lang = 'en-US'; // 그 외 (영어 등 알파벳 우선)
+    }
+    
     window.speechSynthesis.speak(utterance);
 };
 
@@ -188,9 +194,6 @@ document.getElementById('tab-drag-handle')?.addEventListener('click', () => {
     const container = document.getElementById('main-tab-container'); const zone = document.getElementById('koko-zone-main');
     if(!container || !zone) return;
     container.classList.toggle('expanded'); zone.classList.toggle('compact'); 
-    
-    if(container.classList.contains('expanded')) { if(kokoChar) kokoChar.style.animation = 'none'; } 
-    else { if(kokoChar) kokoChar.style.animation = 'floating 2s ease-in-out infinite'; }
 });
 
 function jumpKoko() {
@@ -268,7 +271,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 프로필, 설정 
+// 🔐 4. 로그인, 프로필, 설정 (어드민 패널 유지)
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -277,7 +280,8 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
-        if (user.uid === ADMIN_UID) { document.getElementById('admin-feedback-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-feedback-area').style.display = 'none'; }
+        if (user.uid === ADMIN_UID) { document.getElementById('admin-tools-area').style.display = 'block'; loadAdminFeedbacks(); } 
+        else { document.getElementById('admin-tools-area').style.display = 'none'; }
 
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
@@ -298,7 +302,7 @@ auth.onAuthStateChanged((user) => {
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
         });
-    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-feedback-area').style.display = 'none'; }
+    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-tools-area').style.display = 'none'; }
 });
 
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
@@ -324,13 +328,6 @@ const chatFontSelect = document.getElementById('chat-font-size-select'); const c
 if (localStorage.getItem('koko_chat_font') && chatFontSelect) { chatFontSelect.value = localStorage.getItem('koko_chat_font'); if(chatBox) chatBox.style.fontSize = chatFontSelect.value; }
 chatFontSelect?.addEventListener('change', e => { localStorage.setItem('koko_chat_font', e.target.value); if(chatBox) chatBox.style.fontSize = e.target.value; });
 
-document.getElementById('add-custom-font-btn')?.addEventListener('click', () => {
-    const url = prompt("🔗 구글 폰트(Google Fonts) URL을 입력하세요.\n(예: https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap)"); if (!url) return;
-    const name = prompt("📝 폰트 이름(font-family)을 정확히 입력하세요.\n(예: Gowun Dodum)"); if (!name) return;
-    let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || []; customFonts.push({url, name}); localStorage.setItem('koko_custom_fonts', JSON.stringify(customFonts));
-    alert("폰트가 추가되었습니다! 목록에서 선택해보세요. 🐣"); location.reload();
-});
-
 document.getElementById('open-feedback-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
 document.getElementById('close-feedback-btn')?.addEventListener('click', () => { document.getElementById('feedback-modal').style.display = 'none'; });
 document.getElementById('send-feedback-btn')?.addEventListener('click', async () => {
@@ -345,6 +342,30 @@ function loadAdminFeedbacks() {
         snap.forEach(doc => { const d = doc.data(); list.innerHTML += `<div style="background:white; padding:10px; border-radius:8px;"><div style="font-weight:bold;"><img src="icon-profile.png" class="ui-icon"> ${d.senderNickname}</div><div>${d.text}</div></div>`; });
     });
 }
+
+// 개발자 도구 기능 (칼로리 & 음악)
+let totalCals = 0;
+document.getElementById('add-cal-btn')?.addEventListener('click', () => {
+    const food = document.getElementById('cal-food-input').value; const kcal = parseInt(document.getElementById('cal-kcal-input').value);
+    if(food && kcal) { totalCals += kcal; document.getElementById('cal-total-display').innerText = totalCals; document.getElementById('cal-list').innerHTML += `<div style="padding:2px 0;">- ${food}: ${kcal}kcal</div>`; document.getElementById('cal-food-input').value = ''; document.getElementById('cal-kcal-input').value = ''; }
+});
+
+let playlistFiles = []; let currentAudioIndex = 0; const audioPlayer = document.getElementById('audio-player');
+document.getElementById('music-upload-input')?.addEventListener('change', (e) => {
+    playlistFiles = Array.from(e.target.files); const playlistUl = document.getElementById('music-playlist'); playlistUl.innerHTML = '';
+    playlistFiles.forEach((file, index) => {
+        const li = document.createElement('li'); li.innerText = `🎵 ${file.name}`; li.style.cursor = 'pointer'; li.style.fontSize = '11px'; li.style.padding = '5px 8px'; li.style.borderBottom = '1px solid #eee';
+        li.addEventListener('click', () => playMusic(index)); playlistUl.appendChild(li);
+    });
+    if(playlistFiles.length > 0) playMusic(0);
+});
+function playMusic(index) {
+    if(index >= 0 && index < playlistFiles.length) {
+        currentAudioIndex = index; const file = playlistFiles[index]; const url = URL.createObjectURL(file); audioPlayer.src = url; audioPlayer.play();
+        Array.from(document.getElementById('music-playlist').children).forEach((li, i) => { li.style.fontWeight = i === index ? 'bold' : 'normal'; li.style.color = i === index ? '#0984e3' : '#555'; li.style.background = i === index ? '#f0f4f8' : 'white'; });
+    }
+}
+audioPlayer?.addEventListener('ended', () => { playMusic(currentAudioIndex + 1); });
 
 // ==========================================
 // 💬 5. 채팅 로직
@@ -401,7 +422,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장 
+// 🏆 6. 퀘스트, 투두, 디데이
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -502,6 +523,9 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
+// ==========================================
+// 🌟 7. 단어장 및 암기 테스트 로직 
+// ==========================================
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -568,7 +592,6 @@ document.getElementById('vocab-edit-btn')?.addEventListener('click', () => {
 });
 document.getElementById('vocab-del-btn')?.addEventListener('click', () => { vocabData[currentVocabFolder].splice(currentVocabIndex, 1); localStorage.setItem('koko_vocab_data', JSON.stringify(vocabData)); renderVocabs(); syncToCloud(); document.getElementById('vocab-dropdown').style.display = 'none'; });
 
-// 🌟 암기 테스트 로직 🌟
 window.startVocabTest = (mode) => {
     const list = vocabData[currentVocabFolder] || [];
     if(list.length === 0) { alert("폴더에 단어가 없습니다!"); return; }
@@ -660,7 +683,8 @@ document.getElementById('fortune-btn')?.addEventListener('click', () => { if(kok
 kokoChar?.addEventListener('click', () => { 
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
-        jumpKoko(); return;
+        jumpKoko();
+        return;
     }
     if (kokoSpeech && kokoSpeech.dataset.feedMode === "true") {
         kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = "냠냠! 너무 맛있어요 <img src='icon-100.png' class='ui-icon'>"; kokoSpeech.dataset.feedMode = "false";
@@ -708,5 +732,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.5 로드 완료! (동기화 좀비 폴더 버그 완전 해결!)");
+console.log("🌟 껌딱지 꼬꼬 V4.6 로드 완료! (스마트 다국어 TTS 및 범용 아이콘 적용)");
 // --- 파일 끝 ---
