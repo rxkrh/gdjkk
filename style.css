@@ -64,7 +64,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
 
 .tab-buttons { display: flex; width: 100%; height: 45px; border-bottom: 1px solid #eee; overflow: hidden; flex-shrink: 0; margin: 0; padding: 0;}
-/* 🌟 버그 수정: width 20% 강제 고정을 없애고 flex: 1 1 0px로 설정하여, 탭 개수에 맞게 1/N로 자연스럽게 늘어나게 함! */
 .tab-btn { flex: 1 1 0px; padding: 6px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
@@ -107,7 +106,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
 .vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0; width: 100%; padding-right: 5px;}
-.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px;}
+.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;}
 .switch-label input { margin: 0; width: 16px; height: 16px;}
 
 .vocab-item { position: relative; } 
