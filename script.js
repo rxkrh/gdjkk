@@ -55,23 +55,20 @@ function syncToCloud() {
     }
 }
 
-// 🌟 글로벌 다국어 스마트 TTS 감지 로직 🌟
 window.speakWord = (text) => {
     if (!window.speechSynthesis) { alert("현재 브라우저에서는 음성 기능을 지원하지 않습니다."); return; }
     const utterance = new SpeechSynthesisUtterance(text);
-    
-    // 글자(유니코드)의 특징을 잡아내어 해당 국가의 발음 엔진으로 자동 연결!
-    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)) utterance.lang = 'ko-KR'; // 한국어
-    else if (/[\u3040-\u30ff]/.test(text)) utterance.lang = 'ja-JP'; // 일본어 (히라가나/가타카나)
-    else if (/[\u4e00-\u9faf]/.test(text)) utterance.lang = 'zh-CN'; // 중국어 (한자)
-    else if (/[\u0400-\u04FF]/.test(text)) utterance.lang = 'ru-RU'; // 러시아어 (키릴 문자)
-    else if (/[\u0600-\u06FF]/.test(text)) utterance.lang = 'ar-SA'; // 아랍어
-    else if (/[\u0E00-\u0E7F]/.test(text)) utterance.lang = 'th-TH'; // 태국어
-    else if (/[áàảãạăâắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ]/i.test(text)) utterance.lang = 'vi-VN'; // 베트남어 (고유 성조)
-    else if (/[ñ¿¡]/i.test(text)) utterance.lang = 'es-ES'; // 스페인어 (고유 기호)
-    else if (/[äöüß]/i.test(text)) utterance.lang = 'de-DE'; // 독일어 (움라우트 등)
-    else if (/[çœ]/i.test(text)) utterance.lang = 'fr-FR'; // 프랑스어 (고유 기호)
-    else utterance.lang = 'en-US'; // 구분 안되는 기본 알파벳은 모두 영어 발음으로 처리
+    if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(text)) utterance.lang = 'ko-KR'; 
+    else if (/[\u3040-\u30ff]/.test(text)) utterance.lang = 'ja-JP'; 
+    else if (/[\u4e00-\u9faf]/.test(text)) utterance.lang = 'zh-CN'; 
+    else if (/[\u0400-\u04FF]/.test(text)) utterance.lang = 'ru-RU'; 
+    else if (/[\u0600-\u06FF]/.test(text)) utterance.lang = 'ar-SA'; 
+    else if (/[\u0E00-\u0E7F]/.test(text)) utterance.lang = 'th-TH'; 
+    else if (/[áàảãạăâắằẳẵặâấầẩẫậéèẻẽẹêếềểễệíìỉĩịóòỏõọôốồổỗộơớờởỡợúùủũụưứừửữựýỳỷỹỵđ]/i.test(text)) utterance.lang = 'vi-VN'; 
+    else if (/[ñ¿¡]/i.test(text)) utterance.lang = 'es-ES'; 
+    else if (/[äöüß]/i.test(text)) utterance.lang = 'de-DE'; 
+    else if (/[çœ]/i.test(text)) utterance.lang = 'fr-FR'; 
+    else utterance.lang = 'en-US'; 
     
     window.speechSynthesis.speak(utterance);
 };
@@ -166,7 +163,7 @@ function renderTabButtons() {
                     kokoSpeech.innerHTML = "꼬꼬를 터치하여 암기 테스트하기 📝"; kokoSpeech.dataset.testMode = "true";
                 }
             } 
-            else if (targetId === 'tab-todo') { renderTodos(); }
+            else if (targetId === 'tab-todo') { renderTodos(); } // 🌟 수정된 로직이 적용되어 여기서 알아서 흰색 말풍선+대사 초기화가 일어납니다!
             else { updateKokoAppearance(); }
         });
     });
@@ -184,7 +181,7 @@ function bindTabDragEvents() {
 }
 
 // ==========================================
-// 📱 2. UI 동작 로직
+// 📱 2. UI 동작 로직 
 // ==========================================
 const sideMenu = document.getElementById('side-menu'); const overlay = document.getElementById('side-menu-overlay');
 const closeMenu = () => { if(sideMenu) sideMenu.classList.remove('open'); if(overlay) overlay.style.display = 'none'; };
@@ -285,7 +282,7 @@ auth.onAuthStateChanged((user) => {
     if (user) {
         document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
-        if (user.uid === ADMIN_UID) { document.getElementById('admin-tools-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-tools-area').style.display = 'none'; }
+        if (user.uid === ADMIN_UID) { document.getElementById('admin-feedback-area').style.display = 'block'; loadAdminFeedbacks(); } else { document.getElementById('admin-feedback-area').style.display = 'none'; }
 
         db.collection('users').doc(user.uid).get().then(doc => {
             if (doc.exists) {
@@ -306,7 +303,7 @@ auth.onAuthStateChanged((user) => {
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
         });
-    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-tools-area').style.display = 'none'; }
+    } else { document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; document.getElementById('admin-feedback-area').style.display = 'none'; }
 });
 
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
@@ -433,7 +430,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -455,6 +452,7 @@ document.getElementById('todo-folder-select')?.addEventListener('change', (e) =>
 document.getElementById('add-folder-btn')?.addEventListener('click', () => { let name = prompt("새로운 폴더 이름을 입력하세요 (예: 장보기, 공부)"); if(name && name.trim() !== '') { name = name.trim(); if(!todoData[name]) { todoData[name] = []; currentTodoFolder = name; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); } else { alert("이미 있는 폴더 이름입니다!"); } } });
 document.getElementById('del-folder-btn')?.addEventListener('click', () => { if(currentTodoFolder === "기본") { alert("'기본' 폴더는 지울 수 없어요! 🐣"); return; } if(todoData[currentTodoFolder].length > 0) { alert("폴더 안에 할 일이 남아있어요! 먼저 다 비워주세요."); return; } if(confirm(`"${currentTodoFolder}" 폴더를 정말 지울까요?`)) { delete todoData[currentTodoFolder]; currentTodoFolder = "기본"; localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodoFolders(); syncToCloud(); } });
 
+// 🌟 할 일 탭 로직 (흰색 말풍선 꼬임 완벽 방지)
 function renderTodos() { 
     const list = document.getElementById('todo-list'); if(!list) return; list.innerHTML = ''; let anyChecked = false; 
     let currentList = todoData[currentTodoFolder] || [];
@@ -463,8 +461,19 @@ function renderTodos() {
         if (t.checked) anyChecked = true; 
     }); 
     if(kokoSpeech) {
-        if (anyChecked) { kokoSpeech.style.backgroundColor = "#ffd070"; kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; kokoSpeech.dataset.feedMode = "true"; } 
-        else { if(kokoSpeech.dataset.feedMode === "true") { kokoSpeech.style.backgroundColor = "white"; kokoSpeech.dataset.feedMode = "false"; updateKokoAppearance(); } }
+        if (anyChecked) { 
+            kokoSpeech.style.backgroundColor = "#ffd070"; 
+            kokoSpeech.style.color = "#333";
+            kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; 
+            kokoSpeech.dataset.feedMode = "true"; 
+        } 
+        else { 
+            // 피드 모드가 꺼졌거나, 다른 탭에서 왔을 때 모두 기본 말풍선으로 안전하게 덮어씌움
+            kokoSpeech.style.backgroundColor = "white"; 
+            kokoSpeech.style.color = "#333";
+            kokoSpeech.dataset.feedMode = "false"; 
+            updateKokoAppearance(); 
+        }
     }
 }
 document.getElementById('add-todo-btn')?.addEventListener('click', () => { const input = document.getElementById('new-todo-input'); if(!input) return; const txt = input.value.trim(); if (!txt) return; if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = []; todoData[currentTodoFolder].push({ text: txt, checked: false }); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); input.value=''; renderTodos(); syncToCloud(); });
@@ -534,9 +543,6 @@ window.openDdayMenu = (index, event) => {
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
-// ==========================================
-// 🌟 7. 단어장 및 테스트 로직
-// ==========================================
 function renderVocabFolders() {
     const sel = document.getElementById('vocab-folder-select'); if(!sel) return; sel.innerHTML = '';
     Object.keys(vocabData).forEach(folder => {
@@ -668,7 +674,9 @@ function updateKokoAppearance() {
     } else { kokoImg.src = "koko.png"; }
     
     if(kokoSpeech && kokoSpeech.dataset.feedMode !== "true" && kokoSpeech.dataset.testMode !== "true") {
-        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = getDefaultSpeech();
+        kokoSpeech.style.backgroundColor = "white";
+        kokoSpeech.style.color = "#333";
+        kokoSpeech.innerHTML = getDefaultSpeech();
     }
 }
 
@@ -724,6 +732,7 @@ function revealMine(r, c) {
     }
 }
 
+// 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.6 로드 완료! (다국어 스마트 감지 TTS 및 범용 아이콘 적용 완료)");
+console.log("🌟 껌딱지 꼬꼬 V4.7 로드 완료! (탭 전환 시 말풍선 초기화 및 뜻 가리기 우측 원상복구 완료)");
 // --- 파일 끝 ---

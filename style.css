@@ -43,7 +43,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: background-color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
+.speech-bubble { background: white; padding: 10px 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; transition: background-color 0.4s ease, color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .speech-bubble::-webkit-scrollbar { display: none; }
 .koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 
@@ -104,6 +104,11 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
+
+/* 🌟 단어장 뜻 가리기 우측 정렬 원상복구 (flex-end) */
+.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0; width: 100%; padding-right: 5px;}
+.switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px;}
+.switch-label input { margin: 0; width: 16px; height: 16px;}
 
 .vocab-item { position: relative; } 
 .vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 170px; } 
