@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V4.2</title>
+    <title>껌딱지 꼬꼬 V4.3</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -134,20 +134,19 @@
             </div>
 
             <div id="tab-schedule" class="tab-content flex-column-tab">
-                <div class="calendar-wrapper" style="flex-shrink: 0;">
-                    <div class="calendar-header">
-                        <button id="prev-month-btn" class="icon-btn">◀</button>
-                        <h3 id="current-month-display">2026년 3월</h3>
-                        <button id="next-month-btn" class="icon-btn">▶</button>
-                    </div>
-                    <div class="calendar-days-of-week">
-                        <div style="color:#ff6b6b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#0984e3;">토</div>
-                    </div>
-                    <div id="calendar-grid" class="calendar-grid"></div>
-                </div>
-                <div id="selected-date-info" style="font-weight:bold; color:#0984e3; margin:10px 0 5px 0; font-size: 0.85em; flex-shrink: 0;">선택한 날짜: -</div>
-                
                 <div class="scroll-wrapper">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button id="prev-month-btn" class="icon-btn">◀</button>
+                            <h3 id="current-month-display">2026년 3월</h3>
+                            <button id="next-month-btn" class="icon-btn">▶</button>
+                        </div>
+                        <div class="calendar-days-of-week">
+                            <div style="color:#ff6b6b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#0984e3;">토</div>
+                        </div>
+                        <div id="calendar-grid" class="calendar-grid"></div>
+                    </div>
+                    <div id="selected-date-info" style="font-weight:bold; color:#0984e3; margin:10px 0 5px 0; font-size: 0.85em;">선택한 날짜: -</div>
                     <ul id="schedule-list" class="item-list"></ul>
                 </div>
                 
