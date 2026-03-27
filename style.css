@@ -104,8 +104,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
 .more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
-/* 🌟 단어장 정렬: 체크박스 영역 좌측 완벽 배치 (flex-start) */
-.vocab-top-controls { display: flex; justify-content: flex-start; margin-bottom: 10px; flex-shrink: 0; width: 100%; padding-left: 2px;}
+/* 🌟 단어장 정렬: 체크박스 영역 우측 끝으로 완벽 재배치 (flex-end) */
+.vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 10px; flex-shrink: 0; width: 100%; padding-right: 5px;}
 .switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;}
 .switch-label input { margin: 0; width: 16px; height: 16px;}
 

@@ -605,5 +605,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V4.1 로드 완료! (좌측 정렬 복구 완료)");
+console.log("🌟 껌딱지 꼬꼬 V4.2 로드 완료! (뜻 가리기 우측 재배치 완료!)");
 // --- 파일 끝 ---
