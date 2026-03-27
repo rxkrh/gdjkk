@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V4.1</title>
+    <title>껌딱지 꼬꼬 V4.0</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -95,32 +95,10 @@
                     <button id="open-feedback-btn" class="action-btn" style="background-color:#74b9ff;">개발자에게 쪽지 보내기 <img src="icon-mail.png" class="ui-icon" style="filter: brightness(0) invert(1);"></button>
                 </div>
 
-                <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
-                    <h3 style="color:#9b59b6; display:flex; align-items:center; margin-top:0;"><img src="icon-wrench.png" class="ui-icon"> 개발자 비밀 도구</h3>
-                    
-                    <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
-                        <h4 style="margin: 0 0 8px 0; color:#333; font-size:13px;">🍔 칼로리 계산기</h4>
-                        <div class="input-group" style="margin-bottom: 5px;">
-                            <input type="text" id="cal-food-input" placeholder="음식명" style="flex:1;">
-                            <input type="number" id="cal-kcal-input" placeholder="kcal" style="width:70px;">
-                            <button id="add-cal-btn" class="action-btn auto-width" style="background-color:#e74c3c;">추가</button>
-                        </div>
-                        <div id="cal-list" style="font-size:12px; color:#555; max-height:80px; overflow-y:auto; margin-bottom:5px;"></div>
-                        <div style="font-weight:bold; color:#e74c3c; font-size:14px; text-align:right;">총 섭취: <span id="cal-total-display">0</span> kcal</div>
-                    </div>
-
-                    <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
-                        <h4 style="margin: 0 0 5px 0; color:#333; font-size:13px;">🎵 오프라인 플레이어</h4>
-                        <p style="font-size:11px; color:#888; margin:0 0 8px 0;">브라우저 보안상 매번 기기에서 파일을 선택해야 합니다.</p>
-                        <input type="file" id="music-upload-input" accept="audio/*" multiple style="font-size:11px; margin-bottom:10px; width:100%;">
-                        <audio id="audio-player" controls style="width:100%; height:30px; outline:none;"></audio>
-                        <ul id="music-playlist" class="scroll-list" style="margin-top:10px; max-height:100px; list-style:none; padding:0; border:1px solid #ddd; border-radius:5px; background:white;"></ul>
-                    </div>
-
-                    <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
+                <div id="admin-feedback-area" class="menu-section" style="display:none; border:2px solid #ff9f43; background:#fffaf0;">
+                    <h3 style="color:#d35400; display:flex; align-items:center;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h3>
                     <div id="admin-feedback-list" class="scroll-list"></div>
                 </div>
-
             </div>
         </aside>
 
@@ -156,20 +134,20 @@
             </div>
 
             <div id="tab-schedule" class="tab-content flex-column-tab">
-                <div class="calendar-wrapper" style="flex-shrink: 0;">
-                    <div class="calendar-header">
-                        <button id="prev-month-btn" class="icon-btn">◀</button>
-                        <h3 id="current-month-display">2026년 3월</h3>
-                        <button id="next-month-btn" class="icon-btn">▶</button>
-                    </div>
-                    <div class="calendar-days-of-week">
-                        <div style="color:#ff6b6b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#0984e3;">토</div>
-                    </div>
-                    <div id="calendar-grid" class="calendar-grid"></div>
-                </div>
-                <div id="selected-date-info" style="font-weight:bold; color:#0984e3; margin:10px 0 5px 0; font-size: 0.85em; flex-shrink: 0;">선택한 날짜: -</div>
-                
                 <div class="scroll-wrapper">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button id="prev-month-btn" class="icon-btn">◀</button>
+                            <h3 id="current-month-display">2026년 3월</h3>
+                            <button id="next-month-btn" class="icon-btn">▶</button>
+                        </div>
+                        <div class="calendar-days-of-week">
+                            <div style="color:#ff6b6b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#0984e3;">토</div>
+                        </div>
+                        <div id="calendar-grid" class="calendar-grid"></div>
+                    </div>
+                    
+                    <div id="selected-date-info" style="font-weight:bold; color:#0984e3; margin:10px 0 5px 0; font-size: 0.85em;">선택한 날짜: -</div>
                     <ul id="schedule-list" class="item-list"></ul>
                 </div>
                 
