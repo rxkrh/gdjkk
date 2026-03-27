@@ -59,7 +59,7 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
-// 🌟 데이터 전체 동기화 로직
+// 🌟 전체 동기화 로직 (Update 방식으로 에러 원천 차단)
 function syncToCloud() {
     if (auth.currentUser) {
         const dataToSync = { 
@@ -72,6 +72,7 @@ function syncToCloud() {
     }
 }
 
+// 🌟 글로벌 언어 자동 감지 스마트 TTS
 window.speakWord = (text) => {
     if (!window.speechSynthesis) { alert("현재 브라우저에서는 음성 기능을 지원하지 않습니다."); return; }
     const utterance = new SpeechSynthesisUtterance(text);
@@ -90,7 +91,7 @@ window.speakWord = (text) => {
     window.speechSynthesis.speak(utterance);
 };
 
-// 🌟 설정값 UI 초기 적용
+// 🌟 세팅 초기 적용
 document.body.style.fontFamily = currentFont;
 document.body.className = currentFontSize;
 const fontSelect = document.getElementById('font-select');
@@ -182,6 +183,7 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
+            // 🌟 말풍선 초기화 방어벽
             if(kokoSpeech) {
                 kokoSpeech.dataset.testMode = "false"; kokoSpeech.dataset.feedMode = "false";
                 kokoSpeech.style.color = "#333"; kokoSpeech.style.backgroundColor = "white";
@@ -240,7 +242,7 @@ function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
     if(kokoSpeech) {
-        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.dataset.feedMode = "false";
+        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.dataset.feedMode = "false";
         if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
         else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
     }
@@ -302,7 +304,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인 및 데이터 동기화
+// 🔐 4. 로그인 및 동기화
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -327,7 +329,6 @@ auth.onAuthStateChanged((user) => {
                 if (data.schedules) { schedules = data.schedules; }
                 if (data.attendance) { attendance = data.attendance; checkAttendanceUI(); }
                 
-                // 🌟 클라우드에서 설정값 동기화 적용
                 if (data.settings) {
                     if(data.settings.font) currentFont = data.settings.font;
                     if(data.settings.fontSize) currentFontSize = data.settings.fontSize;
@@ -350,9 +351,7 @@ auth.onAuthStateChanged((user) => {
                     if(chatFontSelect) chatFontSelect.value = currentChatFont;
                     if(chatBox) chatBox.style.fontSize = currentChatFont;
                     
-                    loadCustomFonts();
-                    applyShortcuts();
-                    renderTabEditor();
+                    loadCustomFonts(); applyShortcuts(); renderTabEditor();
                 }
 
                 renderTodoFolders(); renderVocabFolders(); renderCalendar(); renderTabButtons();
@@ -480,7 +479,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이
+// 🏆 6. 퀘스트, 투두, 디데이, 단어장 
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -520,9 +519,14 @@ function renderTodos() {
         list.innerHTML += `<li><label style="cursor:pointer; display:flex; align-items:center; gap:8px; width:100%;"><input type="checkbox" ${t.checked ? 'checked' : ''} onchange="toggleTodo(${i})"><span style="flex-grow:1; ${t.checked ? 'text-decoration:line-through; color:#aaa;' : ''}">${t.text}</span></label><button class="more-btn todo-more-btn" onclick="openTodoMenu(${i}, event)">⋮</button></li>`; 
         if (t.checked) anyChecked = true; 
     }); 
+    
     if(kokoSpeech) {
-        if (anyChecked) { kokoSpeech.style.backgroundColor = "#ffd070"; kokoSpeech.style.color = "#333"; kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; kokoSpeech.dataset.feedMode = "true"; } 
-        else { if(kokoSpeech.dataset.feedMode === "true") { kokoSpeech.style.backgroundColor = "white"; kokoSpeech.dataset.feedMode = "false"; updateKokoAppearance(); } }
+        if (anyChecked) { 
+            kokoSpeech.style.backgroundColor = "#ffd070"; 
+            kokoSpeech.style.color = "#333";
+            kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; 
+            kokoSpeech.dataset.feedMode = "true"; 
+        } 
     }
 }
 document.getElementById('add-todo-btn')?.addEventListener('click', () => { const input = document.getElementById('new-todo-input'); if(!input) return; const txt = input.value.trim(); if (!txt) return; if(!todoData[currentTodoFolder]) todoData[currentTodoFolder] = []; todoData[currentTodoFolder].push({ text: txt, checked: false }); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); input.value=''; renderTodos(); syncToCloud(); });
@@ -740,6 +744,14 @@ function updateKokoAppearance() {
     }
 }
 
+// 🌟 포춘쿠키 이벤트 활성화
+const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
+document.getElementById('icon-fortune')?.addEventListener('click', () => { 
+    if(kokoSpeech && (kokoSpeech.dataset.feedMode === "true" || kokoSpeech.dataset.testMode === "true")) return; 
+    if(kokoSpeech) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; 
+    jumpKoko(); 
+});
+
 kokoChar?.addEventListener('click', () => { 
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
@@ -807,5 +819,5 @@ function revealMine(r, c) {
 
 // 🌟 초기 렌더링 호출
 getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V5.0 로드 완료! (완벽 클라우드 설정 동기화 추가!)");
+console.log("🌟 껌딱지 꼬꼬 V5.0 Final 로드 완료! (최종 마스터피스 안정화 버전)");
 // --- 파일 끝 ---
