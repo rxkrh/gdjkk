@@ -800,7 +800,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 V5.8 꼬꼬 게임 (화면 확대/축소 및 가로/세로 분리)
+// 🌟 V5.9 꼬꼬 게임 (커스텀 게임오버 팝업 연동 및 레이아웃 수정)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -809,6 +809,9 @@ let currentZoom = 1;
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('fullscreen-game-overlay').style.display = 'flex';
     document.getElementById('difficulty-popup').style.display = 'block';
+    document.getElementById('game-over-popup').style.display = 'none'; // 초기화시 숨김
+    document.getElementById('game-stage-wrapper').style.opacity = '1';
+    document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
     document.getElementById('game-stage').innerHTML = ''; 
 });
 
@@ -852,6 +855,10 @@ window.initMinesweeper = (diff) => {
     if(mineCount > maxMines) mineCount = maxMines;
 
     document.getElementById('difficulty-popup').style.display = 'none';
+    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-stage-wrapper').style.opacity = '1';
+    document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
+    
     remainingMines = mineCount; gameTime = 0; isFirstClick = true; 
     currentZoom = 1; updateZoomDisplay(); // 게임 시작시 줌 초기화
     updateHeader(); createBoard();
@@ -912,7 +919,8 @@ function toggleFlag(cell) {
 
 function placeMines(exR, exC) {
     let placed = 0;
-    while(placed < mineCount) {
+    let actualMines = Math.min(mineCount, boardRows*boardCols - 1); 
+    while(placed < actualMines) {
         let r = Math.floor(Math.random()*boardRows); let c = Math.floor(Math.random()*boardCols);
         if(gridData[r][c] !== 'M' && (r !== exR || c !== exC)) { gridData[r][c] = 'M'; placed++; }
     }
@@ -927,17 +935,51 @@ function countMines(r, c) {
     return count;
 }
 
+// 🌟 커스텀 게임 오버 팝업 연동 로직
 function gameOver(win) {
     clearInterval(timerInterval);
-    if(win) alert(`대성공! ${gameTime}초 만에 완료했습니다! 🎉`);
-    else { alert("앗! 상한 달걀이에요! 💥"); }
-    document.getElementById('fullscreen-game-overlay').style.display = 'none';
+    if(win) {
+        alert(`대성공! ${gameTime}초 만에 완료했습니다! 🎉`);
+        document.getElementById('fullscreen-game-overlay').style.display = 'none';
+    } else {
+        // 🌟 올바르게 꽂은 깃발 개수 산출 (찾아낸 진짜 지뢰 수)
+        let correctFlags = 0;
+        document.querySelectorAll('.egg-cell.flagged').forEach(cell => {
+            let r = cell.dataset.r; let c = cell.dataset.c;
+            if(gridData[r][c] === 'M') correctFlags++;
+        });
+
+        // 팝업 텍스트 주입
+        document.getElementById('result-time').innerText = gameTime;
+        document.getElementById('result-mines').innerText = correctFlags;
+        
+        // UI 효과
+        document.getElementById('game-stage-wrapper').style.opacity = '0.5';
+        document.getElementById('game-stage-wrapper').style.pointerEvents = 'none';
+        document.getElementById('game-over-popup').style.display = 'block';
+    }
 }
+
+// 커스텀 팝업 내 버튼 동작
+window.retryGameFromPopup = () => {
+    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-stage-wrapper').style.opacity = '1';
+    document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
+    document.getElementById('game-stage').innerHTML = ''; // 보드 삭제
+    document.getElementById('difficulty-popup').style.display = 'block'; // 난이도 창 복구
+};
+
+window.exitGameFromPopup = () => {
+    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-stage-wrapper').style.opacity = '1';
+    document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
+    document.getElementById('fullscreen-game-overlay').style.display = 'none'; // 게임장 완전히 나가기
+};
 
 function checkWin() {
     const revealedCount = document.querySelectorAll('.egg-cell.revealed').length;
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V5.8 로드 완료! (게임 줌인/아웃 및 난이도 하향 적용 완료)");
+console.log("🌟 껌딱지 꼬꼬 V5.9 로드 완료! (커스텀 게임오버 팝업 및 그리드 여백 완전 최적화)");
 // --- 파일 끝 ---

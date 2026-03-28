@@ -2,7 +2,6 @@
 
 * { box-sizing: border-box; }
 
-/* 🌟 앱 전체 드래그 방지 기본 세팅 */
 .font-xsmall { font-size: 12px; } 
 .font-small { font-size: 14px; } 
 .font-normal { font-size: 16px; } 
@@ -154,7 +153,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .game-item-card:active .game-item-icon { transform: scale(0.95); opacity: 0.7; }
 .game-item-title { font-size: 0.75em; font-weight: bold; color: #555; text-align: center; word-break: keep-all; line-height: 1.2; }
 
-/* 🌟 전체화면 게임 오버레이: 드래그/선택 방지 옵션 추가 */
+/* 🌟 전체화면 게임 오버레이 (간격 완벽 일치 최적화) */
 .fullscreen-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -163,7 +162,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
     display: none;
     flex-direction: column;
     align-items: center;
-    padding-top: 60px;
+    /* 상단 닫기버튼 여유공간 60px, 좌/우/하단 여백 20px 통일 */
+    padding: 60px 20px 20px 20px;
     animation: zoomIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     user-select: none;
     -webkit-user-select: none;
@@ -176,23 +176,26 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 }
 
 .game-exit-btn { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
-.game-header { display: flex; justify-content: space-around; width: 80%; margin-bottom: 20px; }
+.game-header { display: flex; justify-content: space-around; width: 100%; margin-bottom: 20px; flex-shrink: 0; }
 .header-unit { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .header-label { font-size: 0.9em; font-weight: bold; }
 .header-value { font-size: 1.4em; font-weight: 800; font-family: monospace; color: #333; }
 
-.game-zoom-controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+.game-zoom-controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
 
-/* 🌟 화면 잘림 방지를 위한 스크롤 영역 추가 */
+/* 🌟 화면 꽉 채우는 스크롤 그리드 주머니 (Flex-grow로 화면 끝까지 팽창!) */
 .game-stage-wrapper {
-    width: 95%; max-width: 400px; max-height: 60vh;
-    overflow: auto; background: #e1d8c1;
-    border-radius: 12px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-    padding: 10px; scrollbar-width: none; -ms-overflow-style: none;
+    width: 100%; 
+    flex: 1; /* 남은 세로 공간 100% 차지 -> 하단 여백 20px과 정확히 일치함 */
+    overflow: auto; 
+    background: #e1d8c1;
+    border-radius: 12px; 
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+    padding: 10px; 
+    scrollbar-width: none; -ms-overflow-style: none;
 }
 .game-stage-wrapper::-webkit-scrollbar { display: none; }
 
-/* 🌟 줌 인/아웃을 위해 CSS 변수(--cell-size) 사용 */
 .game-stage { display: grid; gap: 4px; width: max-content; margin: 0 auto; }
 .egg-cell { width: var(--cell-size, 35px); height: var(--cell-size, 35px); background-image: url('egg.png'); background-size: contain; background-repeat: no-repeat; background-position: center; cursor: pointer; position: relative; }
 .egg-cell.revealed { background-image: url('fried-egg.png'); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: calc(var(--cell-size, 35px) * 0.4); }
@@ -220,8 +223,10 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .chat-message.me { background-color: #ffd070; align-self: flex-end; border-bottom-right-radius: 2px; }
 .chat-message.other { background-color: #f1f3f5; align-self: flex-start; border-bottom-left-radius: 2px; }
 .chat-message.megaphone { background-color: #ff6b6b; color: white; font-weight: bold; border: 2px solid #ff4757; }
+
 .shake { animation: shake 0.5s ease-in-out; }
 @keyframes shake { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
+
 .chat-sender { font-size: 0.75em; color: #666; margin-bottom: 3px; font-weight: bold; }
 
 #megaphone-label { font-size: 0.8em; cursor: pointer; color: #ff9f43; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; }
