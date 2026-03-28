@@ -59,7 +59,6 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
-// 🌟 전체 동기화 로직 (Update 방식으로 에러 원천 차단)
 function syncToCloud() {
     if (auth.currentUser) {
         const dataToSync = { 
@@ -72,7 +71,6 @@ function syncToCloud() {
     }
 }
 
-// 🌟 글로벌 언어 자동 감지 스마트 TTS
 window.speakWord = (text) => {
     if (!window.speechSynthesis) { alert("현재 브라우저에서는 음성 기능을 지원하지 않습니다."); return; }
     const utterance = new SpeechSynthesisUtterance(text);
@@ -91,7 +89,6 @@ window.speakWord = (text) => {
     window.speechSynthesis.speak(utterance);
 };
 
-// 🌟 세팅 초기 적용
 document.body.style.fontFamily = currentFont;
 document.body.className = currentFontSize;
 const fontSelect = document.getElementById('font-select');
@@ -132,6 +129,7 @@ document.getElementById('add-custom-font-btn')?.addEventListener('click', () => 
     alert("폰트가 추가되었습니다! 목록에서 선택해보세요. 🐣"); 
 });
 
+const shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
     document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
@@ -145,7 +143,33 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
         localStorage.setItem('koko_shortcuts', JSON.stringify(shortcuts)); applyShortcuts(); syncToCloud();
     });
 });
-document.getElementById('icon-game')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
+
+// 🌟 게임장 오픈 로직 (하단 탭을 게임 목록으로 완전히 교체)
+document.getElementById('icon-game')?.addEventListener('click', () => { 
+    document.getElementById('main-tab-buttons').style.display = 'none';
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.getElementById('game-list-view').style.display = 'flex';
+    
+    const container = document.getElementById('main-tab-container');
+    const zone = document.getElementById('koko-zone-main');
+    if(!container.classList.contains('expanded')) {
+        container.classList.add('expanded');
+        zone.classList.add('compact');
+    }
+});
+
+// 🌟 게임장에서 원래 탭 메뉴로 복귀하는 뒤로가기 버튼
+document.getElementById('close-game-list-btn')?.addEventListener('click', () => {
+    document.getElementById('game-list-view').style.display = 'none';
+    document.getElementById('main-tab-buttons').style.display = 'flex';
+    renderTabButtons(); // 현재 활성화된 탭을 자연스럽게 다시 띄웁니다.
+});
+
+// 🌟 게임 목록에서 지뢰찾기 선택 시 모달 오픈
+document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
+    document.getElementById('game-modal').style.display = 'flex';
+    initMinesweeper();
+});
 
 function renderTabEditor() {
     const list = document.getElementById('tab-edit-list'); if(!list) return;
@@ -183,12 +207,16 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
-            // 🌟 말풍선 초기화 방어벽
+            // 🌟 버그 수정: 어떤 탭을 누르든 일단 Koko 말풍선을 완벽하게 백지로 세탁(Reset)합니다.
             if(kokoSpeech) {
-                kokoSpeech.dataset.testMode = "false"; kokoSpeech.dataset.feedMode = "false";
-                kokoSpeech.style.color = "#333"; kokoSpeech.style.backgroundColor = "white";
+                kokoSpeech.dataset.testMode = "false"; 
+                kokoSpeech.dataset.feedMode = "false";
+                kokoSpeech.style.color = "#333"; 
+                kokoSpeech.style.backgroundColor = "white";
+                updateKokoAppearance(); // 기본 날씨/시간 멘트 주입
             }
 
+            // 리셋 후 각 기능 탭별로 특수 멘트를 다시 덮어씌웁니다.
             if(targetId === 'tab-schedule') { renderCalendar(); kokoScheduleCheck(); } 
             else if (targetId === 'tab-vocab') { 
                 renderVocabFolders(); 
@@ -197,8 +225,7 @@ function renderTabButtons() {
                     kokoSpeech.innerHTML = "꼬꼬를 터치하여 암기 테스트하기 📝"; kokoSpeech.dataset.testMode = "true";
                 }
             } 
-            else if (targetId === 'tab-todo') { renderTodos(); }
-            else { updateKokoAppearance(); }
+            else if (targetId === 'tab-todo') { renderTodos(); } 
         });
     });
 }
@@ -242,7 +269,6 @@ function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
     if(kokoSpeech) {
-        kokoSpeech.style.backgroundColor = "white"; kokoSpeech.style.color = "#333"; kokoSpeech.dataset.feedMode = "false";
         if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
         else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
     }
@@ -744,7 +770,7 @@ function updateKokoAppearance() {
     }
 }
 
-// 🌟 포춘쿠키 이벤트 활성화
+// 🌟 포춘쿠키 이벤트
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('icon-fortune')?.addEventListener('click', () => { 
     if(kokoSpeech && (kokoSpeech.dataset.feedMode === "true" || kokoSpeech.dataset.testMode === "true")) return; 
@@ -771,7 +797,7 @@ kokoChar?.addEventListener('click', () => {
         
         setTimeout(() => { 
             renderTodos(); 
-            if (todoData[currentTodoFolder] && todoData[currentTodoFolder].length > 0) {
+            if (todoData[currentTodoFolder] && todoData[currentTodoFolder].some(t => t.checked)) {
                 if(kokoSpeech) kokoSpeech.innerHTML = "다음 할 일도 화이팅! <img src='icon-chick.png' class='ui-icon'>";
             } else {
                 updateKokoAppearance(); 
@@ -789,35 +815,5 @@ kokoChar?.addEventListener('click', () => {
     }
 });
 
-// ==========================================
-// 🎮 8. 꼬꼬 게임
-// ==========================================
-document.getElementById('open-game-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('game-modal').style.display = 'flex'; initMinesweeper(); });
-document.getElementById('close-game-btn')?.addEventListener('click', () => { document.getElementById('game-modal').style.display = 'none'; });
-document.getElementById('reset-game-btn')?.addEventListener('click', () => { initMinesweeper(); });
-
-let mineBoard = []; let mineRevealed = []; let mineGameOver = false; let safeCellsCount = 0; const MINE_SIZE = 6; const MINES_COUNT = 5;
-function initMinesweeper() {
-    const grid = document.getElementById('minesweeper-grid'); if(!grid) return; grid.innerHTML = '';
-    document.getElementById('game-status').innerText = `안전한 달걀을 찾아주세요! (폭탄 ${MINES_COUNT}개)`; document.getElementById('game-status').style.color = "#555";
-    mineBoard = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(0)); mineRevealed = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(false)); mineGameOver = false; safeCellsCount = (MINE_SIZE * MINE_SIZE) - MINES_COUNT;
-    let placed = 0; while(placed < MINES_COUNT) { let r = Math.floor(Math.random()*MINE_SIZE); let c = Math.floor(Math.random()*MINE_SIZE); if(mineBoard[r][c] !== 'M') { mineBoard[r][c] = 'M'; placed++; } }
-    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { if(mineBoard[r][c] === 'M') continue; let count=0; for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nr<MINE_SIZE && nc>=0 && nc<MINE_SIZE && mineBoard[nr][nc]==='M') count++; } } mineBoard[r][c] = count; } }
-    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { let cell = document.createElement('div'); cell.className = 'mine-cell'; cell.id = `mine-${r}-${c}`; cell.innerText = '🥚'; cell.addEventListener('click', () => revealMine(r,c)); grid.appendChild(cell); } }
-}
-function revealMine(r, c) {
-    if(mineGameOver || mineRevealed[r][c]) return; mineRevealed[r][c] = true; let cell = document.getElementById(`mine-${r}-${c}`); cell.classList.add('revealed');
-    if(mineBoard[r][c] === 'M') {
-        cell.innerText = '💥'; mineGameOver = true; document.getElementById('game-status').innerText = "앗! 상한 달걀이에요! 😭"; document.getElementById('game-status').style.color = "#e74c3c";
-        for(let ir=0; ir<MINE_SIZE; ir++){ for(let ic=0; ic<MINE_SIZE; ic++){ if(mineBoard[ir][ic]==='M' && !mineRevealed[ir][ic]) { let c = document.getElementById(`mine-${ir}-${ic}`); c.innerText = '💥'; c.classList.add('revealed'); } } }
-    } else {
-        safeCellsCount--; cell.innerText = mineBoard[r][c] > 0 ? mineBoard[r][c] : '';
-        if(mineBoard[r][c] === 0) { for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nc>=0 && nr<MINE_SIZE && nc<MINE_SIZE) revealMine(nr,nc); } } }
-        if(safeCellsCount === 0) { mineGameOver = true; document.getElementById('game-status').innerText = "대성공! 맛있는 달걀을 다 찾았어요! 🐣✨"; document.getElementById('game-status').style.color = "#2ecc71"; if(kokoSpeech) kokoSpeech.innerHTML = "와! 지뢰찾기 고수시네요! <img src='icon-party.png' class='ui-icon'>"; jumpKoko(); }
-    }
-}
-
-// 🌟 초기 렌더링 호출
-getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
-console.log("🌟 껌딱지 꼬꼬 V5.0 Final 로드 완료! (최종 마스터피스 안정화 버전)");
+console.log("🌟 껌딱지 꼬꼬 V5.1 로드 완료! (최종 마스터피스)");
 // --- 파일 끝 ---

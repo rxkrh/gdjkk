@@ -10,12 +10,13 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
+/* 채팅 박스(50px)와 딱 떨어지도록 padding-bottom을 50px로 일치! */
 .app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
 .center-flex { display: flex; justify-content: center; align-items: center; gap: 5px; }
 
-.top-bar { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; position: relative; z-index: 10; }
+.top-bar { display: flex; justify-content: space-between; align-items: flex-start; padding: 15px 20px; position: relative; z-index: 10; }
 .icon-btn { background: none; border: none; padding: 5px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: inherit; font-family: inherit; }
 .icon-btn .ui-icon { width: 24px; height: 24px; margin: 0; }
 .top-right-icons { display: flex; align-items: center; gap: 10px; font-weight: bold; color: #555; }
@@ -63,7 +64,9 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .drag-icon-img { width: 14px; height: 14px; opacity: 0.6; transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
 .tab-container.expanded .drag-icon-img { transform: rotate(180deg); }
 
+/* 🌟 버그 수정: 탭 버튼이 사라지면 경계선도 같이 없어지도록 설정 */
 .tab-buttons { display: flex; width: 100%; height: 45px; border-bottom: 1px solid #eee; overflow: hidden; flex-shrink: 0; margin: 0; padding: 0;}
+/* 🌟 버그 수정: 탭 개수에 관계없이 1/N로 균등하게 꽉 차게 조절! */
 .tab-btn { flex: 1 1 0px; padding: 6px 0; font-size: 0.75em; background: none; border: none; font-weight: bold; color: #888; cursor: pointer; border-bottom: 3px solid transparent; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 3px; white-space: nowrap; font-family: inherit; }
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
@@ -169,10 +172,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .chat-message.me { background-color: #ffd070; align-self: flex-end; border-bottom-right-radius: 2px; }
 .chat-message.other { background-color: #f1f3f5; align-self: flex-start; border-bottom-left-radius: 2px; }
 .chat-message.megaphone { background-color: #ff6b6b; color: white; font-weight: bold; border: 2px solid #ff4757; }
-
 .shake { animation: shake 0.5s ease-in-out; }
 @keyframes shake { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
-
 .chat-sender { font-size: 0.75em; color: #666; margin-bottom: 3px; font-weight: bold; }
 
 #megaphone-label { font-size: 0.8em; cursor: pointer; color: #ff9f43; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; }
