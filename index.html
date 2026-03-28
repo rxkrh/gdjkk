@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V5.5</title>
+    <title>껌딱지 꼬꼬 V5.6</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
 <body class="font-normal">
     <div class="app-container">
+        
         <header class="top-bar">
             <div style="display:flex; flex-direction:column; gap:8px; align-items:center; width:40px;">
                 <button id="menu-open-btn" class="icon-btn"><img src="icon-menu.png" class="ui-icon" alt="메뉴"></button>
@@ -16,6 +17,7 @@
                     <img src="icon-game.png" class="ui-icon" style="margin:0; width:20px; height:20px;" alt="게임">
                 </button>
             </div>
+            
             <div class="top-right-icons" id="top-shortcut-area">
                 <span class="weather-info" id="icon-weather"><img src="icon-sun.png" class="ui-icon" id="weather-icon-img"> 날씨 로딩중...</span>
                 <button id="icon-fortune" class="icon-btn"><img src="icon-fortune.png" class="ui-icon" alt="운세"></button>
@@ -24,12 +26,45 @@
 
         <div id="side-menu-overlay" class="overlay"></div>
         <aside id="side-menu" class="side-menu">
-            <div class="menu-header"><h2>메뉴</h2><button id="menu-close-btn" class="icon-btn">❌</button></div>
+            <div class="menu-header">
+                <h2>메뉴</h2>
+                <button id="menu-close-btn" class="icon-btn" style="font-size: 16px;">❌</button>
+            </div>
             <div class="menu-content">
                 <div class="menu-section">
-                    <h3>⚙️ 꼬꼬 설정</h3>
+                    <h3><img src="icon-profile.png" class="ui-icon"> 내 프로필</h3>
+                    <div id="login-area">
+                        <button id="google-login-btn" class="action-btn" style="background-color:#4285F4;">G 구글 로그인</button>
+                    </div>
+                    <div id="user-profile-area" style="display:none;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; align-items:center;">
+                            <span id="user-email-display" style="color:#888;"></span>
+                            <button id="logout-btn" class="sub-btn">로그아웃</button>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" id="nickname-input" placeholder="새 닉네임 입력">
+                            <button id="save-nickname-btn" class="action-btn auto-width">변경</button>
+                        </div>
+                        <div id="profile-status" style="font-weight:bold; margin-top:5px;"></div>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <h3><img src="icon-setting.png" class="ui-icon"> 꼬꼬 설정</h3>
                     <div class="setting-item" style="flex-direction: column; gap: 8px;">
-                        <select id="font-select"></select>
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span>글꼴</span>
+                            <button id="add-custom-font-btn" class="action-btn auto-width font-add-btn">+ 폰트 추가</button>
+                        </div>
+                        <select id="font-select" style="width: 100%; padding: 5px; border-radius: 5px; border: 1px solid #ddd;">
+                            <option value="'Pretendard', sans-serif">기본 깔끔체</option>
+                            <option value="'Jua', sans-serif">주아체</option>
+                            <option value="'Nanum Pen Script', cursive">손글씨</option>
+                            <option value="'Dongle', sans-serif">동글체</option>
+                        </select>
+                    </div>
+                    <div class="setting-item" style="margin-top: 10px; align-items:center;">
+                        <span>크기</span>
                         <select id="size-select">
                             <option value="font-xsmall">매우 작게</option>
                             <option value="font-small">작게</option>
@@ -37,76 +72,345 @@
                             <option value="font-large">크게</option>
                             <option value="font-xlarge">매우 크게</option>
                         </select>
-                        <button id="enable-push-btn" class="action-btn">🔔 알림 켜기</button>
+                    </div>
+                    <div class="setting-item" style="margin-top: 10px; align-items:center;">
+                        <span>기기 알림 (PWA)</span>
+                        <button id="enable-push-btn" class="action-btn auto-width" style="background-color:#2ecc71; padding:4px 8px; font-size:0.8em; height:26px;">🔔 켜기</button>
                     </div>
                 </div>
+
+                <div class="menu-section">
+                    <h3>📌 상단 바로가기 편집</h3>
+                    <div style="display:flex; gap:12px; font-size:13px; font-weight:bold; color:#555; align-items:center;">
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="weather"> 날씨</label>
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="fortune"> 운세</label>
+                        <label style="display:flex; align-items:center; gap:4px;"><input type="checkbox" class="chk-shortcut" data-key="game"> 게임</label>
+                    </div>
                 </div>
+
+                <div class="menu-section">
+                    <h3>📌 하단 탭 메뉴 편집</h3>
+                    <p style="font-size:11px; color:#888; margin:0 0 10px 0;">🟰 버튼을 잡고 드래그하여 순서를 바꾸세요.</p>
+                    <ul id="tab-edit-list" class="tab-edit-list"></ul>
+                </div>
+
+                <div class="menu-section">
+                    <h3><img src="icon-mailbox.png" class="ui-icon"> 고객센터</h3>
+                    <button id="open-feedback-btn" class="action-btn" style="background-color:#74b9ff;">개발자에게 쪽지 보내기 <img src="icon-mail.png" class="ui-icon" style="filter: brightness(0) invert(1);"></button>
+                </div>
+
+                <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
+                    <h3 style="color:#9b59b6; display:flex; align-items:center; margin-top:0;"><img src="icon-wrench.png" class="ui-icon"> 개발자 비밀 도구</h3>
+                    
+                    <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
+                        <h4 style="margin: 0 0 8px 0; color:#333; font-size:13px;">🍔 칼로리 계산기</h4>
+                        <div class="input-group" style="margin-bottom: 5px;">
+                            <input type="text" id="cal-food-input" placeholder="음식명" style="flex:1;">
+                            <input type="number" id="cal-kcal-input" placeholder="kcal" style="width:70px;">
+                            <button id="add-cal-btn" class="action-btn auto-width" style="background-color:#e74c3c;">추가</button>
+                        </div>
+                        <div id="cal-list" style="font-size:12px; color:#555; max-height:80px; overflow-y:auto; margin-bottom:5px;"></div>
+                        <div style="font-weight:bold; color:#e74c3c; font-size:14px; text-align:right;">총 섭취: <span id="cal-total-display">0</span> kcal</div>
+                    </div>
+
+                    <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
+                        <h4 style="margin: 0 0 5px 0; color:#333; font-size:13px;">🎵 오프라인 플레이어</h4>
+                        <p style="font-size:11px; color:#888; margin:0 0 8px 0;">브라우저 보안상 매번 기기에서 파일을 선택해야 합니다.</p>
+                        <input type="file" id="music-upload-input" accept="audio/*" multiple style="font-size:11px; margin-bottom:10px; width:100%;">
+                        <audio id="audio-player" controls style="width:100%; height:30px; outline:none;"></audio>
+                        <ul id="music-playlist" class="scroll-list" style="margin-top:10px; max-height:100px; list-style:none; padding:0; border:1px solid #ddd; border-radius:5px; background:white;"></ul>
+                    </div>
+
+                    <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
+                    <div id="admin-feedback-list" class="scroll-list"></div>
+                </div>
+
+            </div>
         </aside>
 
         <main class="koko-zone" id="koko-zone-main">
-            <div class="speech-bubble" id="koko-speech">주인님, 반가워요! 삐약!</div>
-            <img src="koko.png" alt="꼬꼬" class="koko-character" id="koko">
+            <div class="speech-bubble" id="koko-speech">주인님, 오늘 하루도 화이팅이에요! 삐약! <img src="icon-chick.png" class="ui-icon"></div>
+            <img src="koko.png" alt="껌딱지 꼬꼬" class="koko-character" id="koko">
         </main>
 
         <section class="tab-container" id="main-tab-container">
-            <div class="tab-drag-handle" id="tab-drag-handle"><div class="drag-handle-pill"></div></div>
+            <div class="tab-drag-handle" id="tab-drag-handle">
+                <div class="drag-handle-pill">
+                    <img src="icon-up.png" id="tab-drag-icon" class="drag-icon-img" alt="펼치기">
+                </div>
+            </div>
+
             <div class="tab-buttons" id="main-tab-buttons"></div>
 
             <div id="game-list-view" class="tab-content flex-column-tab" style="display:none; padding-top:0;">
                 <div style="display:flex; flex-direction:column; width:100%; border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 8px;">
-                    <h3 style="text-align:center; margin: 10px 0; color:#555; font-size: 1.1em;">게임 목록</h3>
-                    <button id="close-game-list-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; align-self: flex-start;">⬅️ 뒤로가기</button>
+                    <h3 style="text-align:center; margin: 10px 0; color:#555; font-size: 1.1em; width: 100%;">게임 목록</h3>
+                    <button id="close-game-list-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; padding:5px 0 0 0; display:flex; align-items:center; align-self: flex-start;">⬅️ 뒤로가기</button>
                 </div>
-                <div class="scroll-wrapper" style="display: flex; flex-wrap: wrap; gap: 20px;">
+                <div class="scroll-wrapper" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start;">
                     <div id="play-minesweeper-list-btn" class="game-item-card">
-                        <div class="game-item-icon"><img src="egg.png" style="width:40px;"></div>
+                        <div class="game-item-icon"><img src="egg.png" style="width:40px; height:40px; object-fit:contain;"></div>
                         <span class="game-item-title">달걀 지뢰찾기</span>
                     </div>
                 </div>
             </div>
 
-            <div id="tab-todo" class="tab-content active flex-column-tab">...</div>
-        </section>
-
-        <div id="fullscreen-game-overlay" class="fullscreen-overlay">
-            <button id="game-close-x" class="game-exit-btn">❌</button>
-            
-            <div class="game-header">
-                <div class="header-unit">
-                    <span class="header-label" style="color:#0984e3;">타이머</span>
-                    <span id="game-timer" class="header-value">000</span>
+            <div id="tab-todo" class="tab-content active flex-column-tab">
+                <div class="folder-header">
+                    <select id="todo-folder-select" class="folder-select"></select>
+                    <button id="add-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;" title="추가">➕ 폴더</button>
+                    <button id="edit-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;" title="수정">✏️</button>
+                    <button id="del-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;" title="삭제">🗑️</button>
                 </div>
-                <div class="header-unit">
-                    <span class="header-label" style="color:#e74c3c;">남은 지뢰 개수</span>
-                    <span id="game-mine-count" class="header-value">00</span>
+                <div class="scroll-wrapper">
+                    <ul id="todo-list" class="item-list"></ul>
+                </div>
+                <div class="sticky-bottom-input">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <input type="text" id="new-todo-input" placeholder="이 폴더에 할 일 추가!">
+                        <button id="add-todo-btn" class="action-btn auto-width">추가</button>
+                    </div>
                 </div>
             </div>
 
-            <div id="game-stage" class="game-stage">
+            <div id="tab-schedule" class="tab-content flex-column-tab">
+                <div class="scroll-wrapper">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-header">
+                            <button id="prev-month-btn" class="icon-btn">◀</button>
+                            <h3 id="current-month-display">2026년 3월</h3>
+                            <button id="next-month-btn" class="icon-btn">▶</button>
+                        </div>
+                        <div class="calendar-days-of-week">
+                            <div style="color:#ff6b6b;">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div style="color:#0984e3;">토</div>
+                        </div>
+                        <div id="calendar-grid" class="calendar-grid"></div>
+                    </div>
+                    <div id="selected-date-info" style="font-weight:bold; color:#0984e3; margin:10px 0 5px 0; font-size: 0.85em;">선택한 날짜: -</div>
+                    <ul id="schedule-list" class="item-list"></ul>
                 </div>
+                
+                <div class="sticky-bottom-input">
+                    <div class="input-group" style="margin-bottom:0;">
+                        <input type="time" id="schedule-time-input" style="flex-grow:0; width:100px;">
+                        <input type="text" id="schedule-task-input" placeholder="일정 내용 (시간 선택)">
+                        <button id="add-schedule-btn" class="action-btn auto-width" style="background-color:#0984e3;">추가</button>
+                    </div>
+                </div>
+            </div>
 
-            <div id="difficulty-popup" class="difficulty-container">
-                <h2 style="margin-bottom:20px;">난이도 선택</h2>
-                <div class="diff-btns">
-                    <button onclick="initMinesweeper('easy')">쉬움</button>
-                    <button onclick="initMinesweeper('normal')">보통</button>
-                    <button onclick="initMinesweeper('hard')">어려움</button>
+            <div id="tab-dday" class="tab-content flex-column-tab">
+                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;"><img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!</div>
+                <div class="scroll-wrapper">
+                    <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
+                    <ul id="dday-list-display" class="item-list"></ul>
                 </div>
-                <div class="custom-settings">
-                    <p style="font-weight:bold; margin:15px 0 10px 0;">사용자 지정 게임</p>
-                    <div class="range-group">
-                        <label>행/열: <span id="val-size">10</span></label>
-                        <input type="range" id="input-size" min="5" max="15" value="10">
+                <div class="sticky-bottom-input">
+                    <div class="dday-one-line">
+                        <select id="dday-icon-select" class="dday-compact-select">
+                            <option value="">기본</option>
+                            <option value="🎂">🎂 생일</option>
+                            <option value="🔥">🔥 마감</option>
+                            <option value="💖">💖 기념</option>
+                            <option value="✈️">✈️ 여행</option>
+                            <option value="🎓">🎓 시험</option>
+                            <option value="🎯">🎯 목표</option>
+                        </select>
+                        <input type="text" id="dday-title-input" placeholder="디데이 제목">
+                        <div class="date-square-wrapper">
+                            <span id="date-square-icon">📅</span>
+                            <input type="date" id="dday-date-input" title="날짜 선택">
+                        </div>
+                        <button id="save-dday-btn" class="action-btn dday-save-btn">저장</button>
                     </div>
-                    <div class="range-group">
-                        <label>달걀 개수: <span id="val-mines">10</span></label>
-                        <input type="range" id="input-mines" min="3" max="50" value="10">
-                    </div>
-                    <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px;">게임 시작</button>
                 </div>
+            </div>
+
+            <div id="tab-vocab" class="tab-content flex-column-tab">
+                <div class="folder-header">
+                    <select id="vocab-folder-select" class="folder-select"></select>
+                    <button id="add-vocab-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;">➕ 폴더</button>
+                    <button id="edit-vocab-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;">✏️</button>
+                    <button id="del-vocab-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;">🗑️</button>
+                </div>
+                
+                <div class="vocab-top-controls">
+                    <label class="switch-label">
+                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer; margin:0; width:16px; height:16px; flex-shrink:0;">
+                        <span style="margin-left:6px; white-space: nowrap;">🙈 뜻 가리기 (터치 확인)</span>
+                    </label>
+                </div>
+                
+                <div class="scroll-wrapper">
+                    <ul id="vocab-list" class="item-list"></ul>
+                </div>
+                <div class="sticky-bottom-input">
+                    <div class="dday-one-line">
+                        <input type="text" id="new-vocab-word" placeholder="단어 (예: Apple)" style="flex:1;">
+                        <input type="text" id="new-vocab-mean" placeholder="뜻 (예: 사과)" style="flex:1;">
+                        <button id="add-vocab-btn" class="action-btn dday-save-btn" style="background-color:#9b59b6;">추가</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-quest" class="tab-content flex-column-tab">
+                <div class="scroll-wrapper" style="margin-bottom:0;">
+                    <div class="quest-header-section">
+                        <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71;">오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;"></button>
+                        <div class="attendance-info center-flex">현재 연속 출석: <strong id="attendance-streak">0</strong>일 <img src="icon-fire.png" class="ui-icon"></div>
+                    </div>
+                    <h4 class="quest-title"><img src="icon-crown.png" class="ui-icon"> 일일 꼬꼬 퀘스트</h4>
+                    <ul id="quest-list" class="item-list">
+                        <li id="quest-1"><span style="color:#aaa;">☑️ 꼬꼬 쓰다듬기 (터치)</span></li>
+                        <li id="quest-2"><span style="color:#aaa;">☑️ 오늘의 출석체크 하기</span></li>
+                        <li id="quest-3"><span style="color:#aaa;">☑️ 할 일 1개 완료하기</span></li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="chat-drawer" class="chat-drawer collapsed">
+            <div id="chat-header-bar" class="chat-header-bar">
+                <span id="chat-preview-text"><img src="icon-chat.png" class="ui-icon"> 여기를 눌러 채팅창 열기...</span>
+                <span id="chat-toggle-icon"><img src="icon-up.png" class="ui-icon"></span>
+            </div>
+            <div class="chat-drawer-body">
+                <div class="chat-controls-top">
+                    <div class="chat-tabs">
+                        <button id="tab-global" class="active">전체 채팅</button>
+                        <button id="tab-room">1:1 비밀방</button>
+                    </div>
+                </div>
+                <div id="room-code-area" style="display:none; margin-bottom: 8px;">
+                    <div class="input-group" style="margin: 0;">
+                        <input type="text" id="room-code-input" placeholder="방 코드">
+                        <button id="join-room-btn" class="action-btn auto-width" style="background-color:#a29bfe;">입장</button>
+                    </div>
+                </div>
+                <div class="chat-box" id="chat-box" style="font-size: 0.85em;">
+                    <div class="guide-text" style="margin-top:30px;">닉네임을 등록해야 채팅이 가능해요!</div>
+                </div>
+                <label id="megaphone-label">
+                    <input type="checkbox" id="megaphone-check"> 
+                    <img src="icon-mega.png" class="ui-icon" style="margin: 0 4px 0 0;"> 확성기로 크게 말하기
+                </label>
+                
+                <div class="input-group" style="margin-bottom: 0;">
+                    <input type="text" id="chat-input" placeholder="닉네임 등록 필요" disabled>
+                    <button id="send-chat-btn" class="action-btn auto-width" disabled>전송</button>
+                    <select id="chat-font-size-select" style="padding: 0 8px; font-size: 0.85em; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; width: auto; background: white; outline: none;">
+                        <option value="0.75em">작게</option>
+                        <option value="0.85em" selected>보통</option>
+                        <option value="1em">크게</option>
+                        <option value="1.15em">아주 크게</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="vocab-test-select-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div class="modal-box" style="text-align:center;">
+            <h3 style="margin-top:0; color:#0984e3;">📝 암기 테스트</h3>
+            <p class="modal-desc">어떤 테스트를 진행할까요?</p>
+            <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
+                <button class="action-btn" style="background-color:#74b9ff; font-size:1em;" onclick="startVocabTest('meanToWord')">💡 뜻 보고 🔤 단어 쓰기</button>
+                <button class="action-btn" style="background-color:#a29bfe; font-size:1em;" onclick="startVocabTest('wordToMean')">🔤 단어 보고 💡 뜻 쓰기</button>
+            </div>
+            <button class="action-btn" style="margin-top:15px; background-color:#ccc; color:#333;" onclick="closeVocabTestSelect()">취소</button>
+        </div>
+    </div>
+
+    <div id="vocab-test-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div class="modal-box" style="text-align:center;">
+            <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#888; margin-bottom:10px;">
+                <span id="test-progress" style="font-weight:bold; color:#0984e3;">1 / 10</span>
+                <span style="color:#2ecc71; cursor:pointer; font-weight:bold;" onclick="skipVocabTestQuestion()">모르겠어요 ⏭️</span>
+            </div>
+            <h2 id="test-question-text" style="margin:15px 0 20px 0; color:#333; font-size:1.5em; word-break: break-word;">Apple</h2>
+            <div id="test-feedback-text" style="font-size:0.9em; font-weight:bold; height:20px; margin-bottom:10px; display:flex; align-items:center; justify-content:center;"></div>
+            <input type="text" id="test-answer-input" placeholder="정답을 입력하세요" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:inherit; font-size:1em; margin-bottom:15px;" onkeypress="if(event.key==='Enter') submitVocabTestAnswer()">
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="action-btn" style="flex:1; background-color:#ccc; color:#333;" onclick="closeVocabTest()">종료</button>
+                <button class="action-btn" style="flex:1; background-color:#2ecc71;" onclick="submitVocabTestAnswer()">확인</button>
             </div>
         </div>
     </div>
+
+    <div id="fullscreen-game-overlay" class="fullscreen-overlay">
+        <button id="game-close-x" class="game-exit-btn">❌</button>
+        
+        <div class="game-header">
+            <div class="header-unit">
+                <span class="header-label" style="color:#0984e3;">타이머</span>
+                <span id="game-timer" class="header-value">000</span>
+            </div>
+            <div class="header-unit">
+                <span class="header-label" style="color:#e74c3c;">남은 지뢰 개수</span>
+                <span id="game-mine-count" class="header-value">00</span>
+            </div>
+        </div>
+
+        <div id="game-stage" class="game-stage">
+            </div>
+
+        <div id="difficulty-popup" class="difficulty-container">
+            <h2 style="margin-top:0; margin-bottom:20px;">난이도 선택</h2>
+            <div class="diff-btns">
+                <button onclick="initMinesweeper('easy')">쉬움</button>
+                <button onclick="initMinesweeper('normal')">보통</button>
+                <button onclick="initMinesweeper('hard')">어려움</button>
+            </div>
+            <div class="custom-settings">
+                <p style="font-weight:bold; margin:15px 0 10px 0; color:#555;">사용자 지정 게임</p>
+                <div class="range-group">
+                    <label>행/열: <span id="val-size">10</span></label>
+                    <input type="range" id="input-size" min="5" max="15" value="10">
+                </div>
+                <div class="range-group">
+                    <label>달걀 개수: <span id="val-mines">10</span></label>
+                    <input type="range" id="input-mines" min="3" max="50" value="10">
+                </div>
+                <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px;">게임 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#74b9ff;">쪽지 보내기</h3>
+            <p class="modal-desc">개발자에게 보내고 싶은 내용을 써주세요.</p>
+            <textarea id="feedback-text" rows="5"></textarea>
+            <div class="modal-buttons">
+                <button id="close-feedback-btn" class="action-btn" style="background-color:#ccc; color:#333;">취소</button>
+                <button id="send-feedback-btn" class="action-btn" style="background-color:#74b9ff;">전송하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="todo-dropdown" class="dday-dropdown"><button id="todo-edit-btn">✏️ 수정</button><button id="todo-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
+    <div id="dday-dropdown" class="dday-dropdown"><button id="dday-main-btn">👑 대표 지정</button><button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
+    <div id="vocab-dropdown" class="dday-dropdown"><button id="vocab-edit-btn">✏️ 수정</button><button id="vocab-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="script.js"></script>
+
+    <script>
+        document.getElementById('enable-push-btn')?.addEventListener('click', () => {
+            if (!("Notification" in window)) {
+                alert("이 기기/브라우저는 푸시 알림을 지원하지 않습니다. 😢");
+            } else if (Notification.permission === "granted") {
+                new Notification("꼬꼬 알림", { body: "이미 알림이 켜져 있어요! 삐약!", icon: "koko.png" });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        new Notification("꼬꼬 알림", { body: "푸시 알림이 설정되었습니다! 삐약!", icon: "koko.png" });
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
