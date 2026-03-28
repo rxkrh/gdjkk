@@ -122,10 +122,16 @@ loadCustomFonts();
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
     document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
-    document.getElementById('icon-game').style.display = shortcuts.game ? 'flex' : 'none';
+    
+    // 비로그인 상태일 때는 플로팅 버튼을 강제로 숨겨둠 (onAuthStateChanged에서 제어)
+    if(auth.currentUser && shortcuts.game) {
+        document.getElementById('icon-game').style.display = 'flex';
+    } else {
+        document.getElementById('icon-game').style.display = 'none';
+    }
+    
     document.querySelectorAll('.chk-shortcut').forEach(chk => { chk.checked = shortcuts[chk.dataset.key]; });
 }
-applyShortcuts();
 document.querySelectorAll('.chk-shortcut').forEach(chk => {
     chk.addEventListener('change', (e) => {
         shortcuts[e.target.dataset.key] = e.target.checked;
@@ -188,7 +194,6 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
-            // 🌟 말풍선 초기화 방어벽
             if(kokoSpeech) {
                 kokoSpeech.dataset.testMode = "false"; 
                 kokoSpeech.dataset.feedMode = "false";
@@ -245,7 +250,7 @@ function jumpKoko() {
     }
 }
 
-// 🌟 스케줄 말풍선 줄바꿈 적용!
+// 🌟 스케줄 말풍선 멘트 줄바꿈 적용
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
@@ -314,14 +319,29 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화
+// 🔐 4. 로그인, 동기화 및 🌟랜딩 페이지 제어🌟
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
+document.getElementById('center-google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider)); // 중앙 버튼 연결
 
 auth.onAuthStateChanged((user) => {
+    const mainTopBar = document.getElementById('main-top-bar');
+    const mainTabContainer = document.getElementById('main-tab-container');
+    const chatDrawerElement = document.getElementById('chat-drawer');
+    const centerLoginBtn = document.getElementById('center-google-login-btn');
+    const gameFab = document.getElementById('icon-game');
+
     if (user) {
-        document.getElementById('login-area').style.display = 'none'; document.getElementById('user-profile-area').style.display = 'block'; document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
+        // 🌟 로그인 완료 UI: 로비 활성화
+        if(mainTopBar) mainTopBar.style.display = 'flex';
+        if(mainTabContainer) mainTabContainer.style.display = 'flex';
+        if(chatDrawerElement) chatDrawerElement.style.display = 'flex';
+        if(centerLoginBtn) centerLoginBtn.style.display = 'none';
+        
+        document.getElementById('login-area').style.display = 'none'; 
+        document.getElementById('user-profile-area').style.display = 'block'; 
+        document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
         myUid = user.uid; 
         
         const adminArea = document.getElementById('admin-tools-area');
@@ -361,9 +381,11 @@ auth.onAuthStateChanged((user) => {
                     if(chatFontSelect) chatFontSelect.value = currentChatFont;
                     if(chatBox) chatBox.style.fontSize = currentChatFont;
                     
-                    loadCustomFonts(); applyShortcuts(); renderTabEditor();
+                    loadCustomFonts(); renderTabEditor();
                 }
-
+                
+                // 로그인 후에 숏컷 적용 및 게임 아이콘 상태 업데이트
+                applyShortcuts(); 
                 renderTodoFolders(); renderVocabFolders(); renderCalendar(); renderTabButtons();
                 
                 if (data.nickname) { 
@@ -373,10 +395,32 @@ auth.onAuthStateChanged((user) => {
                 }
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
-            } else { syncToCloud(); if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; }
+                updateKokoAppearance(); // 로그인 후 날씨 등 업데이트
+            } else { 
+                applyShortcuts();
+                syncToCloud(); 
+                if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; 
+            }
         }).catch(err => { console.error("Data Load Error:", err); });
     } else { 
-        document.getElementById('login-area').style.display = 'block'; document.getElementById('user-profile-area').style.display = 'none'; 
+        // 🌟 비로그인 UI: 랜딩 페이지 
+        if(mainTopBar) mainTopBar.style.display = 'none';
+        if(mainTabContainer) mainTabContainer.style.display = 'none';
+        if(chatDrawerElement) chatDrawerElement.style.display = 'none';
+        if(gameFab) gameFab.style.display = 'none';
+        if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
+        
+        if (kokoSpeech) {
+            kokoSpeech.innerHTML = "로그인 후 사용 가능해요 <img src='icon-chick.png' class='ui-icon'>";
+            kokoSpeech.style.backgroundColor = "white";
+            kokoSpeech.style.color = "#333";
+            kokoSpeech.dataset.feedMode = "false";
+            kokoSpeech.dataset.testMode = "false";
+        }
+        if (kokoChar) kokoChar.src = "koko.png";
+
+        document.getElementById('login-area').style.display = 'block'; 
+        document.getElementById('user-profile-area').style.display = 'none'; 
         const adminArea = document.getElementById('admin-tools-area');
         if(adminArea) adminArea.style.display = 'none'; 
     }
@@ -437,7 +481,7 @@ audioPlayer?.addEventListener('ended', () => { playMusic(currentAudioIndex + 1);
 // 💬 5. 채팅 로직
 // ==========================================
 function enableChat() { const input = document.getElementById('chat-input'); const btn = document.getElementById('send-chat-btn'); if(input) { input.disabled = false; input.placeholder = "메시지 입력..."; } if(btn) btn.disabled = false; loadMessages(); }
-if(myNickname) enableChat();
+// myNickname 체크는 비동기 처리 안에서 수행
 
 document.getElementById('tab-global')?.addEventListener('click', e => { currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room')?.classList.remove('active'); document.getElementById('room-code-area').style.display = 'none'; document.getElementById('megaphone-label').style.display = 'flex'; loadMessages(); });
 document.getElementById('tab-room')?.addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global')?.classList.remove('active'); document.getElementById('room-code-area').style.display = 'flex'; document.getElementById('megaphone-label').style.display = 'none'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:0.85em; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; if(chatUnsubscribe) chatUnsubscribe(); });
@@ -500,7 +544,6 @@ function checkAttendanceUI() {
 }
 document.getElementById('attendance-btn')?.addEventListener('click', () => { const todayStr = new Date().toDateString(); attendance.lastDate = todayStr; attendance.streak += 1; localStorage.setItem('koko_attendance', JSON.stringify(attendance)); syncToCloud(); checkAttendanceUI(); if(kokoSpeech) kokoSpeech.innerHTML = `출석 도장 꾹! 연속 ${attendance.streak}일째! <img src="icon-party.png" class="ui-icon">`; jumpKoko(); });
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; jumpKoko(); } }
-checkAttendanceUI(); 
 
 function renderTodoFolders() {
     const sel = document.getElementById('todo-folder-select'); if(!sel) return; sel.innerHTML = '';
@@ -529,7 +572,7 @@ function renderTodos() {
         if (t.checked) anyChecked = true; 
     }); 
     
-    if(kokoSpeech) {
+    if(kokoSpeech && auth.currentUser) {
         if (anyChecked) { 
             kokoSpeech.style.backgroundColor = "#ffd070"; 
             kokoSpeech.style.color = "#333";
@@ -609,7 +652,7 @@ window.openDdayMenu = (index, event) => {
     currentDdayIndex = index; const menu = document.getElementById('dday-dropdown'); if(!menu) return;
     const rect = event.target.getBoundingClientRect(); menu.style.display = 'flex'; menu.style.top = `${rect.bottom + window.scrollY}px`; menu.style.left = `${rect.left - 100}px`; 
 };
-document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
+document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech && auth.currentUser) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
 function renderVocabFolders() {
@@ -746,8 +789,21 @@ function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.ge
 
 function getDefaultSpeech() { const h = new Date().getHours(); return h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); }
 
+// 🌟 비로그인 시 웰컴 메시지 유지 로직
 function updateKokoAppearance() {
-    const hour = new Date().getHours(); const kokoImg = document.getElementById('koko'); if(!kokoImg) return;
+    const kokoImg = document.getElementById('koko'); if(!kokoImg) return;
+    
+    if (!auth.currentUser) {
+        kokoImg.src = "koko.png";
+        if(kokoSpeech) {
+            kokoSpeech.style.backgroundColor = "white";
+            kokoSpeech.style.color = "#333";
+            kokoSpeech.innerHTML = "로그인 후 사용 가능해요 <img src='icon-chick.png' class='ui-icon'>";
+        }
+        return;
+    }
+
+    const hour = new Date().getHours(); 
     if (hour >= 22 || hour < 6) { kokoImg.src = "koko-sleep.png"; if(kokoSpeech && kokoSpeech.dataset.feedMode !== "true" && kokoSpeech.dataset.testMode !== "true") { kokoSpeech.innerHTML = "쿨쿨... 꼬꼬는 꿈나라 여행 중... 💤"; } return; }
     if (currentWeatherCode !== -1) {
         if (currentWeatherCode <= 1) kokoImg.src = "koko-cool.png"; else if (currentWeatherCode >= 51 && currentWeatherCode <= 67 || currentWeatherCode >= 80) kokoImg.src = "koko-umbrella.png"; else if (currentWeatherCode >= 71 && currentWeatherCode <= 77) kokoImg.src = "koko-snow.png"; else kokoImg.src = "koko.png";
@@ -763,11 +819,12 @@ function updateKokoAppearance() {
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('icon-fortune')?.addEventListener('click', () => { 
     if(kokoSpeech && (kokoSpeech.dataset.feedMode === "true" || kokoSpeech.dataset.testMode === "true")) return; 
-    if(kokoSpeech) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; 
+    if(kokoSpeech && auth.currentUser) kokoSpeech.innerText = fortunes[Math.floor(Math.random()*fortunes.length)]; 
     jumpKoko(); 
 });
 
 kokoChar?.addEventListener('click', () => { 
+    if (!auth.currentUser) return; // 비로그인 시 터치 무시
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
         jumpKoko(); return;
@@ -983,5 +1040,9 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V6.1 로드 완료!");
+// 🌟 앱 실행 시 기본 날씨 및 초기 렌더링 호출
+getKokoWeather(); 
+updateKokoAppearance(); 
+
+console.log("🌟 껌딱지 꼬꼬 V6.3 로드 완료! (완벽 로그인 랜딩/플로팅 버튼 최적화)");
 // --- 파일 끝 ---
