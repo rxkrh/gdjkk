@@ -10,8 +10,8 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
-/* 🌟 안전 여백 60px 유지 */
-.app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 60px; }
+/* 🌟 하단 탭과 채팅창의 완벽한 1:1 밀착을 위해 padding-bottom을 50px로 픽스! */
+.app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
 .center-flex { display: flex; justify-content: center; align-items: center; gap: 5px; }
@@ -58,6 +58,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .tab-container { background: white; border-radius: 25px 25px 0 0; box-shadow: 0 -5px 20px rgba(0,0,0,0.05); height: 280px; flex: 0 0 280px; display: flex; flex-direction: column; position: relative; z-index: 5; transition: height 0.5s cubic-bezier(0.25, 1, 0.5, 1), flex 0.5s cubic-bezier(0.25, 1, 0.5, 1); margin-bottom: 0; }
 .tab-container.expanded { flex: 1 1 auto; height: 100%; } 
 
+/* 🌟 게임 아이콘 플로팅 버튼 복구 완료 (크기는 축소 유지) */
 .game-fab { position: absolute; top: -50px; right: 20px; background: white; border-radius: 50%; width: 40px; height: 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; justify-content: center; align-items: center; z-index: 20; transition: transform 0.2s; }
 .game-fab:active { transform: scale(0.9); }
 
@@ -106,10 +107,9 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .item-list li { display: flex; align-items: center; justify-content: space-between; background: #f9f9f9; padding: 10px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9em; width: 100%; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;}
 .item-list li label input[type="checkbox"] { margin: 0; width: 1.2em; height: 1.2em; flex-shrink: 0; cursor: pointer; }
 
-/* 🌟 버그 픽스: 스케줄 수정버튼용 스타일 */
-.edit-btn { background: none; border: none; color: #f39c12; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; display: flex; align-items: center; justify-content: center; line-height: 1; }
-.delete-btn, .more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
-.more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
+/* 버튼 통일 처리 */
+.delete-btn, .more-btn, .schedule-more-btn { background: none; border: none; color: #ff6b6b; cursor: pointer; padding: 5px; flex-shrink: 0; font-size: 1.05em; font-weight: bold; display: flex; align-items: center; justify-content: center; line-height: 1;}
+.more-btn, .schedule-more-btn { color: #888; font-size: 1.2em; padding: 0 5px;}
 
 .vocab-top-controls { display: flex; justify-content: flex-end; margin-bottom: 5px; flex-shrink: 0; width: 100%; padding-right: 5px;}
 .switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px;}
@@ -153,6 +153,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 #attendance-streak { color: #ff9f43; font-size: 1.2em; margin: 0 4px; }
 .quest-title { margin: 0 0 10px 0; color: #555; display: flex; align-items: center; font-size: 1em; flex-shrink: 0;}
 
+/* 게임장 스타일 */
 .game-item-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; width: 75px; }
 .game-item-icon { width: 60px; height: 60px; background: transparent; border: none; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 2.2em; transition: transform 0.2s; }
 .game-item-card:active .game-item-icon { transform: scale(0.95); opacity: 0.7; }
