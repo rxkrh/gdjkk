@@ -188,6 +188,7 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
+            // 🌟 말풍선 초기화 방어벽
             if(kokoSpeech) {
                 kokoSpeech.dataset.testMode = "false"; 
                 kokoSpeech.dataset.feedMode = "false";
@@ -244,12 +245,16 @@ function jumpKoko() {
     }
 }
 
+// 🌟 스케줄 말풍선 줄바꿈 적용!
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
     if(kokoSpeech) {
-        if(todaysSchedules.length === 0) { kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; } 
-        else { kokoSpeech.innerHTML = `일정이 있습니다! '${todaysSchedules[0].task}' 🗓️`; }
+        if(todaysSchedules.length === 0) { 
+            kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
+        } else { 
+            kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong> 🗓️`; 
+        }
     }
     jumpKoko(); 
 }
@@ -483,7 +488,7 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이, 단어장 
+// 🏆 6. 퀘스트, 투두, 디데이
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
@@ -800,7 +805,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 V6.0 꼬꼬 게임 (모바일 스크롤 최적화 및 팝업 통합 제어)
+// 🌟 8. 꼬꼬 게임 (지뢰찾기)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -932,7 +937,6 @@ function countMines(r, c) {
     return count;
 }
 
-// 🌟 승리 팝업 로직 업데이트
 function gameOver(win) {
     clearInterval(timerInterval);
     const header = document.getElementById('result-header');
@@ -941,7 +945,7 @@ function gameOver(win) {
 
     if(win) {
         header.innerText = "지뢰찾기 성공! 🎉";
-        header.style.color = "#2ecc71"; // 초록색
+        header.style.color = "#2ecc71"; 
         msg.innerHTML = `지뢰를 모두 찾는 데에 <span style="color:#0984e3;">${gameTime}초</span> 걸렸어요!`;
     } else {
         let correctFlags = 0;
@@ -950,7 +954,7 @@ function gameOver(win) {
             if(gridData[r][c] === 'M') correctFlags++;
         });
         header.innerText = "앗, 상한 달걀이에요 💥";
-        header.style.color = "#e74c3c"; // 빨간색
+        header.style.color = "#e74c3c"; 
         msg.innerHTML = `<span style="color:#0984e3;">${gameTime}</span>초 동안 지뢰를 <span style="color:#2ecc71;">${correctFlags}</span>개 찾았어요!<br>다시 도전하시겠어요?`;
     }
 
@@ -979,5 +983,5 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V6.0 로드 완료! (팝업 모바일 잘림 수정 및 승리 커스텀 UI 적용 완료)");
+console.log("🌟 껌딱지 꼬꼬 V6.1 로드 완료!");
 // --- 파일 끝 ---
