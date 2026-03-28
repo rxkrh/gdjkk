@@ -42,8 +42,6 @@ let currentFont = localStorage.getItem('koko_font') || "'Pretendard', sans-serif
 let currentFontSize = localStorage.getItem('koko_font_size') || "font-normal";
 let currentChatFont = localStorage.getItem('koko_chat_font') || "0.85em";
 let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || [];
-
-// 🌟 버그 픽스: shortcuts 변수가 유일하게 선언되도록 수정!
 let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
 
 const defaultTabs = [
@@ -801,22 +799,35 @@ kokoChar?.addEventListener('click', () => {
     }
 });
 
-// 🌟 V5.5 지뢰찾기 로직 (전체화면, 애니메이션 유지)
+// ==========================================
+// 🎮 8. 꼬꼬 게임 (전체화면 & 난이도)
+// ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; let boardSize = 10; let mineCount = 10; let isFirstClick = true;
+
+document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
+    document.getElementById('fullscreen-game-overlay').style.display = 'flex';
+    document.getElementById('difficulty-popup').style.display = 'block';
+    document.getElementById('game-stage').innerHTML = ''; 
+});
 
 document.getElementById('game-close-x')?.addEventListener('click', () => {
     document.getElementById('fullscreen-game-overlay').style.display = 'none';
     clearInterval(timerInterval);
 });
 
-document.getElementById('input-size').oninput = function() { document.getElementById('val-size').innerText = this.value; };
-document.getElementById('input-mines').oninput = function() { document.getElementById('val-mines').innerText = this.value; };
+const inputSize = document.getElementById('input-size');
+const inputMines = document.getElementById('input-mines');
+if(inputSize) inputSize.oninput = function() { document.getElementById('val-size').innerText = this.value; };
+if(inputMines) inputMines.oninput = function() { document.getElementById('val-mines').innerText = this.value; };
 
-function initMinesweeper(diff) {
-    if(diff === 'easy') { boardSize = 6; mineCount = 4; }
+window.initMinesweeper = (diff) => {
+    if(diff === 'easy') { boardSize = 6; mineCount = 5; }
     else if(diff === 'normal') { boardSize = 10; mineCount = 15; }
     else if(diff === 'hard') { boardSize = 12; mineCount = 30; }
-    else if(diff === 'custom') { boardSize = parseInt(document.getElementById('input-size').value); mineCount = parseInt(document.getElementById('input-mines').value); }
+    else if(diff === 'custom') { 
+        boardSize = parseInt(document.getElementById('input-size').value); 
+        mineCount = parseInt(document.getElementById('input-mines').value); 
+    }
     
     document.getElementById('difficulty-popup').style.display = 'none';
     remainingMines = mineCount; gameTime = 0; isFirstClick = true; updateHeader(); createBoard();
@@ -877,7 +888,8 @@ function toggleFlag(cell) {
 
 function placeMines(exR, exC) {
     let placed = 0;
-    while(placed < mineCount) {
+    let actualMines = Math.min(mineCount, boardSize*boardSize - 1); 
+    while(placed < actualMines) {
         let r = Math.floor(Math.random()*boardSize); let c = Math.floor(Math.random()*boardSize);
         if(gridData[r][c] !== 'M' && (r !== exR || c !== exC)) { gridData[r][c] = 'M'; placed++; }
     }
@@ -904,5 +916,5 @@ function checkWin() {
     if(revealedCount === (boardSize * boardSize) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V5.6 로드 완료! (오류 수정 및 안정화 최종본)");
+console.log("🌟 껌딱지 꼬꼬 V5.7 로드 완료! (전체화면 게임장 자바스크립트 버그 완벽 복구)");
 // --- 파일 끝 ---

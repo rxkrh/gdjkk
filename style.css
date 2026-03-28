@@ -215,10 +215,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .chat-message.me { background-color: #ffd070; align-self: flex-end; border-bottom-right-radius: 2px; }
 .chat-message.other { background-color: #f1f3f5; align-self: flex-start; border-bottom-left-radius: 2px; }
 .chat-message.megaphone { background-color: #ff6b6b; color: white; font-weight: bold; border: 2px solid #ff4757; }
-
 .shake { animation: shake 0.5s ease-in-out; }
 @keyframes shake { 0% {transform: translateX(0);} 25% {transform: translateX(-5px);} 50% {transform: translateX(5px);} 75% {transform: translateX(-5px);} 100% {transform: translateX(0);} }
-
 .chat-sender { font-size: 0.75em; color: #666; margin-bottom: 3px; font-weight: bold; }
 
 #megaphone-label { font-size: 0.8em; cursor: pointer; color: #ff9f43; font-weight: bold; display: flex; align-items: center; margin-bottom: 8px; }
