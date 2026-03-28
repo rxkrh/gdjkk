@@ -800,7 +800,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 V5.9 꼬꼬 게임 (커스텀 게임오버 팝업 연동 및 레이아웃 수정)
+// 🌟 V6.0 꼬꼬 게임 (모바일 스크롤 최적화 및 팝업 통합 제어)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -809,7 +809,7 @@ let currentZoom = 1;
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('fullscreen-game-overlay').style.display = 'flex';
     document.getElementById('difficulty-popup').style.display = 'block';
-    document.getElementById('game-over-popup').style.display = 'none'; // 초기화시 숨김
+    document.getElementById('game-result-popup').style.display = 'none'; 
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
     document.getElementById('game-stage').innerHTML = ''; 
@@ -820,7 +820,6 @@ document.getElementById('game-close-x')?.addEventListener('click', () => {
     clearInterval(timerInterval);
 });
 
-// 커스텀 레인지 연결
 const inputRows = document.getElementById('input-rows');
 const inputCols = document.getElementById('input-cols');
 const inputMines = document.getElementById('input-mines');
@@ -828,7 +827,6 @@ if(inputRows) inputRows.oninput = function() { document.getElementById('val-rows
 if(inputCols) inputCols.oninput = function() { document.getElementById('val-cols').innerText = this.value; };
 if(inputMines) inputMines.oninput = function() { document.getElementById('val-mines').innerText = this.value; };
 
-// 확대 축소 로직
 document.getElementById('zoom-in-btn')?.addEventListener('click', () => {
     if(currentZoom < 2) currentZoom += 0.2; updateZoomDisplay();
 });
@@ -850,17 +848,16 @@ window.initMinesweeper = (diff) => {
         mineCount = parseInt(document.getElementById('input-mines').value); 
     }
     
-    // 지뢰 개수 방어 로직
-    let maxMines = (boardRows * boardCols) - 1;
+    let maxMines = Math.floor((boardRows * boardCols) * 0.8);
     if(mineCount > maxMines) mineCount = maxMines;
 
     document.getElementById('difficulty-popup').style.display = 'none';
-    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-result-popup').style.display = 'none';
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
     
     remainingMines = mineCount; gameTime = 0; isFirstClick = true; 
-    currentZoom = 1; updateZoomDisplay(); // 게임 시작시 줌 초기화
+    currentZoom = 1; updateZoomDisplay(); 
     updateHeader(); createBoard();
     
     clearInterval(timerInterval);
@@ -935,45 +932,46 @@ function countMines(r, c) {
     return count;
 }
 
-// 🌟 커스텀 게임 오버 팝업 연동 로직
+// 🌟 승리 팝업 로직 업데이트
 function gameOver(win) {
     clearInterval(timerInterval);
+    const header = document.getElementById('result-header');
+    const msg = document.getElementById('result-message');
+    const popup = document.getElementById('game-result-popup');
+
     if(win) {
-        alert(`대성공! ${gameTime}초 만에 완료했습니다! 🎉`);
-        document.getElementById('fullscreen-game-overlay').style.display = 'none';
+        header.innerText = "지뢰찾기 성공! 🎉";
+        header.style.color = "#2ecc71"; // 초록색
+        msg.innerHTML = `지뢰를 모두 찾는 데에 <span style="color:#0984e3;">${gameTime}초</span> 걸렸어요!`;
     } else {
-        // 🌟 올바르게 꽂은 깃발 개수 산출 (찾아낸 진짜 지뢰 수)
         let correctFlags = 0;
         document.querySelectorAll('.egg-cell.flagged').forEach(cell => {
             let r = cell.dataset.r; let c = cell.dataset.c;
             if(gridData[r][c] === 'M') correctFlags++;
         });
-
-        // 팝업 텍스트 주입
-        document.getElementById('result-time').innerText = gameTime;
-        document.getElementById('result-mines').innerText = correctFlags;
-        
-        // UI 효과
-        document.getElementById('game-stage-wrapper').style.opacity = '0.5';
-        document.getElementById('game-stage-wrapper').style.pointerEvents = 'none';
-        document.getElementById('game-over-popup').style.display = 'block';
+        header.innerText = "앗, 상한 달걀이에요 💥";
+        header.style.color = "#e74c3c"; // 빨간색
+        msg.innerHTML = `<span style="color:#0984e3;">${gameTime}</span>초 동안 지뢰를 <span style="color:#2ecc71;">${correctFlags}</span>개 찾았어요!<br>다시 도전하시겠어요?`;
     }
+
+    document.getElementById('game-stage-wrapper').style.opacity = '0.5';
+    document.getElementById('game-stage-wrapper').style.pointerEvents = 'none';
+    popup.style.display = 'block';
 }
 
-// 커스텀 팝업 내 버튼 동작
 window.retryGameFromPopup = () => {
-    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-result-popup').style.display = 'none';
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
-    document.getElementById('game-stage').innerHTML = ''; // 보드 삭제
-    document.getElementById('difficulty-popup').style.display = 'block'; // 난이도 창 복구
+    document.getElementById('game-stage').innerHTML = ''; 
+    document.getElementById('difficulty-popup').style.display = 'block'; 
 };
 
 window.exitGameFromPopup = () => {
-    document.getElementById('game-over-popup').style.display = 'none';
+    document.getElementById('game-result-popup').style.display = 'none';
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
-    document.getElementById('fullscreen-game-overlay').style.display = 'none'; // 게임장 완전히 나가기
+    document.getElementById('fullscreen-game-overlay').style.display = 'none'; 
 };
 
 function checkWin() {
@@ -981,5 +979,5 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V5.9 로드 완료! (커스텀 게임오버 팝업 및 그리드 여백 완전 최적화)");
+console.log("🌟 껌딱지 꼬꼬 V6.0 로드 완료! (팝업 모바일 잘림 수정 및 승리 커스텀 UI 적용 완료)");
 // --- 파일 끝 ---

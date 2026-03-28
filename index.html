@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V5.9</title>
+    <title>껌딱지 꼬꼬 V6.0</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -101,6 +101,7 @@
 
                 <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
                     <h3 style="color:#9b59b6; display:flex; align-items:center; margin-top:0;"><img src="icon-wrench.png" class="ui-icon"> 개발자 비밀 도구</h3>
+                    
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 8px 0; color:#333; font-size:13px;">🍔 칼로리 계산기</h4>
                         <div class="input-group" style="margin-bottom: 5px;">
@@ -111,6 +112,7 @@
                         <div id="cal-list" style="font-size:12px; color:#555; max-height:80px; overflow-y:auto; margin-bottom:5px;"></div>
                         <div style="font-weight:bold; color:#e74c3c; font-size:14px; text-align:right;">총 섭취: <span id="cal-total-display">0</span> kcal</div>
                     </div>
+
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 5px 0; color:#333; font-size:13px;">🎵 오프라인 플레이어</h4>
                         <p style="font-size:11px; color:#888; margin:0 0 8px 0;">브라우저 보안상 매번 기기에서 파일을 선택해야 합니다.</p>
@@ -118,6 +120,7 @@
                         <audio id="audio-player" controls style="width:100%; height:30px; outline:none;"></audio>
                         <ul id="music-playlist" class="scroll-list" style="margin-top:10px; max-height:100px; list-style:none; padding:0; border:1px solid #ddd; border-radius:5px; background:white;"></ul>
                     </div>
+
                     <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
                     <div id="admin-feedback-list" class="scroll-list"></div>
                 </div>
@@ -142,7 +145,7 @@
             <div id="game-list-view" class="tab-content flex-column-tab" style="display:none; padding-top:0;">
                 <div style="display:flex; flex-direction:column; width:100%; border-bottom: 1px solid #eee; margin-bottom: 15px; padding-bottom: 8px;">
                     <h3 style="text-align:center; margin: 10px 0; color:#555; font-size: 1.1em; width: 100%;">게임 목록</h3>
-                    <button id="close-game-list-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; padding:5px 0 0 0; display:flex; align-items:center; align-self: flex-start;">⬅️ 뒤로가기</button>
+                    <button id="close-game-list-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; padding:5px 0 0 0; display:flex; align-items:center; align-self: flex-start; font-family:inherit;">⬅️ 뒤로가기</button>
                 </div>
                 <div class="scroll-wrapper" style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: flex-start; align-content: flex-start;">
                     <div id="play-minesweeper-list-btn" class="game-item-card">
@@ -311,10 +314,10 @@
             <h3 style="margin-top:0; color:#0984e3;">📝 암기 테스트</h3>
             <p class="modal-desc">어떤 테스트를 진행할까요?</p>
             <div style="display:flex; flex-direction:column; gap:10px; margin-top:15px;">
-                <button class="action-btn" style="background-color:#74b9ff; font-size:1em;" onclick="startVocabTest('meanToWord')">💡 뜻 보고 🔤 단어 쓰기</button>
-                <button class="action-btn" style="background-color:#a29bfe; font-size:1em;" onclick="startVocabTest('wordToMean')">🔤 단어 보고 💡 뜻 쓰기</button>
+                <button class="action-btn" style="background-color:#74b9ff; font-size:1em; font-family:inherit;" onclick="startVocabTest('meanToWord')">💡 뜻 보고 🔤 단어 쓰기</button>
+                <button class="action-btn" style="background-color:#a29bfe; font-size:1em; font-family:inherit;" onclick="startVocabTest('wordToMean')">🔤 단어 보고 💡 뜻 쓰기</button>
             </div>
-            <button class="action-btn" style="margin-top:15px; background-color:#ccc; color:#333;" onclick="closeVocabTestSelect()">취소</button>
+            <button class="action-btn" style="margin-top:15px; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTestSelect()">취소</button>
         </div>
     </div>
 
@@ -328,8 +331,8 @@
             <div id="test-feedback-text" style="font-size:0.9em; font-weight:bold; height:20px; margin-bottom:10px; display:flex; align-items:center; justify-content:center;"></div>
             <input type="text" id="test-answer-input" placeholder="정답을 입력하세요" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:inherit; font-size:1em; margin-bottom:15px;" onkeypress="if(event.key==='Enter') submitVocabTestAnswer()">
             <div style="display:flex; gap:10px; width:100%;">
-                <button class="action-btn" style="flex:1; background-color:#ccc; color:#333;" onclick="closeVocabTest()">종료</button>
-                <button class="action-btn" style="flex:1; background-color:#2ecc71;" onclick="submitVocabTestAnswer()">확인</button>
+                <button class="action-btn" style="flex:1; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTest()">종료</button>
+                <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="submitVocabTestAnswer()">확인</button>
             </div>
         </div>
     </div>
@@ -380,20 +383,18 @@
                     <label>지뢰 개수: <span id="val-mines">12</span></label>
                     <input type="range" id="input-mines" min="3" max="50" value="12">
                 </div>
-                <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px;">게임 시작</button>
+                <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px; font-family:inherit;">게임 시작</button>
             </div>
         </div>
 
-        <div id="game-over-popup" class="difficulty-container" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3010; text-align: center;">
-            <h2 style="margin-top:0; margin-bottom:15px; color:#e74c3c;">앗, 상한 달걀이에요</h2>
-            <p style="font-size:1.05em; margin-bottom:20px; line-height:1.6; color:#333; font-weight:bold;">
-                <span id="result-time" style="color:#0984e3;">0</span>초 동안<br>
-                지뢰를 <span id="result-mines" style="color:#2ecc71;">0</span>개 찾았어요!<br>
-                다시 도전하시겠어요?
+        <div id="game-result-popup" class="difficulty-container" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3010; text-align: center;">
+            <h2 id="result-header" style="margin-top:0; margin-bottom:15px;">결과</h2>
+            <p id="result-message" style="font-size:1.05em; margin-bottom:20px; line-height:1.6; color:#333; font-weight:bold;">
+                메시지 영역
             </p>
             <div style="display:flex; gap:10px; width:100%;">
-                <button class="action-btn" style="flex:1; background-color:#e74c3c;" onclick="exitGameFromPopup()">나가기</button>
-                <button class="action-btn" style="flex:1; background-color:#2ecc71;" onclick="retryGameFromPopup()">다시하기</button>
+                <button class="action-btn" style="flex:1; background-color:#e74c3c; font-family:inherit;" onclick="exitGameFromPopup()">나가기</button>
+                <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="retryGameFromPopup()">다시하기</button>
             </div>
         </div>
 
