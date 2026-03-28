@@ -800,9 +800,11 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🎮 8. 꼬꼬 게임 (전체화면 & 난이도)
+// 🌟 V5.8 꼬꼬 게임 (화면 확대/축소 및 가로/세로 분리)
 // ==========================================
-let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; let boardSize = 10; let mineCount = 10; let isFirstClick = true;
+let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
+let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
+let currentZoom = 1;
 
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('fullscreen-game-overlay').style.display = 'flex';
@@ -815,22 +817,44 @@ document.getElementById('game-close-x')?.addEventListener('click', () => {
     clearInterval(timerInterval);
 });
 
-const inputSize = document.getElementById('input-size');
+// 커스텀 레인지 연결
+const inputRows = document.getElementById('input-rows');
+const inputCols = document.getElementById('input-cols');
 const inputMines = document.getElementById('input-mines');
-if(inputSize) inputSize.oninput = function() { document.getElementById('val-size').innerText = this.value; };
+if(inputRows) inputRows.oninput = function() { document.getElementById('val-rows').innerText = this.value; };
+if(inputCols) inputCols.oninput = function() { document.getElementById('val-cols').innerText = this.value; };
 if(inputMines) inputMines.oninput = function() { document.getElementById('val-mines').innerText = this.value; };
 
+// 확대 축소 로직
+document.getElementById('zoom-in-btn')?.addEventListener('click', () => {
+    if(currentZoom < 2) currentZoom += 0.2; updateZoomDisplay();
+});
+document.getElementById('zoom-out-btn')?.addEventListener('click', () => {
+    if(currentZoom > 0.6) currentZoom -= 0.2; updateZoomDisplay();
+});
+function updateZoomDisplay() {
+    document.getElementById('zoom-level-display').innerText = Math.round(currentZoom * 100) + '%';
+    document.documentElement.style.setProperty('--cell-size', (35 * currentZoom) + 'px');
+}
+
 window.initMinesweeper = (diff) => {
-    if(diff === 'easy') { boardSize = 6; mineCount = 5; }
-    else if(diff === 'normal') { boardSize = 10; mineCount = 15; }
-    else if(diff === 'hard') { boardSize = 12; mineCount = 30; }
+    if(diff === 'easy') { boardRows = 7; boardCols = 7; mineCount = 5; }
+    else if(diff === 'normal') { boardRows = 10; boardCols = 10; mineCount = 12; }
+    else if(diff === 'hard') { boardRows = 14; boardCols = 14; mineCount = 25; }
     else if(diff === 'custom') { 
-        boardSize = parseInt(document.getElementById('input-size').value); 
+        boardRows = parseInt(document.getElementById('input-rows').value); 
+        boardCols = parseInt(document.getElementById('input-cols').value); 
         mineCount = parseInt(document.getElementById('input-mines').value); 
     }
     
+    // 지뢰 개수 방어 로직
+    let maxMines = (boardRows * boardCols) - 1;
+    if(mineCount > maxMines) mineCount = maxMines;
+
     document.getElementById('difficulty-popup').style.display = 'none';
-    remainingMines = mineCount; gameTime = 0; isFirstClick = true; updateHeader(); createBoard();
+    remainingMines = mineCount; gameTime = 0; isFirstClick = true; 
+    currentZoom = 1; updateZoomDisplay(); // 게임 시작시 줌 초기화
+    updateHeader(); createBoard();
     
     clearInterval(timerInterval);
     timerInterval = setInterval(() => { gameTime++; document.getElementById('game-timer').innerText = String(gameTime).padStart(3, '0'); }, 1000);
@@ -843,12 +867,12 @@ function updateHeader() {
 
 function createBoard() {
     const stage = document.getElementById('game-stage');
-    stage.style.gridTemplateColumns = `repeat(${boardSize}, 1fr)`;
+    stage.style.gridTemplateColumns = `repeat(${boardCols}, 1fr)`;
     stage.innerHTML = '';
-    gridData = Array(boardSize).fill().map(() => Array(boardSize).fill(0));
+    gridData = Array(boardRows).fill().map(() => Array(boardCols).fill(0));
 
-    for (let r = 0; r < boardSize; r++) {
-        for (let c = 0; c < boardSize; c++) {
+    for (let r = 0; r < boardRows; r++) {
+        for (let c = 0; c < boardCols; c++) {
             const cell = document.createElement('div'); cell.className = 'egg-cell'; cell.dataset.r = r; cell.dataset.c = c;
             cell.onclick = () => revealCell(r, c);
             let timer;
@@ -873,7 +897,7 @@ function revealCell(r, c) {
         else {
             for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){
                 let nr = r+dr, nc = c+dc;
-                if(nr>=0 && nr<boardSize && nc>=0 && nc<boardSize) revealCell(nr, nc);
+                if(nr>=0 && nr<boardRows && nc>=0 && nc<boardCols) revealCell(nr, nc);
             }}
         }
     }
@@ -888,9 +912,8 @@ function toggleFlag(cell) {
 
 function placeMines(exR, exC) {
     let placed = 0;
-    let actualMines = Math.min(mineCount, boardSize*boardSize - 1); 
-    while(placed < actualMines) {
-        let r = Math.floor(Math.random()*boardSize); let c = Math.floor(Math.random()*boardSize);
+    while(placed < mineCount) {
+        let r = Math.floor(Math.random()*boardRows); let c = Math.floor(Math.random()*boardCols);
         if(gridData[r][c] !== 'M' && (r !== exR || c !== exC)) { gridData[r][c] = 'M'; placed++; }
     }
 }
@@ -899,7 +922,7 @@ function countMines(r, c) {
     let count = 0;
     for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){
         let nr = r+dr, nc = c+dc;
-        if(nr>=0 && nr<boardSize && nc>=0 && nc<boardSize && gridData[nr][nc] === 'M') count++;
+        if(nr>=0 && nr<boardRows && nc>=0 && nc<boardCols && gridData[nr][nc] === 'M') count++;
     }}
     return count;
 }
@@ -913,8 +936,8 @@ function gameOver(win) {
 
 function checkWin() {
     const revealedCount = document.querySelectorAll('.egg-cell.revealed').length;
-    if(revealedCount === (boardSize * boardSize) - mineCount) gameOver(true);
+    if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-console.log("🌟 껌딱지 꼬꼬 V5.7 로드 완료! (전체화면 게임장 자바스크립트 버그 완벽 복구)");
+console.log("🌟 껌딱지 꼬꼬 V5.8 로드 완료! (게임 줌인/아웃 및 난이도 하향 적용 완료)");
 // --- 파일 끝 ---

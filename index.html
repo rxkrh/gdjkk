@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V5.7</title>
+    <title>껌딱지 꼬꼬 V5.8</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -337,7 +337,7 @@
         </div>
     </div>
 
-    <div id="fullscreen-game-overlay" class="fullscreen-overlay">
+    <div id="fullscreen-game-overlay" class="fullscreen-overlay" oncontextmenu="return false;">
         <button id="game-close-x" class="game-exit-btn">❌</button>
         
         <div class="game-header">
@@ -350,9 +350,17 @@
                 <span id="game-mine-count" class="header-value">00</span>
             </div>
         </div>
+        
+        <div class="game-zoom-controls">
+            <button id="zoom-out-btn" class="action-btn" style="width:40px; height:30px; background:#bdc3c7; padding:0;">➖</button>
+            <span id="zoom-level-display" style="font-weight:bold; color:#555; width:45px; text-align:center;">100%</span>
+            <button id="zoom-in-btn" class="action-btn" style="width:40px; height:30px; background:#bdc3c7; padding:0;">➕</button>
+        </div>
 
-        <div id="game-stage" class="game-stage">
-            </div>
+        <div id="game-stage-wrapper" class="game-stage-wrapper">
+            <div id="game-stage" class="game-stage">
+                </div>
+        </div>
 
         <div id="difficulty-popup" class="difficulty-container">
             <h2 style="margin-top:0; margin-bottom:20px;">난이도 선택</h2>
@@ -364,12 +372,16 @@
             <div class="custom-settings">
                 <p style="font-weight:bold; margin:15px 0 10px 0; color:#555;">사용자 지정 게임</p>
                 <div class="range-group">
-                    <label>행/열: <span id="val-size">10</span></label>
-                    <input type="range" id="input-size" min="5" max="15" value="10">
+                    <label>세로(행): <span id="val-rows">10</span></label>
+                    <input type="range" id="input-rows" min="5" max="20" value="10">
                 </div>
                 <div class="range-group">
-                    <label>달걀 개수: <span id="val-mines">10</span></label>
-                    <input type="range" id="input-mines" min="3" max="50" value="10">
+                    <label>가로(열): <span id="val-cols">10</span></label>
+                    <input type="range" id="input-cols" min="5" max="20" value="10">
+                </div>
+                <div class="range-group">
+                    <label>지뢰 개수: <span id="val-mines">12</span></label>
+                    <input type="range" id="input-mines" min="3" max="50" value="12">
                 </div>
                 <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px;">게임 시작</button>
             </div>
