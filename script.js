@@ -59,6 +59,66 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
+// 🌟 푸시 알림 공통 함수
+function sendPushNotification(title, options) {
+    if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(title, options);
+    }
+}
+
+// 🌟 앱 접속 시 일일 푸시 알림 체크 (디데이, 스케줄 요약)
+function checkDailyNotifications() {
+    if (!auth.currentUser) return;
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const lastNotifDate = localStorage.getItem('koko_last_notif_date');
+
+    if (lastNotifDate !== todayStr) {
+        let hasDday = false;
+        // 디데이 알림
+        ddays.forEach(d => {
+            const t = new Date(d.date); t.setHours(0,0,0,0);
+            const todayReset = new Date(); todayReset.setHours(0,0,0,0);
+            const diff = Math.ceil((t - todayReset) / 86400000);
+            if (diff === 0) {
+                // 포맷: D-Day! OO생일 🎂
+                sendPushNotification(`D-Day! ${d.title} ${d.icon}`, { body: "오늘이 바로 그날이에요! 삐약!", icon: "koko.png" });
+                hasDday = true;
+            }
+        });
+
+        // 오늘의 스케줄 요약 알림
+        const todaysSchedules = schedules[todayStr] || [];
+        if (todaysSchedules.length > 0) {
+            setTimeout(() => {
+                sendPushNotification("오늘의 일정 알림 📅", { body: `오늘 ${todaysSchedules.length}개의 일정이 있어요. 화이팅!`, icon: "koko.png" });
+            }, hasDday ? 2000 : 0); 
+        }
+        
+        localStorage.setItem('koko_last_notif_date', todayStr);
+    }
+}
+
+// 🌟 실시간 스케줄 푸시 알림 타이머 (1분마다 체크)
+setInterval(() => {
+    if (!auth.currentUser) return;
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    const currentTimeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    
+    const todaysSchedules = schedules[todayStr] || [];
+    todaysSchedules.forEach(s => {
+        if (s.time === currentTimeStr) {
+            const alertedKey = `koko_alerted_${todayStr}_${s.time}_${s.task}`;
+            if (!localStorage.getItem(alertedKey)) {
+                sendPushNotification(`일정 시간이에요! ⏰`, { body: `'${s.task}' 일정이 시작되었습니다.`, icon: "koko.png" });
+                localStorage.setItem(alertedKey, 'true');
+            }
+        }
+    });
+}, 60000);
+
+
 function syncToCloud() {
     if (auth.currentUser) {
         const dataToSync = { 
@@ -123,12 +183,8 @@ function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
     document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
     
-    // 비로그인 상태일 때는 플로팅 버튼을 강제로 숨겨둠 (onAuthStateChanged에서 제어)
-    if(auth.currentUser && shortcuts.game) {
-        document.getElementById('icon-game').style.display = 'flex';
-    } else {
-        document.getElementById('icon-game').style.display = 'none';
-    }
+    if(auth.currentUser && shortcuts.game) { document.getElementById('icon-game').style.display = 'flex'; } 
+    else { document.getElementById('icon-game').style.display = 'none'; }
     
     document.querySelectorAll('.chk-shortcut').forEach(chk => { chk.checked = shortcuts[chk.dataset.key]; });
 }
@@ -250,7 +306,7 @@ function jumpKoko() {
     }
 }
 
-// 🌟 스케줄 말풍선 멘트 줄바꿈 적용
+// 🌟 스케줄 말풍선 줄바꿈 적용
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
@@ -303,7 +359,8 @@ function renderSchedulesForSelected() {
     if(daySchedules.length === 0) { list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`; return; }
     daySchedules.forEach((s, i) => { 
         let badgeClass = s.time === "종일" ? "schedule-time-badge allday" : "schedule-time-badge";
-        list.innerHTML += `<li><span style="display:flex; align-items:center;"><span class="${badgeClass}">${s.time}</span> ${s.task}</span><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></li>`; 
+        // 🌟 버그 픽스: 삭제 버튼 옆에 수정(✏️) 버튼 추가
+        list.innerHTML += `<li><span style="display:flex; align-items:center;"><span class="${badgeClass}">${s.time}</span> ${s.task}</span><div style="display:flex;"><button class="edit-btn" onclick="editSchedule(${i})">✏️</button><button class="delete-btn" onclick="deleteSchedule(${i})">❌</button></div></li>`; 
     });
 }
 document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
@@ -316,14 +373,25 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
     schedules[selectedDateStr].push({ time: time, task: task });
     localStorage.setItem('koko_schedules', JSON.stringify(schedules)); timeObj.value = ''; taskObj.value = ''; renderCalendar(); syncToCloud();
 });
+
+// 🌟 스케줄 수정 로직
+window.editSchedule = i => {
+    const currentTask = schedules[selectedDateStr][i].task;
+    const newTask = prompt("일정을 수정하세요:", currentTask);
+    if(newTask && newTask.trim() !== "") {
+        schedules[selectedDateStr][i].task = newTask.trim();
+        localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
+        renderCalendar(); syncToCloud(); 
+    }
+};
 window.deleteSchedule = i => { schedules[selectedDateStr].splice(i, 1); localStorage.setItem('koko_schedules', JSON.stringify(schedules)); renderCalendar(); syncToCloud(); };
 
 // ==========================================
-// 🔐 4. 로그인, 동기화 및 🌟랜딩 페이지 제어🌟
+// 🔐 4. 로그인, 동기화 및 랜딩 페이지 제어
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
-document.getElementById('center-google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider)); // 중앙 버튼 연결
+document.getElementById('center-google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider)); 
 
 auth.onAuthStateChanged((user) => {
     const mainTopBar = document.getElementById('main-top-bar');
@@ -333,7 +401,6 @@ auth.onAuthStateChanged((user) => {
     const gameFab = document.getElementById('icon-game');
 
     if (user) {
-        // 🌟 로그인 완료 UI: 로비 활성화
         if(mainTopBar) mainTopBar.style.display = 'flex';
         if(mainTabContainer) mainTabContainer.style.display = 'flex';
         if(chatDrawerElement) chatDrawerElement.style.display = 'flex';
@@ -384,9 +451,11 @@ auth.onAuthStateChanged((user) => {
                     loadCustomFonts(); renderTabEditor();
                 }
                 
-                // 로그인 후에 숏컷 적용 및 게임 아이콘 상태 업데이트
                 applyShortcuts(); 
                 renderTodoFolders(); renderVocabFolders(); renderCalendar(); renderTabButtons();
+                
+                // 🌟 푸시 알림 체크 발동
+                checkDailyNotifications();
                 
                 if (data.nickname) { 
                     myNickname = data.nickname; localStorage.setItem('koko_nickname', myNickname); document.getElementById('nickname-input').value = myNickname; 
@@ -395,7 +464,7 @@ auth.onAuthStateChanged((user) => {
                 }
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
-                updateKokoAppearance(); // 로그인 후 날씨 등 업데이트
+                updateKokoAppearance(); 
             } else { 
                 applyShortcuts();
                 syncToCloud(); 
@@ -403,7 +472,6 @@ auth.onAuthStateChanged((user) => {
             }
         }).catch(err => { console.error("Data Load Error:", err); });
     } else { 
-        // 🌟 비로그인 UI: 랜딩 페이지 
         if(mainTopBar) mainTopBar.style.display = 'none';
         if(mainTabContainer) mainTabContainer.style.display = 'none';
         if(chatDrawerElement) chatDrawerElement.style.display = 'none';
@@ -481,7 +549,6 @@ audioPlayer?.addEventListener('ended', () => { playMusic(currentAudioIndex + 1);
 // 💬 5. 채팅 로직
 // ==========================================
 function enableChat() { const input = document.getElementById('chat-input'); const btn = document.getElementById('send-chat-btn'); if(input) { input.disabled = false; input.placeholder = "메시지 입력..."; } if(btn) btn.disabled = false; loadMessages(); }
-// myNickname 체크는 비동기 처리 안에서 수행
 
 document.getElementById('tab-global')?.addEventListener('click', e => { currentChatMode = 'global'; e.target.classList.add('active'); document.getElementById('tab-room')?.classList.remove('active'); document.getElementById('room-code-area').style.display = 'none'; document.getElementById('megaphone-label').style.display = 'flex'; loadMessages(); });
 document.getElementById('tab-room')?.addEventListener('click', e => { currentChatMode = 'room'; e.target.classList.add('active'); document.getElementById('tab-global')?.classList.remove('active'); document.getElementById('room-code-area').style.display = 'flex'; document.getElementById('megaphone-label').style.display = 'none'; document.getElementById('chat-box').innerHTML = '<div style="text-align:center; color:#888; font-size:0.85em; margin-top:30px;">코드를 입력하고 입장하세요 <img src="icon-lock.png" class="ui-icon"></div>'; if(chatUnsubscribe) chatUnsubscribe(); });
@@ -544,6 +611,7 @@ function checkAttendanceUI() {
 }
 document.getElementById('attendance-btn')?.addEventListener('click', () => { const todayStr = new Date().toDateString(); attendance.lastDate = todayStr; attendance.streak += 1; localStorage.setItem('koko_attendance', JSON.stringify(attendance)); syncToCloud(); checkAttendanceUI(); if(kokoSpeech) kokoSpeech.innerHTML = `출석 도장 꾹! 연속 ${attendance.streak}일째! <img src="icon-party.png" class="ui-icon">`; jumpKoko(); });
 function completeQuest(questNum) { if (!dailyQuests[`q${questNum}`]) { dailyQuests[`q${questNum}`] = true; const qObj = document.getElementById(`quest-${questNum}`); if(qObj) qObj.innerHTML = `<span style="color:#2ecc71; font-weight:bold; text-decoration:line-through;"><img src="icon-check.png" class="ui-icon"> 퀘스트 완료!</span>`; jumpKoko(); } }
+checkAttendanceUI(); 
 
 function renderTodoFolders() {
     const sel = document.getElementById('todo-folder-select'); if(!sel) return; sel.innerHTML = '';
@@ -653,6 +721,18 @@ window.openDdayMenu = (index, event) => {
     const rect = event.target.getBoundingClientRect(); menu.style.display = 'flex'; menu.style.top = `${rect.bottom + window.scrollY}px`; menu.style.left = `${rect.left - 100}px`; 
 };
 document.getElementById('dday-main-btn')?.addEventListener('click', () => { ddays.forEach(d => d.isMain = false); ddays[currentDdayIndex].isMain = true; renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; if(kokoSpeech && auth.currentUser) kokoSpeech.innerHTML = `"${ddays[currentDdayIndex].title}" 대표 지정 완료! <img src="icon-crown.png" class="ui-icon">`; });
+
+// 🌟 디데이 수정 로직 연결
+document.getElementById('dday-edit-btn')?.addEventListener('click', () => {
+    const currentText = ddays[currentDdayIndex].title;
+    const newText = prompt("디데이 제목을 수정하세요:", currentText);
+    if(newText && newText.trim() !== "") {
+        ddays[currentDdayIndex].title = newText.trim();
+        renderDdays(); syncToCloud();
+    }
+    document.getElementById('dday-dropdown').style.display = 'none';
+});
+
 document.getElementById('dday-del-btn')?.addEventListener('click', () => { ddays.splice(currentDdayIndex, 1); renderDdays(); syncToCloud(); document.getElementById('dday-dropdown').style.display = 'none'; });
 
 function renderVocabFolders() {
@@ -789,7 +869,6 @@ function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.ge
 
 function getDefaultSpeech() { const h = new Date().getHours(); return h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); }
 
-// 🌟 비로그인 시 웰컴 메시지 유지 로직
 function updateKokoAppearance() {
     const kokoImg = document.getElementById('koko'); if(!kokoImg) return;
     
@@ -824,7 +903,7 @@ document.getElementById('icon-fortune')?.addEventListener('click', () => {
 });
 
 kokoChar?.addEventListener('click', () => { 
-    if (!auth.currentUser) return; // 비로그인 시 터치 무시
+    if (!auth.currentUser) return; 
     if (kokoSpeech && kokoSpeech.dataset.testMode === "true") {
         document.getElementById('vocab-test-select-modal').style.display = 'flex';
         jumpKoko(); return;
@@ -1040,9 +1119,5 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-// 🌟 앱 실행 시 기본 날씨 및 초기 렌더링 호출
-getKokoWeather(); 
-updateKokoAppearance(); 
-
-console.log("🌟 껌딱지 꼬꼬 V6.3 로드 완료! (완벽 로그인 랜딩/플로팅 버튼 최적화)");
+console.log("🌟 껌딱지 꼬꼬 V6.4 로드 완료! (수정 버튼, 푸시 알림, 랜딩 페이지 완벽 적용)");
 // --- 파일 끝 ---
