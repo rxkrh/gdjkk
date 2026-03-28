@@ -119,17 +119,6 @@ function loadCustomFonts() {
 }
 loadCustomFonts();
 
-document.getElementById('add-custom-font-btn')?.addEventListener('click', () => {
-    const url = prompt("🔗 구글 폰트(Google Fonts) URL을 입력하세요.\n(예: https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap)"); if (!url) return;
-    const name = prompt("📝 폰트 이름(font-family)을 정확히 입력하세요.\n(예: Gowun Dodum)"); if (!name) return;
-    customFonts.push({url, name}); 
-    localStorage.setItem('koko_custom_fonts', JSON.stringify(customFonts));
-    loadCustomFonts();
-    syncToCloud();
-    alert("폰트가 추가되었습니다! 목록에서 선택해보세요. 🐣"); 
-});
-
-const shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
     document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
@@ -144,7 +133,6 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
     });
 });
 
-// 🌟 게임장 오픈 로직 (하단 탭을 게임 목록으로 완전히 교체)
 document.getElementById('icon-game')?.addEventListener('click', () => { 
     document.getElementById('main-tab-buttons').style.display = 'none';
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -158,14 +146,12 @@ document.getElementById('icon-game')?.addEventListener('click', () => {
     }
 });
 
-// 🌟 게임장에서 원래 탭 메뉴로 복귀하는 뒤로가기 버튼
 document.getElementById('close-game-list-btn')?.addEventListener('click', () => {
     document.getElementById('game-list-view').style.display = 'none';
     document.getElementById('main-tab-buttons').style.display = 'flex';
-    renderTabButtons(); // 현재 활성화된 탭을 자연스럽게 다시 띄웁니다.
+    renderTabButtons(); 
 });
 
-// 🌟 게임 목록에서 지뢰찾기 선택 시 모달 오픈
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('game-modal').style.display = 'flex';
     initMinesweeper();
@@ -207,16 +193,12 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
-            // 🌟 버그 수정: 어떤 탭을 누르든 일단 Koko 말풍선을 완벽하게 백지로 세탁(Reset)합니다.
             if(kokoSpeech) {
-                kokoSpeech.dataset.testMode = "false"; 
-                kokoSpeech.dataset.feedMode = "false";
-                kokoSpeech.style.color = "#333"; 
-                kokoSpeech.style.backgroundColor = "white";
-                updateKokoAppearance(); // 기본 날씨/시간 멘트 주입
+                kokoSpeech.dataset.testMode = "false"; kokoSpeech.dataset.feedMode = "false";
+                kokoSpeech.style.color = "#333"; kokoSpeech.style.backgroundColor = "white";
+                updateKokoAppearance();
             }
 
-            // 리셋 후 각 기능 탭별로 특수 멘트를 다시 덮어씌웁니다.
             if(targetId === 'tab-schedule') { renderCalendar(); kokoScheduleCheck(); } 
             else if (targetId === 'tab-vocab') { 
                 renderVocabFolders(); 
@@ -770,7 +752,7 @@ function updateKokoAppearance() {
     }
 }
 
-// 🌟 포춘쿠키 이벤트
+// 🌟 포춘쿠키 이벤트 활성화 (아이콘과 연결)
 const fortunes = ["행운 컬러: 노랑💛", "기분 좋은 일 발생!✨", "소중한 사람에게 연락해봐요💌", "금전운 최고!💰"];
 document.getElementById('icon-fortune')?.addEventListener('click', () => { 
     if(kokoSpeech && (kokoSpeech.dataset.feedMode === "true" || kokoSpeech.dataset.testMode === "true")) return; 
@@ -815,5 +797,5 @@ kokoChar?.addEventListener('click', () => {
     }
 });
 
-console.log("🌟 껌딱지 꼬꼬 V5.1 로드 완료! (최종 마스터피스)");
+console.log("🌟 껌딱지 꼬꼬 V5.2 로드 완료! (버그 수정 최종본)");
 // --- 파일 끝 ---
