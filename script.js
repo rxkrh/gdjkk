@@ -119,6 +119,16 @@ function loadCustomFonts() {
 }
 loadCustomFonts();
 
+document.getElementById('add-custom-font-btn')?.addEventListener('click', () => {
+    const url = prompt("🔗 구글 폰트(Google Fonts) URL을 입력하세요.\n(예: https://fonts.googleapis.com/css2?family=Gowun+Dodum&display=swap)"); if (!url) return;
+    const name = prompt("📝 폰트 이름(font-family)을 정확히 입력하세요.\n(예: Gowun Dodum)"); if (!name) return;
+    customFonts.push({url, name}); 
+    localStorage.setItem('koko_custom_fonts', JSON.stringify(customFonts));
+    loadCustomFonts();
+    syncToCloud();
+    alert("폰트가 추가되었습니다! 목록에서 선택해보세요. 🐣"); 
+});
+
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
     document.getElementById('icon-fortune').style.display = shortcuts.fortune ? 'flex' : 'none';
@@ -133,7 +143,6 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
     });
 });
 
-// 🌟 게임 아이콘 클릭 시 전용 뷰 렌더링
 document.getElementById('icon-game')?.addEventListener('click', () => { 
     document.getElementById('main-tab-buttons').style.display = 'none';
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -147,14 +156,12 @@ document.getElementById('icon-game')?.addEventListener('click', () => {
     }
 });
 
-// 🌟 게임 목록의 뒤로가기 버튼
 document.getElementById('close-game-list-btn')?.addEventListener('click', () => {
     document.getElementById('game-list-view').style.display = 'none';
     document.getElementById('main-tab-buttons').style.display = 'flex';
     renderTabButtons(); 
 });
 
-// 🌟 게임 목록 내 지뢰찾기 버튼
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('game-modal').style.display = 'flex';
     initMinesweeper();
@@ -196,16 +203,14 @@ function renderTabButtons() {
             const targetId = btn.dataset.target;
             if(targetId && document.getElementById(targetId)) document.getElementById(targetId).classList.add('active');
             
-            // 🌟 말풍선 초기화 버그 100% 차단 로직 (다른 탭의 멘트가 꼬이지 않게 우선 흰색 날씨로 세탁)
             if(kokoSpeech) {
                 kokoSpeech.dataset.testMode = "false"; 
                 kokoSpeech.dataset.feedMode = "false";
                 kokoSpeech.style.color = "#333"; 
                 kokoSpeech.style.backgroundColor = "white";
-                updateKokoAppearance(); // 무조건 기본 멘트 주입!
+                updateKokoAppearance();
             }
 
-            // 그 후 탭에 맞는 특수 멘트 다시 입히기
             if(targetId === 'tab-schedule') { renderCalendar(); kokoScheduleCheck(); } 
             else if (targetId === 'tab-vocab') { 
                 renderVocabFolders(); 
@@ -541,7 +546,6 @@ function renderTodos() {
             kokoSpeech.innerHTML = "꼬꼬를 터치하여 모이 주기 🌾"; 
             kokoSpeech.dataset.feedMode = "true"; 
         } else {
-            // 말풍선 에러 방지 처리 (아무것도 없으면 초기화)
             if(kokoSpeech.dataset.feedMode === "true") {
                 kokoSpeech.style.backgroundColor = "white"; 
                 kokoSpeech.style.color = "#333";
@@ -810,5 +814,27 @@ kokoChar?.addEventListener('click', () => {
     }
 });
 
-console.log("🌟 껌딱지 꼬꼬 V5.3 로드 완료! (게임 목록 카드형 UI 분리 및 메뉴 아이콘 정렬 완료)");
+let mineBoard = []; let mineRevealed = []; let mineGameOver = false; let safeCellsCount = 0; const MINE_SIZE = 6; const MINES_COUNT = 5;
+function initMinesweeper() {
+    const grid = document.getElementById('minesweeper-grid'); if(!grid) return; grid.innerHTML = '';
+    document.getElementById('game-status').innerText = `안전한 달걀을 찾아주세요! (폭탄 ${MINES_COUNT}개)`; document.getElementById('game-status').style.color = "#555";
+    mineBoard = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(0)); mineRevealed = Array(MINE_SIZE).fill().map(()=>Array(MINE_SIZE).fill(false)); mineGameOver = false; safeCellsCount = (MINE_SIZE * MINE_SIZE) - MINES_COUNT;
+    let placed = 0; while(placed < MINES_COUNT) { let r = Math.floor(Math.random()*MINE_SIZE); let c = Math.floor(Math.random()*MINE_SIZE); if(mineBoard[r][c] !== 'M') { mineBoard[r][c] = 'M'; placed++; } }
+    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { if(mineBoard[r][c] === 'M') continue; let count=0; for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nr<MINE_SIZE && nc>=0 && nc<MINE_SIZE && mineBoard[nr][nc]==='M') count++; } } mineBoard[r][c] = count; } }
+    for(let r=0; r<MINE_SIZE; r++) { for(let c=0; c<MINE_SIZE; c++) { let cell = document.createElement('div'); cell.className = 'mine-cell'; cell.id = `mine-${r}-${c}`; cell.innerText = '🥚'; cell.addEventListener('click', () => revealMine(r,c)); grid.appendChild(cell); } }
+}
+function revealMine(r, c) {
+    if(mineGameOver || mineRevealed[r][c]) return; mineRevealed[r][c] = true; let cell = document.getElementById(`mine-${r}-${c}`); cell.classList.add('revealed');
+    if(mineBoard[r][c] === 'M') {
+        cell.innerText = '💥'; mineGameOver = true; document.getElementById('game-status').innerText = "앗! 상한 달걀이에요! 😭"; document.getElementById('game-status').style.color = "#e74c3c";
+        for(let ir=0; ir<MINE_SIZE; ir++){ for(let ic=0; ic<MINE_SIZE; ic++){ if(mineBoard[ir][ic]==='M' && !mineRevealed[ir][ic]) { let c = document.getElementById(`mine-${ir}-${ic}`); c.innerText = '💥'; c.classList.add('revealed'); } } }
+    } else {
+        safeCellsCount--; cell.innerText = mineBoard[r][c] > 0 ? mineBoard[r][c] : '';
+        if(mineBoard[r][c] === 0) { for(let dr=-1; dr<=1; dr++){ for(let dc=-1; dc<=1; dc++){ let nr=r+dr, nc=c+dc; if(nr>=0 && nc>=0 && nr<MINE_SIZE && nc<MINE_SIZE) revealMine(nr,nc); } } }
+        if(safeCellsCount === 0) { mineGameOver = true; document.getElementById('game-status').innerText = "대성공! 맛있는 달걀을 다 찾았어요! 🐣✨"; document.getElementById('game-status').style.color = "#2ecc71"; if(kokoSpeech) kokoSpeech.innerHTML = "와! 지뢰찾기 고수시네요! <img src='icon-party.png' class='ui-icon'>"; jumpKoko(); }
+    }
+}
+
+getKokoWeather(); updateKokoAppearance(); renderTabEditor(); renderTabButtons();
+console.log("🌟 껌딱지 꼬꼬 V5.4 로드 완료! (버튼 위치 및 디자인 교정 완벽 반영)");
 // --- 파일 끝 ---

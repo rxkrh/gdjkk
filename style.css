@@ -147,10 +147,10 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 #attendance-streak { color: #ff9f43; font-size: 1.2em; margin: 0 4px; }
 .quest-title { margin: 0 0 10px 0; color: #555; display: flex; align-items: center; font-size: 1em; flex-shrink: 0;}
 
-/* 🌟 게임장 카드형 목록 스타일 추가 */
+/* 🌟 버그 수정: 게임 아이콘 점선/배경 완전히 제거! 깔끔한 투명 배경 */
 .game-item-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; width: 75px; }
-.game-item-icon { width: 60px; height: 60px; background: #fff9e6; border: 2px dashed #f1c40f; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 1.8em; transition: transform 0.2s, background 0.2s; }
-.game-item-card:active .game-item-icon { transform: scale(0.95); background: #f1c40f; }
+.game-item-icon { width: 60px; height: 60px; background: transparent; border: none; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 2.2em; transition: transform 0.2s; }
+.game-item-card:active .game-item-icon { transform: scale(0.95); opacity: 0.7; }
 .game-item-title { font-size: 0.75em; font-weight: bold; color: #555; text-align: center; word-break: keep-all; line-height: 1.2; }
 
 .minesweeper-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; margin-top: 10px; max-width: 250px; margin-left: auto; margin-right: auto; }
