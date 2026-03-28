@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V6.6</title>
+    <title>껌딱지 꼬꼬 V6.7</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -98,7 +98,6 @@
 
                 <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
                     <h3 style="color:#9b59b6; display:flex; align-items:center; margin-top:0;"><img src="icon-wrench.png" class="ui-icon"> 개발자 비밀 도구</h3>
-                    
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 8px 0; color:#333; font-size:13px;">🍔 칼로리 계산기</h4>
                         <div class="input-group" style="margin-bottom: 5px;">
@@ -109,7 +108,6 @@
                         <div id="cal-list" style="font-size:12px; color:#555; max-height:80px; overflow-y:auto; margin-bottom:5px;"></div>
                         <div style="font-weight:bold; color:#e74c3c; font-size:14px; text-align:right;">총 섭취: <span id="cal-total-display">0</span> kcal</div>
                     </div>
-
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 5px 0; color:#333; font-size:13px;">🎵 오프라인 플레이어</h4>
                         <p style="font-size:11px; color:#888; margin:0 0 8px 0;">브라우저 보안상 매번 기기에서 파일을 선택해야 합니다.</p>
@@ -117,7 +115,6 @@
                         <audio id="audio-player" controls style="width:100%; height:30px; outline:none;"></audio>
                         <ul id="music-playlist" class="scroll-list" style="margin-top:10px; max-height:100px; list-style:none; padding:0; border:1px solid #ddd; border-radius:5px; background:white;"></ul>
                     </div>
-
                     <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
                     <div id="admin-feedback-list" class="scroll-list"></div>
                 </div>
@@ -134,6 +131,10 @@
             
             <button id="icon-game" class="icon-btn game-fab" style="display:none;">
                 <img src="icon-game.png" class="ui-icon" style="margin:0; width:20px; height:20px; object-fit:contain;" alt="게임">
+            </button>
+            
+            <button id="icon-ranking" class="icon-btn game-fab" style="display:none; background:#fff9e6; border: 2px solid #f1c40f;">
+                <img src="trophy.png" class="ui-icon" style="margin:0; width:20px; height:20px; object-fit:contain;" alt="랭킹">
             </button>
 
             <div class="tab-drag-handle" id="tab-drag-handle">
@@ -158,13 +159,14 @@
             </div>
 
             <div id="tab-todo" class="tab-content active flex-column-tab">
-                <div class="folder-header">
-                    <select id="todo-folder-select" class="folder-select"></select>
-                    <button id="add-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;" title="추가">➕ 폴더</button>
-                    <button id="edit-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;" title="수정">✏️</button>
-                    <button id="del-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;" title="삭제">🗑️</button>
-                </div>
-                <div class="scroll-wrapper">
+                <div class="scroll-wrapper" style="padding-top:0;">
+                    <div class="folder-header pinned" id="todo-folder-header">
+                        <button class="icon-btn pin-btn active" id="todo-pin-btn" onclick="togglePin('todo')" title="고정 토글">📌</button>
+                        <select id="todo-folder-select" class="folder-select"></select>
+                        <button id="add-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;" title="추가">➕</button>
+                        <button id="edit-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;" title="수정">✏️</button>
+                        <button id="del-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;" title="삭제">🗑️</button>
+                    </div>
                     <ul id="todo-list" class="item-list"></ul>
                 </div>
                 <div class="sticky-bottom-input">
@@ -229,23 +231,24 @@
             </div>
 
             <div id="tab-vocab" class="tab-content flex-column-tab">
-                <div class="folder-header">
-                    <select id="vocab-folder-select" class="folder-select"></select>
-                    <button id="add-vocab-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;">➕ 폴더</button>
-                    <button id="edit-vocab-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;">✏️</button>
-                    <button id="del-vocab-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;">🗑️</button>
-                </div>
-                
-                <div class="vocab-top-controls">
-                    <label class="switch-label">
-                        <input type="checkbox" id="vocab-blind-check" style="cursor:pointer; margin:0; width:16px; height:16px; flex-shrink:0;">
-                        <span style="margin-left:6px; white-space: nowrap;">🙈 뜻 가리기 (터치 확인)</span>
-                    </label>
-                </div>
-                
-                <div class="scroll-wrapper">
+                <div class="scroll-wrapper" style="padding-top:0;">
+                    <div class="folder-header pinned" id="vocab-folder-header">
+                        <button class="icon-btn pin-btn active" id="vocab-pin-btn" onclick="togglePin('vocab')" title="고정 토글">📌</button>
+                        <select id="vocab-folder-select" class="folder-select"></select>
+                        <button id="add-vocab-folder-btn" class="icon-btn folder-btn" style="background:#0984e3;" title="추가">➕</button>
+                        <button id="edit-vocab-folder-btn" class="icon-btn folder-btn" style="background:#f39c12; width:32px; padding:0;" title="수정">✏️</button>
+                        <button id="del-vocab-folder-btn" class="icon-btn folder-btn" style="background:#ff6b6b; width:32px; padding:0;" title="삭제">🗑️</button>
+                    </div>
+                    
+                    <div class="vocab-top-controls">
+                        <label class="switch-label">
+                            <input type="checkbox" id="vocab-blind-check" style="cursor:pointer; margin:0; width:16px; height:16px; flex-shrink:0;">
+                            <span style="margin-left:6px; white-space: nowrap;">🙈 뜻 가리기 (터치 확인)</span>
+                        </label>
+                    </div>
                     <ul id="vocab-list" class="item-list"></ul>
                 </div>
+                
                 <div class="sticky-bottom-input">
                     <div class="dday-one-line">
                         <input type="text" id="new-vocab-word" placeholder="단어 (예: Apple)" style="flex:1;">
@@ -335,6 +338,34 @@
             <div style="display:flex; gap:10px; width:100%;">
                 <button class="action-btn" style="flex:1; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTest()">종료</button>
                 <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="submitVocabTestAnswer()">확인</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="fullscreen-ranking-overlay" class="fullscreen-overlay" style="background:white;">
+        <button id="ranking-close-x" class="game-exit-btn" style="color:#555;">❌</button>
+        
+        <div id="ranking-main-view" style="width:100%; display:flex; flex-direction:column; align-items:center; padding-top:20px;">
+            <h2 style="margin: 0 0 20px 0; padding-bottom: 15px; border-bottom: 1px solid #eee; width: 90%; text-align: center; color: #333;">랭킹보드</h2>
+            
+            <div id="open-minesweeper-ranking" style="width: 90%; padding: 20px; border-radius: 15px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: background 0.2s;">
+                <img src="trophy.png" style="width:40px; height:40px; object-fit:contain;">
+                <h3 style="margin:0; color:#555; font-size:1.1em;">달걀 지뢰찾기 랭킹</h3>
+            </div>
+        </div>
+
+        <div id="ranking-detail-view" style="display:none; width:100%; flex-direction:column; align-items:center; padding-top:20px; flex:1;">
+            <button id="ranking-back-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; align-self: flex-start; padding: 0 20px; font-family:inherit; margin-bottom: 15px;">⬅️ 뒤로가기</button>
+            
+            <div class="ranking-tabs">
+                <button class="rank-tab active" data-diff="easy">쉬움</button>
+                <button class="rank-tab" data-diff="normal">보통</button>
+                <button class="rank-tab" data-diff="hard">어려움</button>
+            </div>
+            
+            <div class="game-stage-wrapper" style="background:white; box-shadow:none; border-top: 1px solid #eee; border-radius:0; padding:10px 20px;">
+                <div id="ranking-list" style="width:100%; display:flex; flex-direction:column; gap:10px;">
+                    </div>
             </div>
         </div>
     </div>

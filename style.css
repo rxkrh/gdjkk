@@ -78,12 +78,18 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .scroll-wrapper { flex: 1 1 0px; overflow-y: auto; margin-bottom: 10px; padding-bottom: 5px; min-height: 0; scrollbar-width: none; -ms-overflow-style: none; }
 .scroll-wrapper::-webkit-scrollbar { display: none; }
 
-.sticky-bottom-input { flex: 0 0 auto; background: white; padding: 10px 15px 15px 15px; margin: 0 -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
+/* 🌟 버그 픽스: 하단 입력칸 상하 여백 다이어트 */
+.sticky-bottom-input { flex: 0 0 auto; background: white; padding: 5px 15px 8px 15px; margin: 0 -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1em; display: flex; align-items: center; justify-content: center;}
 .guide-text { text-align: center; font-size: 0.75em; color: #aaa; margin-bottom: 5px; }
 
-.folder-header { display: flex; gap: 6px; margin-bottom: 5px; align-items: center; flex-shrink: 0; }
+/* 🌟 폴더 헤더 스크롤 핀 고정 디자인 */
+.folder-header { display: flex; gap: 6px; align-items: center; padding: 5px 0 10px 0; background: white; position: relative; flex-shrink: 0; }
+.folder-header.pinned { position: sticky; top: -1px; z-index: 10; border-bottom: 1px solid #eee; margin-bottom: 5px;}
+.pin-btn { font-size: 1.1em; padding: 0; transition: 0.2s; opacity: 0.4; }
+.pin-btn.active { opacity: 1; }
+
 .folder-select { flex-grow: 1; height: 32px; padding: 0 6px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; outline: none; }
 .folder-btn { display: flex; align-items: center; justify-content: center; padding: 0 10px; border-radius: 8px; height: 32px; font-size: 0.85em; line-height: 1; margin: 0; color: white; font-weight: bold; flex-shrink: 0;}
 
@@ -94,7 +100,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .date-square-wrapper input[type="date"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .dday-save-btn { flex: 0 0 15%; min-width: 45px; height: 34px; padding: 0; background-color: #ff6b6b; font-family: inherit; font-size: 0.85em; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; margin: 0;}
 
-.input-group { display: flex; gap: 8px; margin-bottom: 10px; width: 100%; flex-shrink: 0;}
+/* 입력칸 하단 마진 제거로 공간 확보 */
+.input-group { display: flex; gap: 8px; margin-bottom: 0; width: 100%; flex-shrink: 0;}
 .input-group input { flex-grow: 1; width: 100%; height: 36px; padding: 0 10px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 0.85em; }
 .action-btn { width: 100%; display: flex; align-items: center; justify-content: center; height: 36px; padding: 0 15px; background-color: #ff9f43; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: inherit; font-size: 0.9em; flex-shrink: 0; line-height: 1; margin: 0;}
 .action-btn:disabled { background-color: #e0e0e0; cursor: not-allowed; }
@@ -113,7 +120,6 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .switch-label { font-size: 0.8em; font-weight: bold; color: #555; cursor: pointer; display: flex; align-items: center; gap: 4px;}
 .switch-label input { margin: 0; width: 16px; height: 16px;}
 
-/* 🌟 버그 픽스: 단어장 뜻 위치를 왼쪽으로 살짝 이동시키고, 단어 마진도 함께 넓혀서 글자 겹침 방지 */
 .vocab-item { position: relative; } 
 .vocab-word { font-weight: bold; font-size: 1.05em; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; margin-right: 190px; } 
 .vocab-meaning-box { position: absolute; right: 125px; transform: translateX(50%); display: flex; justify-content: center; align-items: center; z-index: 2; width: 85px; }
@@ -178,6 +184,15 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .diff-btns button { padding: 12px; border: none; border-radius: 10px; background: #f1c40f; font-weight: bold; cursor: pointer; font-size: 1em; transition: background 0.2s; }
 .diff-btns button:hover { background: #f39c12; }
 .range-group { margin: 10px 0; display: flex; flex-direction: column; font-size: 0.8em; }
+
+/* 🌟 랭킹보드 스타일 추가 */
+.ranking-tabs { display: flex; width: 100%; justify-content: space-around; margin-bottom: 10px; border-bottom: 2px solid #eee;}
+.rank-tab { background: none; border: none; font-size: 1.05em; font-weight: bold; color: #aaa; padding: 10px 0; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; flex: 1; font-family: inherit;}
+.rank-tab.active { color: #f39c12; border-bottom: 3px solid #f39c12; }
+.ranking-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f9f9f9; border-radius: 10px; font-weight: bold; color: #555; }
+.rank-num { width: 30px; text-align: center; font-size: 1.2em; display:flex; justify-content:center; align-items:center; }
+.rank-name { flex-grow: 1; margin: 0 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rank-time { color: #0984e3; }
 
 .chat-drawer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f0f4f8; border-radius: 20px 20px 0 0; box-shadow: 0 -5px 15px rgba(0,0,0,0.1); transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1); z-index: 100; display: flex; flex-direction: column; font-family: inherit; }
 .chat-drawer.collapsed { height: 50px; cursor: pointer; }
