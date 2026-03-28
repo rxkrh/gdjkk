@@ -10,7 +10,8 @@
 
 body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display: flex; justify-content: center; align-items: center; height: 100dvh; margin: 0; overflow: hidden; }
 
-.app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 50px; }
+/* 🌟 버그 픽스: 모바일 하단 탭 가림 방지를 위해 padding-bottom 60px로 여유 확보 */
+.app-container { width: 100%; max-width: 400px; height: 100dvh; max-height: 850px; background-color: #fff9e6; box-shadow: 0 10px 30px rgba(0,0,0,0.1); display: flex; flex-direction: column; position: relative; overflow: hidden; padding-bottom: 60px; }
 
 .ui-icon { width: 1.2em; height: 1.2em; vertical-align: text-bottom; margin-right: 4px; object-fit: contain; }
 .center-flex { display: flex; justify-content: center; align-items: center; gap: 5px; }
@@ -147,13 +148,11 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 #attendance-streak { color: #ff9f43; font-size: 1.2em; margin: 0 4px; }
 .quest-title { margin: 0 0 10px 0; color: #555; display: flex; align-items: center; font-size: 1em; flex-shrink: 0;}
 
-/* 게임 카드 CSS */
 .game-item-card { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; width: 75px; }
 .game-item-icon { width: 60px; height: 60px; background: transparent; border: none; border-radius: 16px; display: flex; justify-content: center; align-items: center; font-size: 2.2em; transition: transform 0.2s; }
 .game-item-card:active .game-item-icon { transform: scale(0.95); opacity: 0.7; }
 .game-item-title { font-size: 0.75em; font-weight: bold; color: #555; text-align: center; word-break: keep-all; line-height: 1.2; font-family: inherit; }
 
-/* 🌟 전체화면 게임 오버레이 */
 .fullscreen-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -183,13 +182,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .game-zoom-controls { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; flex-shrink: 0; }
 
 .game-stage-wrapper {
-    width: 100%; 
-    flex: 1; 
-    overflow: auto; 
-    background: #e1d8c1;
-    border-radius: 12px; 
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-    padding: 10px; 
+    width: 100%; flex: 1; overflow: auto; background: #e1d8c1;
+    border-radius: 12px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); padding: 10px; 
     scrollbar-width: none; -ms-overflow-style: none;
 }
 .game-stage-wrapper::-webkit-scrollbar { display: none; }
@@ -199,16 +193,11 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .egg-cell.revealed { background-image: url('fried-egg.png'); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: calc(var(--cell-size, 35px) * 0.4); }
 .egg-cell.flagged::after { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('x-mark.png'); background-size: 80%; background-repeat: no-repeat; background-position: center; }
 
-/* 🌟 모바일 잘림 방지 (max-height 및 overflow 추가), 폰트 상속 */
 .difficulty-container { 
     background: white; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); 
-    width: 85%; max-width: 320px;
-    max-height: 85vh; 
-    overflow-y: auto;
-    font-family: inherit;
+    width: 85%; max-width: 320px; max-height: 85vh; overflow-y: auto; font-family: inherit;
 }
 .diff-btns { display: flex; gap: 10px; flex-direction: column; }
-/* 🌟 버튼 및 텍스트 폰트 상속 완벽 적용 */
 .diff-btns button, .custom-settings label, .custom-settings p, #result-header, #result-message { font-family: inherit; }
 .diff-btns button { padding: 12px; border: none; border-radius: 10px; background: #f1c40f; font-weight: bold; cursor: pointer; font-size: 1em; transition: background 0.2s; }
 .diff-btns button:hover { background: #f39c12; }
