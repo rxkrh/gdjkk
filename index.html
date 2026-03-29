@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V7.5</title>
+    <title>껌딱지 꼬꼬 V7.6</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -123,13 +123,13 @@
                 </div>
                 
                 <div style="text-align:center; padding: 20px 0; font-size: 0.75em; color: #aaa; border-top: 1px solid #eee; margin-top: auto;">
-                    ver:7.4<br>UID: <span id="app-uid-display">비로그인</span>
+                    ver:7.6<br>UID: <span id="app-uid-display">비로그인</span>
                 </div>
             </div>
         </aside>
 
         <main class="koko-zone" id="koko-zone-main">
-            <div class="speech-bubble" id="koko-speech">주인님, 오늘 하루도 화이팅이에요! 삐약! <img src="icon-chick.png" class="ui-icon"></div>
+            <div class="speech-bubble" id="koko-speech">주인님, 오늘 하루도 화이팅이에요! 삐약!</div>
             <img src="koko.png" alt="껌딱지 꼬꼬" class="koko-character" id="koko">
             <button id="center-google-login-btn" class="action-btn" style="display:none; background-color:#4285F4; margin-top:60px; width:220px; font-family:inherit; font-size:1.1em; border-radius:12px; height:45px; box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);">G 구글 계정으로 시작하기</button>
         </main>
@@ -211,7 +211,7 @@
             </div>
 
             <div id="tab-dday" class="tab-content flex-column-tab">
-                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;"><img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!</div>
+                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;">디데이를 추가해보세요!</div>
                 <div class="scroll-wrapper">
                     <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
@@ -267,11 +267,11 @@
 
             <div id="tab-quest" class="tab-content flex-column-tab">
                 <div class="scroll-wrapper" style="margin-bottom:0;">
-                    <div class="quest-header-section" style="display:flex; flex-direction:column; align-items:center;">
-                        <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71; margin:0 auto;">오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;"></button>
-                        <div class="attendance-info center-flex">현재 연속 출석: <strong id="attendance-streak">0</strong>일 <img src="icon-fire.png" class="ui-icon"></div>
+                    <div class="quest-header-section" style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                        <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71; margin:0 auto; justify-content:center;">오늘의 출석체크 도장 찍기</button>
+                        <div class="attendance-info center-flex" style="justify-content:center; margin-top:0;">현재 연속 출석: <strong id="attendance-streak" style="margin:0 4px; color:#ff9f43; font-size:1.2em;">0</strong>일</div>
                     </div>
-                    <h4 class="quest-title"><img src="icon-crown.png" class="ui-icon"> 일일 꼬꼬 퀘스트</h4>
+                    <h4 class="quest-title" style="justify-content:center;"><img src="icon-crown.png" class="ui-icon"> 일일 꼬꼬 퀘스트</h4>
                     <ul id="quest-list" class="item-list">
                         <li id="quest-1"><span style="color:#aaa;">☑️ 꼬꼬 쓰다듬기 (터치)</span></li>
                         <li id="quest-2"><span style="color:#aaa;">☑️ 오늘의 출석체크 하기</span></li>
@@ -332,7 +332,6 @@
             <button class="action-btn" style="margin-top:15px; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTestSelect()">취소</button>
         </div>
     </div>
-
     <div id="vocab-test-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
         <div class="modal-box" style="text-align:center;">
             <div style="display:flex; justify-content:space-between; font-size:0.85em; color:#888; margin-bottom:10px;">
@@ -355,25 +354,21 @@
                 <button id="ranking-close-x" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.2em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">❌</button>
                 <h3 style="margin:0; color:#555; font-size: 1.2em;">랭킹보드</h3>
             </div>
-            
             <div id="open-minesweeper-ranking" style="width: 90%; margin-top:20px; padding: 20px; border-radius: 15px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: background 0.2s;">
                 <img src="trophy.png" style="width:40px; height:40px; object-fit:contain;">
                 <h3 style="margin:0; color:#555; font-size:1.1em;">달걀 지뢰찾기 랭킹</h3>
             </div>
         </div>
-
         <div id="ranking-detail-view" style="display:none; width:100%; flex-direction:column; align-items:center; padding-top:0; flex:1;">
             <div style="display:flex; align-items:center; width:100%; padding: 15px 20px; position:relative; justify-content:center;">
                 <button id="ranking-back-btn" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:0.85em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">⬅️ 뒤로</button>
                 <h3 style="margin:0; color:#555; font-size: 1.1em;">달걀 지뢰찾기 랭킹</h3>
             </div>
-            
             <div class="ranking-tabs">
                 <button class="rank-tab active" data-diff="easy">쉬움</button>
                 <button class="rank-tab" data-diff="normal">보통</button>
                 <button class="rank-tab" data-diff="hard">어려움</button>
             </div>
-            
             <div class="game-stage-wrapper" style="background:white; box-shadow:none; border-top: none; border-radius:0; padding:10px 20px;">
                 <div id="ranking-list" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
             </div>
@@ -382,28 +377,16 @@
 
     <div id="fullscreen-game-overlay" class="fullscreen-overlay" oncontextmenu="return false;">
         <button id="game-close-x" class="game-exit-btn">❌</button>
-        
         <div class="game-header">
-            <div class="header-unit">
-                <span class="header-label" style="color:#0984e3;">타이머</span>
-                <span id="game-timer" class="header-value">000</span>
-            </div>
-            <div class="header-unit">
-                <span class="header-label" style="color:#e74c3c;">남은 지뢰 개수</span>
-                <span id="game-mine-count" class="header-value">00</span>
-            </div>
+            <div class="header-unit"><span class="header-label" style="color:#0984e3;">타이머</span><span id="game-timer" class="header-value">000</span></div>
+            <div class="header-unit"><span class="header-label" style="color:#e74c3c;">남은 지뢰 개수</span><span id="game-mine-count" class="header-value">00</span></div>
         </div>
-        
         <div class="game-zoom-controls">
             <button id="zoom-out-btn" class="action-btn" style="width:40px; height:30px; background:#bdc3c7; padding:0;">➖</button>
             <span id="zoom-level-display" style="font-weight:bold; color:#555; width:45px; text-align:center;">100%</span>
             <button id="zoom-in-btn" class="action-btn" style="width:40px; height:30px; background:#bdc3c7; padding:0;">➕</button>
         </div>
-
-        <div id="game-stage-wrapper" class="game-stage-wrapper">
-            <div id="game-stage" class="game-stage"></div>
-        </div>
-
+        <div id="game-stage-wrapper" class="game-stage-wrapper"><div id="game-stage" class="game-stage"></div></div>
         <div id="difficulty-popup" class="difficulty-container">
             <h2 style="margin-top:0; margin-bottom:20px;">난이도 선택</h2>
             <div class="diff-btns">
@@ -419,12 +402,9 @@
                 <button class="action-btn" onclick="initMinesweeper('custom')" style="margin-top:10px; font-family:inherit;">게임 시작</button>
             </div>
         </div>
-
         <div id="game-result-popup" class="difficulty-container" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 3010; text-align: center;">
             <h2 id="result-header" style="margin-top:0; margin-bottom:15px;">결과</h2>
-            <p id="result-message" style="font-size:1.05em; margin-bottom:20px; line-height:1.6; color:#333; font-weight:bold; font-family:inherit;">
-                메시지 영역
-            </p>
+            <p id="result-message" style="font-size:1.05em; margin-bottom:20px; line-height:1.6; color:#333; font-weight:bold; font-family:inherit;">메시지 영역</p>
             <div style="display:flex; gap:10px; width:100%;">
                 <button class="action-btn" style="flex:1; background-color:#e74c3c; font-family:inherit;" onclick="exitGameFromPopup()">나가기</button>
                 <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="retryGameFromPopup()">다시하기</button>
