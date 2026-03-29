@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 (V7.1 기본값 최적화)
+// 🌟 1. 전역 변수 선언 (V7.2 기본값 최적화)
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -39,10 +39,10 @@ let dailyQuests = { q1: false, q2: false, q3: false };
 let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || {};
 
 let currentFont = localStorage.getItem('koko_font') || "'Pretendard', sans-serif";
-let currentFontSize = localStorage.getItem('koko_font_size') || "font-small"; // 🌟 최초 크기 '작게'
+let currentFontSize = localStorage.getItem('koko_font_size') || "font-small"; // 기본 크기 작게
 let currentChatFont = localStorage.getItem('koko_chat_font') || "0.85em";
 let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || [];
-let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: true }; // 🌟 모두 활성화
+let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: true }; // 모두 활성화
 
 const defaultTabs = [
     { id: 'tab-todo', label: '할 일', icon: 'icon-todo.png', enabled: true },
@@ -344,14 +344,24 @@ function jumpKoko() {
     }
 }
 
+// 🌟 스케줄 핀 고정 체크 연동 로직
 function kokoScheduleCheck() {
-    const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
-    const todaysSchedules = schedules[todayStr] || [];
-    if(kokoSpeech) {
-        if(todaysSchedules.length === 0) { 
-            kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
-        } else { 
-            kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong> 🗓️`; 
+    let pinnedSchedule = null;
+    Object.keys(schedules).forEach(d => {
+        schedules[d].forEach(s => { if(s.pinned) pinnedSchedule = s; });
+    });
+
+    if (kokoSpeech) {
+        if(pinnedSchedule) {
+            kokoSpeech.innerHTML = `📌 고정된 일정!<br><strong style="color:#0984e3; font-size:0.95em;">'${pinnedSchedule.task}'</strong>`;
+        } else {
+            const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+            const todaysSchedules = schedules[todayStr] || [];
+            if(todaysSchedules.length === 0) { 
+                kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
+            } else { 
+                kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong> 🗓️`; 
+            }
         }
     }
     jumpKoko(); 
@@ -367,7 +377,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직
+// 📅 3. 캘린더 및 스케줄 로직 (핀 기능 포함)
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display'); if (!displayObj) return; 
@@ -394,11 +404,41 @@ function renderSchedulesForSelected() {
     const daySchedules = schedules[selectedDateStr] || [];
     daySchedules.sort((a, b) => { if (a.time === "종일") return -1; if (b.time === "종일") return 1; return a.time.localeCompare(b.time); });
     if(daySchedules.length === 0) { list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`; return; }
+    
+    // 🌟 핀 꽂기 이벤트 동적 등록
     daySchedules.forEach((s, i) => { 
         let badgeClass = s.time === "종일" ? "schedule-time-badge allday" : "schedule-time-badge";
-        list.innerHTML += `<li><span style="display:flex; align-items:center; flex-grow:1;"><span class="${badgeClass}">${s.time}</span> <span style="word-break:break-all;">${s.task}</span></span><button class="more-btn schedule-more-btn" onclick="openScheduleMenu(${i}, event)">⋮</button></li>`; 
+        let pinIcon = s.pinned ? `<span style="margin-right:5px; font-size:1.1em;">📌</span>` : '';
+        let li = document.createElement('li');
+        li.innerHTML = `<span style="display:flex; align-items:center; flex-grow:1;"><span class="${badgeClass}">${s.time}</span> <span style="word-break:break-all;">${pinIcon}${s.task}</span></span><button class="more-btn schedule-more-btn" onclick="openScheduleMenu(${i}, event)">⋮</button>`;
+        li.addEventListener('mousedown', (e) => startSchedulePress(selectedDateStr, i, e));
+        li.addEventListener('touchstart', (e) => startSchedulePress(selectedDateStr, i, e), {passive: true});
+        li.addEventListener('mouseup', cancelSchedulePress);
+        li.addEventListener('mouseleave', cancelSchedulePress);
+        li.addEventListener('touchend', cancelSchedulePress);
+        li.addEventListener('touchcancel', cancelSchedulePress);
+        list.appendChild(li);
     });
 }
+
+// 🌟 스케줄 핀 고정 프레스 로직
+let schedulePressTimer = null; let isSchedulePressing = false;
+window.startSchedulePress = (dateStr, index, event) => { 
+    if(event.target.classList.contains('schedule-more-btn')) return; 
+    isSchedulePressing = true; 
+    schedulePressTimer = setTimeout(() => { 
+        if(isSchedulePressing) { 
+            const wasPinned = schedules[dateStr][index].pinned;
+            Object.keys(schedules).forEach(d => schedules[d].forEach(s => s.pinned = false));
+            if(!wasPinned) schedules[dateStr][index].pinned = true;
+            
+            renderSchedulesForSelected(); syncToCloud(); kokoScheduleCheck();
+            if(navigator.vibrate) navigator.vibrate(50); 
+        } 
+    }, 500); 
+};
+window.cancelSchedulePress = () => { isSchedulePressing = false; if(schedulePressTimer) clearTimeout(schedulePressTimer); };
+
 document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
 document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() + 1); renderCalendar(); });
 document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
@@ -406,7 +446,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
     if(!timeObj || !taskObj) return; let time = timeObj.value; const task = taskObj.value.trim();
     if (!task) { alert("일정 내용을 입력해주세요!"); return; } if (!time) time = "종일";
     if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
-    schedules[selectedDateStr].push({ time: time, task: task });
+    schedules[selectedDateStr].push({ time: time, task: task, pinned: false });
     localStorage.setItem('koko_schedules', JSON.stringify(schedules)); timeObj.value = ''; taskObj.value = ''; renderCalendar(); syncToCloud();
 });
 
@@ -437,7 +477,7 @@ document.getElementById('schedule-del-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화
+// 🔐 4. 로그인 및 동기화 
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -450,6 +490,7 @@ auth.onAuthStateChanged((user) => {
     const centerLoginBtn = document.getElementById('center-google-login-btn');
     const gameFab = document.getElementById('icon-game');
     const rankingFab = document.getElementById('icon-ranking');
+    const uidDisplay = document.getElementById('app-uid-display');
 
     if (user) {
         if(mainTopBar) mainTopBar.style.display = 'flex';
@@ -460,6 +501,7 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('login-area').style.display = 'none'; 
         document.getElementById('user-profile-area').style.display = 'block'; 
         document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
+        if(uidDisplay) uidDisplay.innerText = user.uid; // 앱 설정 하단 UID 표시
         myUid = user.uid; 
         
         const adminArea = document.getElementById('admin-tools-area');
@@ -527,10 +569,11 @@ auth.onAuthStateChanged((user) => {
         if(gameFab) gameFab.style.display = 'none';
         if(rankingFab) rankingFab.style.display = 'none';
         if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
+        if(uidDisplay) uidDisplay.innerText = '비로그인';
         
-        // 🌟 V7.1: 랜딩 페이지 멘트 및 이모티콘 텍스트 감싸기 처리 (inline-flex 활용)
+        // 🌟 V7.2 랜딩 페이지 말풍선 텍스트 이모티콘 1라인 처리 적용 완료
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' style='width:1.2em; height:1.2em; margin-left:4px; object-fit:contain;'></span>";
+            kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <span style='font-size:1.2em; margin-left:4px;'>🐥</span></span>";
             kokoSpeech.style.backgroundColor = "#ff9f43";
             kokoSpeech.style.color = "white";
             kokoSpeech.dataset.feedMode = "false";
@@ -545,10 +588,21 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+// 🌟 버그 수정: 닉네임 변경 7일 제한 개발자 패스 추가 및 동기화!
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
     const nickInput = document.getElementById('nickname-input'); const statusObj = document.getElementById('profile-status'); if(!nickInput || !statusObj) return;
     const name = nickInput.value.trim(); if (!name || name === myNickname) return;
-    if (lastChangeDate) { const diff = (new Date() - lastChangeDate) / 86400000; if (diff < 7) { statusObj.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; statusObj.style.color = "#ff6b6b"; return; } }
+    
+    // 개발자(ADMIN_UID)는 7일 제한 패스
+    if (lastChangeDate && myUid !== ADMIN_UID) { 
+        const diff = (new Date() - lastChangeDate) / 86400000; 
+        if (diff < 7) { 
+            statusObj.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; 
+            statusObj.style.color = "#ff6b6b"; 
+            return; 
+        } 
+    }
+    
     const nameRef = db.collection('nicknames').doc(name); const doc = await nameRef.get();
     if (doc.exists && doc.data().uid !== myUid) { statusObj.innerText = "❌ 사용 중인 이름!"; statusObj.style.color = "#ff6b6b"; return; }
     
@@ -568,7 +622,7 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
     myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     statusObj.innerText = "✅ 변경 완료!"; statusObj.style.color = "#2ecc71"; enableChat();
     
-    // 🌟 닉네임 변경 성공 시 말풍선 흰색 고정
+    // 닉네임 변경 성공 시 말풍선 흰색 고정
     if(kokoSpeech) {
         kokoSpeech.innerHTML = `새 이름 "${myNickname}", 맘에 들어요! <img src='icon-chat.png' class='ui-icon'>`;
         kokoSpeech.style.backgroundColor = "white";
@@ -756,7 +810,7 @@ if(ddayDateInput && dateIconSpan) { ddayDateInput.addEventListener('change', () 
 function renderDdays() { 
     const list = document.getElementById('dday-list-display'); const banner = document.getElementById('main-dday-banner');
     if(!list || !banner) return; list.innerHTML = ''; 
-    if (ddays.length === 0) { banner.innerHTML = `<img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!`; return; } 
+    if (ddays.length === 0) { banner.innerHTML = `디데이를 추가해보세요!`; return; } 
     ddays = ddays.map(d => ({...d, pinned: d.pinned || false, isMain: d.isMain || false, icon: d.icon || ''}));
     const today = new Date(); today.setHours(0,0,0,0); 
     let calc = ddays.map((d, i) => { const t = new Date(d.date); t.setHours(0,0,0,0); return { ...d, originalIndex: i, diff: Math.ceil((t-today)/86400000) }; }); 
@@ -777,9 +831,8 @@ function renderDdays() {
     let mainDday = calc.find(d => d.isMain);
     if(!mainDday) { let upcoming = calc.filter(d => d.diff >= 0).sort((a,b) => a.diff - b.diff); mainDday = upcoming.length > 0 ? upcoming[0] : calc[0]; }
     let mainBadgeText = mainDday.diff === 0 ? `D-Day!` : (mainDday.diff > 0 ? `D-${mainDday.diff}` : `D+${Math.abs(mainDday.diff)}`);
-    let crownIcon = mainDday.isMain ? `<img src="icon-crown.png" class="ui-icon"> ` : `<img src="icon-pin.png" class="ui-icon"> `;
-    let mainCustomIcon = mainDday.icon ? ` <span>${mainDday.icon}</span>` : '';
-    banner.innerHTML = `${crownIcon} ${mainDday.title} ${mainBadgeText}${mainCustomIcon}`; 
+    let mainCustomIcon = mainDday.icon ? ` <span style="font-size:0.9em; margin-left:4px;">${mainDday.icon}</span>` : '';
+    banner.innerHTML = `${mainDday.title} ${mainBadgeText}${mainCustomIcon}`; 
 }
 
 document.getElementById('save-dday-btn')?.addEventListener('click', () => { 
@@ -840,7 +893,6 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
-// 🌟 단어장 수직 중앙 정렬 및 간격 최적화 렌더링
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -851,7 +903,7 @@ function renderVocabs() {
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0; margin-right:15px;">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0; margin:0;">
                 <span class="vocab-word">${v.word}</span>
             </div>
@@ -1265,5 +1317,5 @@ function checkWin() {
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V7.1 로드 완료! (최초 기본값 세팅 및 레이아웃 밀착 고도화)");
+console.log("🌟 껌딱지 꼬꼬 V7.2 로드 완료! (디테일 마스터피스 완성)");
 // --- 파일 끝 ---

@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V7.1</title>
+    <title>껌딱지 꼬꼬 V7.2</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
-<body class="font-small"> <div class="app-container">
+<body class="font-small">
+    <div class="app-container">
         
         <header class="top-bar" id="main-top-bar" style="display:none;">
             <div style="display:flex; flex-direction:column; gap:8px; align-items:center; width:40px;">
@@ -26,7 +27,7 @@
                 <h2>메뉴</h2>
                 <button id="menu-close-btn" class="icon-btn" style="font-size: 16px;">❌</button>
             </div>
-            <div class="menu-content">
+            <div class="menu-content" style="display:flex; flex-direction:column;">
                 <div class="menu-section">
                     <h3><img src="icon-profile.png" class="ui-icon"> 내 프로필</h3>
                     <div id="login-area">
@@ -92,7 +93,7 @@
 
                 <div class="menu-section">
                     <h3><img src="icon-mailbox.png" class="ui-icon"> 고객센터</h3>
-                    <button id="open-feedback-btn" class="action-btn" style="background-color:#74b9ff;">개발자에게 쪽지 보내기 <img src="icon-mail.png" class="ui-icon" style="filter: brightness(0) invert(1);"></button>
+                    <button id="open-feedback-btn" class="action-btn" style="background-color:#74b9ff;">개발자에게 쪽지 보내기</button>
                 </div>
 
                 <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
@@ -119,6 +120,10 @@
 
                     <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
                     <div id="admin-feedback-list" class="scroll-list"></div>
+                </div>
+                
+                <div style="text-align:center; padding: 20px 0; font-size: 0.75em; color: #aaa; border-top: 1px solid #eee; margin-top: auto;">
+                    껌딱지 꼬꼬 V7.2<br>UID: <span id="app-uid-display">비로그인</span>
                 </div>
             </div>
         </aside>
@@ -206,7 +211,7 @@
             </div>
 
             <div id="tab-dday" class="tab-content flex-column-tab">
-                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;"><img src="icon-pin.png" class="ui-icon"> 디데이를 추가해보세요!</div>
+                <div class="d-day-info center-flex" id="main-dday-banner" style="flex-shrink: 0;">디데이를 추가해보세요!</div>
                 <div class="scroll-wrapper">
                     <div class="guide-text">목록을 길게 꾹~ 누르면 고정(📌)됩니다.</div>
                     <ul id="dday-list-display" class="item-list"></ul>
@@ -262,8 +267,8 @@
 
             <div id="tab-quest" class="tab-content flex-column-tab">
                 <div class="scroll-wrapper" style="margin-bottom:0;">
-                    <div class="quest-header-section">
-                        <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71;">오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;"></button>
+                    <div class="quest-header-section" style="display:flex; flex-direction:column; align-items:center;">
+                        <button id="attendance-btn" class="action-btn center-flex" style="background-color:#2ecc71; margin:0 auto;">오늘의 출석체크 도장 찍기 <img src="icon-check.png" class="ui-icon" style="filter: brightness(0) invert(1); margin-left:4px;"></button>
                         <div class="attendance-info center-flex">현재 연속 출석: <strong id="attendance-streak">0</strong>일 <img src="icon-fire.png" class="ui-icon"></div>
                     </div>
                     <h4 class="quest-title"><img src="icon-crown.png" class="ui-icon"> 일일 꼬꼬 퀘스트</h4>
@@ -347,7 +352,7 @@
     <div id="fullscreen-ranking-overlay" class="fullscreen-overlay" style="background:white;">
         <div id="ranking-main-view" style="width:100%; display:flex; flex-direction:column; align-items:center; padding-top:0;">
             <div style="display:flex; align-items:center; width:100%; padding: 15px 20px; position:relative; justify-content:center;">
-                <button id="ranking-close-x" style="position:absolute; left:20px; background:none; border:none; font-size:1.2em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">❌</button>
+                <button id="ranking-close-x" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:1.2em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">❌</button>
                 <h3 style="margin:0; color:#555; font-size: 1.2em;">랭킹보드</h3>
             </div>
             
@@ -359,7 +364,7 @@
 
         <div id="ranking-detail-view" style="display:none; width:100%; flex-direction:column; align-items:center; padding-top:0; flex:1;">
             <div style="display:flex; align-items:center; width:100%; padding: 15px 20px; position:relative; justify-content:center;">
-                <button id="ranking-back-btn" style="position:absolute; left:20px; background:none; border:none; font-size:0.85em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">⬅️ 뒤로</button>
+                <button id="ranking-back-btn" style="position:absolute; left:15px; top:50%; transform:translateY(-50%); background:none; border:none; font-size:0.85em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">⬅️ 뒤로</button>
                 <h3 style="margin:0; color:#555; font-size: 1.1em;">달걀 지뢰찾기 랭킹</h3>
             </div>
             
