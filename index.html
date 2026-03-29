@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V6.8</title>
+    <title>껌딱지 꼬꼬 V6.9</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -98,6 +98,7 @@
 
                 <div id="admin-tools-area" class="menu-section" style="display:none; border:2px solid #9b59b6; background:#fbf8fc; padding:15px; border-radius:10px;">
                     <h3 style="color:#9b59b6; display:flex; align-items:center; margin-top:0;"><img src="icon-wrench.png" class="ui-icon"> 개발자 비밀 도구</h3>
+                    
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 8px 0; color:#333; font-size:13px;">🍔 칼로리 계산기</h4>
                         <div class="input-group" style="margin-bottom: 5px;">
@@ -108,6 +109,7 @@
                         <div id="cal-list" style="font-size:12px; color:#555; max-height:80px; overflow-y:auto; margin-bottom:5px;"></div>
                         <div style="font-weight:bold; color:#e74c3c; font-size:14px; text-align:right;">총 섭취: <span id="cal-total-display">0</span> kcal</div>
                     </div>
+
                     <div style="margin-bottom: 20px; border-bottom: 1px dashed #ccc; padding-bottom: 15px;">
                         <h4 style="margin: 0 0 5px 0; color:#333; font-size:13px;">🎵 오프라인 플레이어</h4>
                         <p style="font-size:11px; color:#888; margin:0 0 8px 0;">브라우저 보안상 매번 기기에서 파일을 선택해야 합니다.</p>
@@ -115,6 +117,7 @@
                         <audio id="audio-player" controls style="width:100%; height:30px; outline:none;"></audio>
                         <ul id="music-playlist" class="scroll-list" style="margin-top:10px; max-height:100px; list-style:none; padding:0; border:1px solid #ddd; border-radius:5px; background:white;"></ul>
                     </div>
+
                     <h4 style="color:#d35400; display:flex; align-items:center; margin: 0 0 10px 0; font-size:13px;"><img src="icon-crown.png" class="ui-icon"> 도착한 쪽지함</h4>
                     <div id="admin-feedback-list" class="scroll-list"></div>
                 </div>
@@ -343,19 +346,23 @@
     </div>
 
     <div id="fullscreen-ranking-overlay" class="fullscreen-overlay" style="background:white;">
-        <button id="ranking-close-x" class="game-exit-btn" style="color:#555;">❌</button>
-        
-        <div id="ranking-main-view" style="width:100%; display:flex; flex-direction:column; align-items:center; padding-top:20px;">
-            <h2 style="margin: 0 0 20px 0; padding-bottom: 15px; border-bottom: 1px solid #eee; width: 90%; text-align: center; color: #333;">랭킹보드</h2>
+        <div id="ranking-main-view" style="width:100%; display:flex; flex-direction:column; align-items:center; padding-top:0;">
+            <div style="display:flex; align-items:center; width:100%; padding: 15px 20px; position:relative; justify-content:center;">
+                <button id="ranking-close-x" style="position:absolute; left:20px; background:none; border:none; font-size:1.2em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">❌</button>
+                <h3 style="margin:0; color:#555; font-size: 1.2em;">랭킹보드</h3>
+            </div>
             
-            <div id="open-minesweeper-ranking" style="width: 90%; padding: 20px; border-radius: 15px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: background 0.2s;">
+            <div id="open-minesweeper-ranking" style="width: 90%; margin-top:20px; padding: 20px; border-radius: 15px; border: 1px solid #eee; background: #fafafa; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: background 0.2s;">
                 <img src="trophy.png" style="width:40px; height:40px; object-fit:contain;">
                 <h3 style="margin:0; color:#555; font-size:1.1em;">달걀 지뢰찾기 랭킹</h3>
             </div>
         </div>
 
-        <div id="ranking-detail-view" style="display:none; width:100%; flex-direction:column; align-items:center; padding-top:20px; flex:1;">
-            <button id="ranking-back-btn" style="background:none; border:none; font-size:0.8em; font-weight:bold; color:#888; cursor:pointer; align-self: flex-start; padding: 0 20px; font-family:inherit; margin-bottom: 15px;">⬅️ 뒤로가기</button>
+        <div id="ranking-detail-view" style="display:none; width:100%; flex-direction:column; align-items:center; padding-top:0; flex:1;">
+            <div style="display:flex; align-items:center; width:100%; padding: 15px 20px; position:relative; justify-content:center;">
+                <button id="ranking-back-btn" style="position:absolute; left:20px; background:none; border:none; font-size:0.85em; font-weight:bold; color:#888; cursor:pointer; font-family:inherit; padding:5px;">⬅️ 뒤로</button>
+                <h3 style="margin:0; color:#555; font-size: 1.1em;">달걀 지뢰찾기 랭킹</h3>
+            </div>
             
             <div class="ranking-tabs">
                 <button class="rank-tab active" data-diff="easy">쉬움</button>
@@ -363,7 +370,7 @@
                 <button class="rank-tab" data-diff="hard">어려움</button>
             </div>
             
-            <div class="game-stage-wrapper" style="background:white; box-shadow:none; border-top: 1px solid #eee; border-radius:0; padding:10px 20px;">
+            <div class="game-stage-wrapper" style="background:white; box-shadow:none; border-top: none; border-radius:0; padding:10px 20px;">
                 <div id="ranking-list" style="width:100%; display:flex; flex-direction:column; gap:10px;">
                     </div>
             </div>
@@ -436,7 +443,13 @@
 
     <div id="schedule-dropdown" class="dday-dropdown"><button id="schedule-edit-btn">✏️ 수정</button><button id="schedule-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
     <div id="todo-dropdown" class="dday-dropdown"><button id="todo-edit-btn">✏️ 수정</button><button id="todo-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
-    <div id="dday-dropdown" class="dday-dropdown"><button id="dday-main-btn">👑 대표 지정</button><button id="dday-edit-btn">✏️ 수정</button><button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
+    
+    <div id="dday-dropdown" class="dday-dropdown">
+        <button id="dday-main-btn">👑 대표 지정</button>
+        <button id="dday-edit-btn">✏️ 수정</button> 
+        <button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button>
+    </div>
+    
     <div id="vocab-dropdown" class="dday-dropdown"><button id="vocab-edit-btn">✏️ 수정</button><button id="vocab-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>

@@ -437,7 +437,7 @@ document.getElementById('schedule-del-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화
+// 🔐 4. 로그인 및 동기화 (닉네임 변경 시 랭킹 연동)
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -528,8 +528,9 @@ auth.onAuthStateChanged((user) => {
         if(rankingFab) rankingFab.style.display = 'none';
         if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
         
+        // 🌟 비로그인 랜딩 페이지 멘트 변경 적용
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "로그인 후 사용 가능해요 <img src='icon-chick.png' class='ui-icon'>";
+            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해 계정 로그인을 진행해주세요! <img src='icon-chick.png' class='ui-icon'>";
             kokoSpeech.style.backgroundColor = "white";
             kokoSpeech.style.color = "#333";
             kokoSpeech.dataset.feedMode = "false";
@@ -544,14 +545,28 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
+// 🌟 버그 수정: 닉네임 변경 시 랭킹 데이터 실시간 동기화 업데이트!
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
     const nickInput = document.getElementById('nickname-input'); const statusObj = document.getElementById('profile-status'); if(!nickInput || !statusObj) return;
     const name = nickInput.value.trim(); if (!name || name === myNickname) return;
     if (lastChangeDate) { const diff = (new Date() - lastChangeDate) / 86400000; if (diff < 7) { statusObj.innerText = `⏳ 7일 제한 (${Math.ceil(7 - diff)}일 후 가능)`; statusObj.style.color = "#ff6b6b"; return; } }
     const nameRef = db.collection('nicknames').doc(name); const doc = await nameRef.get();
     if (doc.exists && doc.data().uid !== myUid) { statusObj.innerText = "❌ 사용 중인 이름!"; statusObj.style.color = "#ff6b6b"; return; }
+    
     if (myNickname) await db.collection('nicknames').doc(myNickname).delete();
-    await nameRef.set({ uid: myUid }); await db.collection('users').doc(myUid).set({ nickname: name, lastNicknameChange: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    await nameRef.set({ uid: myUid }); 
+    await db.collection('users').doc(myUid).set({ nickname: name, lastNicknameChange: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
+    
+    // 🌟 Firebase Batch를 활용하여 과거 랭킹 기록의 닉네임을 한 번에 수정
+    try {
+        const rankDocs = await db.collection('minesweeper_ranks').where('uid', '==', myUid).get();
+        if (!rankDocs.empty) {
+            const batch = db.batch();
+            rankDocs.forEach(d => { batch.update(d.ref, { nickname: name }); });
+            await batch.commit();
+        }
+    } catch(e) { console.log("Ranking sync err:", e); }
+
     myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     statusObj.innerText = "✅ 변경 완료!"; statusObj.style.color = "#2ecc71"; enableChat();
     if(kokoSpeech) kokoSpeech.innerHTML = `새 이름 "${myNickname}", 맘에 들어요! <img src='icon-chat.png' class='ui-icon'>`;
@@ -821,6 +836,7 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
+// 🌟 버그 수정: 단어장 렌더링 로직 (Flex 황금비율 적용 및 뜻 상자 최적화)
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -831,15 +847,15 @@ function renderVocabs() {
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; width:100%;">
-                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})">
+            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0; margin-right:15px;">
+                <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0; margin:0;">
                 <span class="vocab-word">${v.word}</span>
             </div>
-            <div class="vocab-meaning-box">
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
                 ${meaningHtml}
+                <button class="vocab-tts-btn" onclick="speakWord('${v.word.replace(/'/g, "\\'")}')">🔊</button>
+                <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
             </div>
-            <button class="vocab-tts-btn" onclick="speakWord('${v.word.replace(/'/g, "\\'")}')">🔊</button>
-            <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
         `;
         list.appendChild(li);
     }); 
@@ -917,6 +933,7 @@ function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.ge
 
 function getDefaultSpeech() { const h = new Date().getHours(); return h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); }
 
+// 🌟 비로그인 시 멘트 변경
 function updateKokoAppearance() {
     const kokoImg = document.getElementById('koko'); if(!kokoImg) return;
     
@@ -925,7 +942,7 @@ function updateKokoAppearance() {
         if(kokoSpeech) {
             kokoSpeech.style.backgroundColor = "white";
             kokoSpeech.style.color = "#333";
-            kokoSpeech.innerHTML = "로그인 후 사용 가능해요 <img src='icon-chick.png' class='ui-icon'>";
+            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해 계정 로그인을 진행해주세요! <img src='icon-chick.png' class='ui-icon'>";
         }
         return;
     }
@@ -989,7 +1006,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 (랭킹보드 연동 & 우회 쿼리 적용 완료)
+// 🌟 8. 꼬꼬 게임 & 랭킹보드
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -1010,7 +1027,6 @@ document.getElementById('game-close-x')?.addEventListener('click', () => {
     clearInterval(timerInterval);
 });
 
-// 랭킹보드 UI 제어
 document.getElementById('icon-ranking')?.addEventListener('click', () => {
     document.getElementById('fullscreen-ranking-overlay').style.display = 'flex';
     document.getElementById('ranking-main-view').style.display = 'flex';
@@ -1037,7 +1053,6 @@ document.querySelectorAll('.rank-tab').forEach(tab => {
     });
 });
 
-// 🌟 버그 픽스: Firebase 인덱스 에러를 방지하기 위해 클라이언트 사이드에서 시간 정렬!
 function loadRankings(diff) {
     const list = document.getElementById('ranking-list');
     list.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">데이터 불러오는 중...</div>';
@@ -1049,11 +1064,10 @@ function loadRankings(diff) {
             return;
         }
         
-        // 브라우저 메모리에서 직접 오름차순(가장 빠른 시간) 정렬
         let rankData = [];
         snap.forEach(doc => rankData.push(doc.data()));
         rankData.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
-        rankData = rankData.slice(0, 50); // 상위 50명만 표기
+        rankData = rankData.slice(0, 50); 
         
         let rank = 1;
         rankData.forEach(d => {
@@ -1251,5 +1265,5 @@ function checkWin() {
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V6.8 로드 완료! (파이어베이스 인덱스 에러 제거 및 클라이언트 사이드 정렬 최적화)");
+console.log("🌟 껌딱지 꼬꼬 V6.9 로드 완료! (동기화, 단어장 밸런스, 랭킹보드 완성)");
 // --- 파일 끝 ---
