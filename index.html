@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V8.1</title>
+    <title>껌딱지 꼬꼬 V8.2</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -124,7 +124,7 @@
                 
                 <div style="display: flex; justify-content: center; padding: 20px 0; border-top: 1px solid #eee; margin-top: auto;">
                     <div style="font-size: 0.75em; color: #aaa; text-align: left; line-height: 1.5;">
-                        ver:8.1<br>UID: <span id="app-uid-display">비로그인</span>
+                        ver:8.2<br>UID: <span id="app-uid-display">비로그인</span>
                     </div>
                 </div>
             </div>
@@ -445,6 +445,18 @@
             <div style="display:flex; gap:10px; width:100%;">
                 <button class="action-btn" style="flex:1; background-color:#e74c3c; font-family:inherit;" onclick="exitGameFromPopup()">나가기</button>
                 <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="retryGameFromPopup()">다시하기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="feedback-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div class="modal-box">
+            <h3 style="margin-top:0; color:#74b9ff;">쪽지 보내기</h3>
+            <p class="modal-desc">개발자에게 보내고 싶은 내용을 써주세요.</p>
+            <textarea id="feedback-text" rows="5"></textarea>
+            <div class="modal-buttons" style="display:flex; gap:10px; width:100%; margin-top:15px;">
+                <button id="close-feedback-btn" class="action-btn" style="flex:1; background-color:#ccc; color:#333;">취소</button>
+                <button id="send-feedback-btn" class="action-btn" style="flex:1; background-color:#74b9ff;">전송하기</button>
             </div>
         </div>
     </div>

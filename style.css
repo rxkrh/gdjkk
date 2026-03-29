@@ -94,8 +94,8 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 
 .sticky-bottom-input { flex: 0 0 auto; background: white; padding: 5px 15px 8px 15px; margin: 0 -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
 
-/* 🌟 V8.1: 디데이 대표 문구 상단 여백 최적화 (가로세로 중앙) */
-.d-day-info { font-weight: bold; color: #ff6b6b; margin-top: 15px; margin-bottom: 15px; font-size: 1.25em; display: flex; align-items: center; justify-content: center; text-align: center; min-height: 50px; }
+/* 🌟 V8.2: 디데이 대표 문구 상하 여백 10px로 최적화 */
+.d-day-info { font-weight: bold; color: #ff6b6b; margin-top: 10px; margin-bottom: 10px; font-size: 1.25em; display: flex; align-items: center; justify-content: center; text-align: center; }
 .guide-text { text-align: center; font-size: 0.75em; color: #aaa; margin-bottom: 5px; }
 
 .folder-header { display: flex; gap: 6px; align-items: center; padding: 5px 0; border-bottom: 1px solid #eee; background: white; position: relative; flex-shrink: 0; margin-bottom: 5px; }
@@ -162,7 +162,9 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .calendar-day.selected { background-color: #0984e3; color: white; font-weight: bold; }
 .calendar-day.has-schedule::after { content: ''; position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); width: 4px; height: 4px; background-color: #ff6b6b; border-radius: 50%; }
 
-/* 🌟 V8.1: 퀘스트 헤더 황금비율 상단 여백 (24px) 추가 */
+.schedule-time-badge { display: inline-flex; align-items: center; justify-content: center; background: #0984e3; color: white; padding: 2px 6px; border-radius: 12px; font-size: 0.75em; font-weight: bold; margin-right: 8px; line-height: 1;}
+.schedule-time-badge.allday { background: #ff9f43; }
+
 .quest-header-section { text-align:center; margin-top: 24px; margin-bottom: 15px; padding-bottom:15px; border-bottom:1px dashed #eee; flex-shrink: 0; display:flex; flex-direction:column; align-items:center;}
 .attendance-info { font-size: 0.85em; color: #555; margin-top: 8px; }
 #attendance-streak { color: #ff9f43; font-size: 1.2em; margin: 0 4px; }
