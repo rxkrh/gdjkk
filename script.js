@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 (V7.2 기본값 최적화)
+// 🌟 1. 전역 변수 선언 
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -39,10 +39,10 @@ let dailyQuests = { q1: false, q2: false, q3: false };
 let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || {};
 
 let currentFont = localStorage.getItem('koko_font') || "'Pretendard', sans-serif";
-let currentFontSize = localStorage.getItem('koko_font_size') || "font-small"; // 기본 크기 작게
+let currentFontSize = localStorage.getItem('koko_font_size') || "font-small"; 
 let currentChatFont = localStorage.getItem('koko_chat_font') || "0.85em";
 let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || [];
-let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: true }; // 모두 활성화
+let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: true }; 
 
 const defaultTabs = [
     { id: 'tab-todo', label: '할 일', icon: 'icon-todo.png', enabled: true },
@@ -58,6 +58,13 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
+
+// 🌟 아이폰(iOS) 줌인 이중 방지 (멀티 터치 금지)
+document.addEventListener('touchmove', function(event) {
+    if (event.scale !== 1 && event.touches.length > 1) {
+        event.preventDefault();
+    }
+}, { passive: false });
 
 window.togglePin = (type) => {
     const header = document.getElementById(`${type}-folder-header`);
@@ -344,7 +351,7 @@ function jumpKoko() {
     }
 }
 
-// 🌟 스케줄 핀 고정 체크 연동 로직
+// 스케줄 핀 고정 체크 연동 로직
 function kokoScheduleCheck() {
     let pinnedSchedule = null;
     Object.keys(schedules).forEach(d => {
@@ -377,7 +384,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직 (핀 기능 포함)
+// 📅 3. 캘린더 및 스케줄 로직
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display'); if (!displayObj) return; 
@@ -405,7 +412,6 @@ function renderSchedulesForSelected() {
     daySchedules.sort((a, b) => { if (a.time === "종일") return -1; if (b.time === "종일") return 1; return a.time.localeCompare(b.time); });
     if(daySchedules.length === 0) { list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`; return; }
     
-    // 🌟 핀 꽂기 이벤트 동적 등록
     daySchedules.forEach((s, i) => { 
         let badgeClass = s.time === "종일" ? "schedule-time-badge allday" : "schedule-time-badge";
         let pinIcon = s.pinned ? `<span style="margin-right:5px; font-size:1.1em;">📌</span>` : '';
@@ -421,7 +427,6 @@ function renderSchedulesForSelected() {
     });
 }
 
-// 🌟 스케줄 핀 고정 프레스 로직
 let schedulePressTimer = null; let isSchedulePressing = false;
 window.startSchedulePress = (dateStr, index, event) => { 
     if(event.target.classList.contains('schedule-more-btn')) return; 
@@ -501,7 +506,7 @@ auth.onAuthStateChanged((user) => {
         document.getElementById('login-area').style.display = 'none'; 
         document.getElementById('user-profile-area').style.display = 'block'; 
         document.getElementById('user-email-display').innerText = `👋 ${user.email}`;
-        if(uidDisplay) uidDisplay.innerText = user.uid; // 앱 설정 하단 UID 표시
+        if(uidDisplay) uidDisplay.innerText = user.uid; 
         myUid = user.uid; 
         
         const adminArea = document.getElementById('admin-tools-area');
@@ -558,6 +563,13 @@ auth.onAuthStateChanged((user) => {
                 updateKokoAppearance(); 
             } else { 
                 applyShortcuts();
+                // 🌟 신규(일반) 계정 최초 접속 시 탭 UI가 날아가지 않도록 즉시 렌더링 호출
+                renderTabEditor(); 
+                renderTabButtons();
+                renderTodoFolders(); 
+                renderVocabFolders(); 
+                renderCalendar(); 
+                renderDdays();
                 syncToCloud(); 
                 if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; 
             }
@@ -571,7 +583,6 @@ auth.onAuthStateChanged((user) => {
         if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
         if(uidDisplay) uidDisplay.innerText = '비로그인';
         
-        // 🌟 V7.2 랜딩 페이지 말풍선 텍스트 이모티콘 1라인 처리 적용 완료
         if (kokoSpeech) {
             kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <span style='font-size:1.2em; margin-left:4px;'>🐥</span></span>";
             kokoSpeech.style.backgroundColor = "#ff9f43";
@@ -588,12 +599,10 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 🌟 버그 수정: 닉네임 변경 7일 제한 개발자 패스 추가 및 동기화!
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
     const nickInput = document.getElementById('nickname-input'); const statusObj = document.getElementById('profile-status'); if(!nickInput || !statusObj) return;
     const name = nickInput.value.trim(); if (!name || name === myNickname) return;
     
-    // 개발자(ADMIN_UID)는 7일 제한 패스
     if (lastChangeDate && myUid !== ADMIN_UID) { 
         const diff = (new Date() - lastChangeDate) / 86400000; 
         if (diff < 7) { 
@@ -622,7 +631,6 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
     myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     statusObj.innerText = "✅ 변경 완료!"; statusObj.style.color = "#2ecc71"; enableChat();
     
-    // 닉네임 변경 성공 시 말풍선 흰색 고정
     if(kokoSpeech) {
         kokoSpeech.innerHTML = `새 이름 "${myNickname}", 맘에 들어요! <img src='icon-chat.png' class='ui-icon'>`;
         kokoSpeech.style.backgroundColor = "white";
@@ -903,7 +911,7 @@ function renderVocabs() {
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0; margin-right:15px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0;">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0; margin:0;">
                 <span class="vocab-word">${v.word}</span>
             </div>
@@ -1314,8 +1322,15 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
+// 🌟 앱 최초 접속 시 무조건 탭 UI 렌더링하도록 밖으로 꺼냄
+renderTabEditor(); 
+renderTabButtons();
+renderTodoFolders(); 
+renderVocabFolders(); 
+renderCalendar(); 
+renderDdays();
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V7.2 로드 완료! (디테일 마스터피스 완성)");
+console.log("🌟 껌딱지 꼬꼬 V7.3 로드 완료! (iOS 확대/팝업 차단 및 신규 계정 탭 증발 해결)");
 // --- 파일 끝 ---
