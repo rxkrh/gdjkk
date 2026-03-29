@@ -2,9 +2,13 @@
 
 * { box-sizing: border-box; }
 
+/* 🌟 V7.9: 이미지 꾹 누르기 팝업, 텍스트 선택 완벽 차단 */
 img {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
     -webkit-user-drag: none;
 }
@@ -54,13 +58,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .koko-zone { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 15px; padding-bottom: 10px; min-height: 120px; transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); position: relative; z-index: 1;}
 .koko-zone.compact { justify-content: flex-start; padding-top: 10px; }
 
-/* 🌟 버그 수정: 말풍선 텍스트 가로세로 완벽 중앙 정렬 (line-height 추가 및 flex 최적화) */
-.speech-bubble { 
-    background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
-    margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; 
-    font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; line-height: 1.4; word-break: keep-all;
-    transition: background-color 0.4s ease, color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; 
-}
+.speech-bubble { background: white; padding: 10px 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 15px; display: flex; align-items: center; justify-content: center; text-align: center; font-weight: bold; color: #333; max-width: 85%; min-height: 40px; font-size: 0.95em; line-height: 1.4; word-break: keep-all; transition: background-color 0.4s ease, color 0.4s ease; max-height: 75px; overflow-y: auto; scrollbar-width: none; -ms-overflow-style: none; }
 .speech-bubble::-webkit-scrollbar { display: none; }
 .koko-zone.compact .speech-bubble { margin-bottom: 5px; }
 

@@ -31,9 +31,12 @@ let vocabData = { "기본": [] };
 let currentVocabFolder = "기본";
 let isVocabBlindMode = false;
 
+// 단어장 팝업 글로벌 변수 추가
 let testQueue = [];
 let currentTestIndex = 0;
 let currentTestMode = ''; 
+let vocabCorrectCount = 0;
+let vocabIncorrectCount = 0;
 
 let ddays = [];
 let attendance = { lastDate: "", streak: 0 };
@@ -60,6 +63,15 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
+
+// 🌟 이미지 꾹 누르기(롱프레스) 컨텍스트 메뉴 전역 차단 (아이폰/안드로이드 모두 적용)
+window.oncontextmenu = function(event) {
+    if(event.target.tagName === 'IMG') {
+        event.preventDefault();
+        event.stopPropagation();
+        return false;
+    }
+};
 
 document.addEventListener('touchmove', function(event) {
     if (event.scale !== 1 && event.touches.length > 1) {
@@ -363,7 +375,6 @@ function jumpKoko() {
     }
 }
 
-// 🌟 버그 수정: 스케줄 N개 표시 시 문구 하나로 통합 및 깔끔한 출력
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
@@ -451,20 +462,18 @@ document.getElementById('schedule-edit-btn')?.addEventListener('click', () => {
     const newTask = prompt("일정을 수정하세요:", currentTask);
     if(newTask && newTask.trim() !== "") {
         schedules[selectedDateStr][currentScheduleIndex].task = newTask.trim();
-        localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
         renderCalendar(); syncToCloud(); 
     }
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
 document.getElementById('schedule-del-btn')?.addEventListener('click', () => { 
     schedules[selectedDateStr].splice(currentScheduleIndex, 1); 
-    localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
     renderCalendar(); syncToCloud(); 
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화 (오류 방어 로직)
+// 🔐 4. 로그인 및 동기화
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -555,7 +564,7 @@ auth.onAuthStateChanged((user) => {
         if(uidDisplay) uidDisplay.innerText = '비로그인';
         
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요!";
+            kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요!</span>";
             kokoSpeech.style.backgroundColor = "#ff9f43";
             kokoSpeech.style.color = "white";
             kokoSpeech.dataset.feedMode = "false";
@@ -923,15 +932,19 @@ document.getElementById('vocab-edit-btn')?.addEventListener('click', () => {
 });
 document.getElementById('vocab-del-btn')?.addEventListener('click', () => { vocabData[currentVocabFolder].splice(currentVocabIndex, 1); syncToCloud(); renderVocabs(); document.getElementById('vocab-dropdown').style.display = 'none'; });
 
+// 🌟 버그 픽스: 단어장 암기 테스트 성적표(Result) 로직 적용
 window.startVocabTest = (mode) => {
     const list = vocabData[currentVocabFolder] || [];
     if(list.length === 0) { alert("폴더에 단어가 없습니다!"); return; }
     
-    testQueue = list.map((v, i) => ({...v, originalIndex: i})).filter(v => !v.memorized);
-    if(testQueue.length === 0) testQueue = list.map((v, i) => ({...v, originalIndex: i})); 
+    testQueue = list.map((v, i) => ({...v, originalIndex: i, failed: false})).filter(v => !v.memorized);
+    if(testQueue.length === 0) testQueue = list.map((v, i) => ({...v, originalIndex: i, failed: false})); 
     
     testQueue = testQueue.sort(() => Math.random() - 0.5);
     currentTestMode = mode; currentTestIndex = 0;
+    
+    vocabCorrectCount = 0;
+    vocabIncorrectCount = 0;
     
     document.getElementById('vocab-test-select-modal').style.display = 'none';
     document.getElementById('vocab-test-modal').style.display = 'flex';
@@ -939,7 +952,10 @@ window.startVocabTest = (mode) => {
 };
 
 function showTestQuestion() {
-    if(currentTestIndex >= testQueue.length) { alert("테스트를 모두 완료했습니다! 🎉"); closeVocabTest(); return; }
+    if(currentTestIndex >= testQueue.length) { 
+        showVocabResult(); 
+        return; 
+    }
     const q = testQueue[currentTestIndex];
     document.getElementById('test-progress').innerText = `${currentTestIndex + 1} / ${testQueue.length}`;
     document.getElementById('test-question-text').innerText = currentTestMode === 'meanToWord' ? q.mean : q.word;
@@ -957,17 +973,46 @@ window.submitVocabTestAnswer = () => {
     
     if(input.toLowerCase() === correctAnswer.toLowerCase()) {
         feedback.innerText = '정답이에요! 🟢'; feedback.style.color = '#2ecc71';
+        if (!q.failed) { vocabCorrectCount++; q.failed = true; } 
         setTimeout(() => { currentTestIndex++; showTestQuestion(); }, 500);
     } else {
         feedback.innerText = '오답이에요! 🔴'; feedback.style.color = '#e74c3c';
+        if (!q.failed) { vocabIncorrectCount++; q.failed = true; }
         const modalBox = document.querySelector('#vocab-test-modal .modal-box');
         modalBox.classList.remove('shake'); void modalBox.offsetWidth; modalBox.classList.add('shake');
     }
 };
 
-window.skipVocabTestQuestion = () => { const skipped = testQueue.splice(currentTestIndex, 1)[0]; testQueue.push(skipped); showTestQuestion(); };
+window.skipVocabTestQuestion = () => { 
+    const q = testQueue[currentTestIndex];
+    if (!q.failed) { vocabIncorrectCount++; q.failed = true; }
+    currentTestIndex++; 
+    showTestQuestion(); 
+};
+
 window.closeVocabTestSelect = () => { document.getElementById('vocab-test-select-modal').style.display = 'none'; };
 window.closeVocabTest = () => { document.getElementById('vocab-test-modal').style.display = 'none'; };
+
+function showVocabResult() {
+    document.getElementById('vocab-test-modal').style.display = 'none';
+    document.getElementById('vocab-result-modal').style.display = 'flex';
+    
+    const total = testQueue.length;
+    const score = total > 0 ? Math.round((vocabCorrectCount / total) * 100) : 0;
+    
+    document.getElementById('vocab-score-display').innerText = score;
+    document.getElementById('vocab-correct-display').innerText = vocabCorrectCount;
+    document.getElementById('vocab-incorrect-display').innerText = vocabIncorrectCount;
+}
+
+window.closeVocabResult = () => {
+    document.getElementById('vocab-result-modal').style.display = 'none';
+};
+
+window.retryVocabTest = () => {
+    document.getElementById('vocab-result-modal').style.display = 'none';
+    startVocabTest(currentTestMode);
+};
 
 let currentWeatherCode = -1;
 function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.getCurrentPosition(p => { fetch(`https://api.open-meteo.com/v1/forecast?latitude=${p.coords.latitude}&longitude=${p.coords.longitude}&current_weather=true`).then(r=>r.json()).then(d=>{ const wInfo = document.querySelector('.weather-info'); currentWeatherCode = d.current_weather.weathercode; if(wInfo) wInfo.innerHTML=`<img src="${currentWeatherCode<=1?'icon-sun.png':(currentWeatherCode<=45?'icon-cloud.png':'icon-rain.png')}" class="ui-icon"> ${d.current_weather.temperature}°C`; updateKokoAppearance(); }); }, () => { updateKokoAppearance(); }); } else { updateKokoAppearance(); } }
@@ -1306,7 +1351,7 @@ window.exitGameFromPopup = () => {
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
     document.getElementById('fullscreen-game-overlay').style.display = 'none'; 
-}
+};
 
 function checkWin() {
     const revealedCount = document.querySelectorAll('.egg-cell.revealed').length;
@@ -1316,5 +1361,5 @@ function checkWin() {
 applyShortcuts(); 
 renderAllAppUI();
 
-console.log("🌟 껌딱지 꼬꼬 V7.8 로드 완료! (말풍선 단일 텍스트화 및 모든 줄바꿈 완벽 중앙 정렬 완료)");
+console.log("🌟 껌딱지 꼬꼬 V7.9 로드 완료! (이미지 팝업 차단 및 단어장 성적표 최적화)");
 // --- 파일 끝 ---

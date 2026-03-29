@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V7.8</title>
+    <title>껌딱지 꼬꼬 V7.9</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -124,7 +124,7 @@
                 
                 <div style="display: flex; justify-content: center; padding: 20px 0; border-top: 1px solid #eee; margin-top: auto;">
                     <div style="font-size: 0.75em; color: #aaa; text-align: left; line-height: 1.5;">
-                        ver:7.8<br>UID: <span id="app-uid-display">비로그인</span>
+                        ver:7.9<br>UID: <span id="app-uid-display">비로그인</span>
                     </div>
                 </div>
             </div>
@@ -344,9 +344,20 @@
             <h2 id="test-question-text" style="margin:15px 0 20px 0; color:#333; font-size:1.5em; word-break: break-word;">Apple</h2>
             <div id="test-feedback-text" style="font-size:0.9em; font-weight:bold; height:20px; margin-bottom:10px; display:flex; align-items:center; justify-content:center;"></div>
             <input type="text" id="test-answer-input" placeholder="정답을 입력하세요" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:inherit; font-size:1em; margin-bottom:15px;" onkeypress="if(event.key==='Enter') submitVocabTestAnswer()">
+        </div>
+    </div>
+
+    <div id="vocab-result-modal" class="overlay" style="display:none; justify-content:center; align-items:center; z-index:2000;">
+        <div class="modal-box" style="text-align:center;">
+            <h3 style="margin-top:0; color:#333;">결과</h3>
+            <div style="font-size:3em; font-weight:bold; color:#0984e3; margin:15px 0;"><span id="vocab-score-display">100</span>점</div>
+            <div style="font-size:1.1em; font-weight:bold; margin-bottom:25px; line-height:1.6;">
+                맞힌 단어: <span id="vocab-correct-display" style="color:#2ecc71;">0</span>개<br>
+                틀린 단어: <span id="vocab-incorrect-display" style="color:#e74c3c;">0</span>개
+            </div>
             <div style="display:flex; gap:10px; width:100%;">
-                <button class="action-btn" style="flex:1; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTest()">종료</button>
-                <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="submitVocabTestAnswer()">확인</button>
+                <button class="action-btn" style="flex:1; background-color:#e74c3c; font-family:inherit;" onclick="closeVocabResult()">나가기</button>
+                <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="retryVocabTest()">다시하기</button>
             </div>
         </div>
     </div>
