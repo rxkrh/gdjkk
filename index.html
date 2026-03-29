@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V7.9</title>
+    <title>껌딱지 꼬꼬 V8.0</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -124,7 +124,7 @@
                 
                 <div style="display: flex; justify-content: center; padding: 20px 0; border-top: 1px solid #eee; margin-top: auto;">
                     <div style="font-size: 0.75em; color: #aaa; text-align: left; line-height: 1.5;">
-                        ver:7.9<br>UID: <span id="app-uid-display">비로그인</span>
+                        ver:8.0<br>UID: <span id="app-uid-display">비로그인</span>
                     </div>
                 </div>
             </div>
@@ -344,6 +344,10 @@
             <h2 id="test-question-text" style="margin:15px 0 20px 0; color:#333; font-size:1.5em; word-break: break-word;">Apple</h2>
             <div id="test-feedback-text" style="font-size:0.9em; font-weight:bold; height:20px; margin-bottom:10px; display:flex; align-items:center; justify-content:center;"></div>
             <input type="text" id="test-answer-input" placeholder="정답을 입력하세요" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd; text-align:center; font-family:inherit; font-size:1em; margin-bottom:15px;" onkeypress="if(event.key==='Enter') submitVocabTestAnswer()">
+            <div style="display:flex; gap:10px; width:100%;">
+                <button class="action-btn" style="flex:1; background-color:#ccc; color:#333; font-family:inherit;" onclick="closeVocabTest()">종료</button>
+                <button class="action-btn" style="flex:1; background-color:#2ecc71; font-family:inherit;" onclick="submitVocabTestAnswer()">확인</button>
+            </div>
         </div>
     </div>
 
@@ -457,7 +461,11 @@
         </div>
     </div>
 
-    <div id="schedule-dropdown" class="dday-dropdown"><button id="schedule-edit-btn">✏️ 수정</button><button id="schedule-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
+    <div id="schedule-dropdown" class="dday-dropdown">
+        <button id="schedule-edit-btn">✏️ 수정</button>
+        <button id="schedule-del-btn" style="color:#ff6b6b;">❌ 삭제</button>
+    </div>
+    
     <div id="todo-dropdown" class="dday-dropdown"><button id="todo-edit-btn">✏️ 수정</button><button id="todo-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
     <div id="dday-dropdown" class="dday-dropdown"><button id="dday-main-btn">👑 대표 지정</button><button id="dday-edit-btn">✏️ 수정</button><button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
     <div id="vocab-dropdown" class="dday-dropdown"><button id="vocab-edit-btn">✏️ 수정</button><button id="vocab-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>

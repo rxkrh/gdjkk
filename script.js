@@ -31,7 +31,6 @@ let vocabData = { "기본": [] };
 let currentVocabFolder = "기본";
 let isVocabBlindMode = false;
 
-// 단어장 팝업 글로벌 변수 추가
 let testQueue = [];
 let currentTestIndex = 0;
 let currentTestMode = ''; 
@@ -64,7 +63,6 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
-// 🌟 이미지 꾹 누르기(롱프레스) 컨텍스트 메뉴 전역 차단 (아이폰/안드로이드 모두 적용)
 window.oncontextmenu = function(event) {
     if(event.target.tagName === 'IMG') {
         event.preventDefault();
@@ -462,18 +460,20 @@ document.getElementById('schedule-edit-btn')?.addEventListener('click', () => {
     const newTask = prompt("일정을 수정하세요:", currentTask);
     if(newTask && newTask.trim() !== "") {
         schedules[selectedDateStr][currentScheduleIndex].task = newTask.trim();
+        localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
         renderCalendar(); syncToCloud(); 
     }
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
 document.getElementById('schedule-del-btn')?.addEventListener('click', () => { 
     schedules[selectedDateStr].splice(currentScheduleIndex, 1); 
+    localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
     renderCalendar(); syncToCloud(); 
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화
+// 🔐 4. 로그인 및 동기화 
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -786,19 +786,8 @@ document.addEventListener('click', (e) => {
     const smenu = document.getElementById('schedule-dropdown'); if (smenu && smenu.style.display === 'flex' && !e.target.classList.contains('schedule-more-btn')) smenu.style.display = 'none';
 });
 
-let currentDdayIndex = -1; let ddayPressTimer = null; let isPressing = false;
-window.startDdayPress = (index, event) => { if(event.target.classList.contains('more-btn')) return; isPressing = true; ddayPressTimer = setTimeout(() => { if(isPressing) { ddays[index].pinned = !ddays[index].pinned; syncToCloud(); renderDdays(); if(navigator.vibrate) navigator.vibrate(50); } }, 500); };
-window.cancelDdayPress = () => { isPressing = false; if(ddayPressTimer) clearTimeout(ddayPressTimer); };
-
-const ddaySelect = document.getElementById('dday-icon-select');
-const optTextFull = { "": "기본", "🎂": "🎂 생일", "🔥": "🔥 마감", "💖": "💖 기념", "✈️": "✈️ 여행", "🎓": "🎓 시험", "🎯": "🎯 목표" };
-const optTextShort = { "": "기본", "🎂": "생일", "🔥": "마감", "💖": "기념", "✈️": "여행", "🎓": "시험", "🎯": "목표" };
-function updateDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = opt.selected ? optTextShort[opt.value] : optTextFull[opt.value]; }); }
-function openDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = optTextFull[opt.value]; }); }
-if(ddaySelect) { ddaySelect.addEventListener('change', updateDdaySelectUI); ddaySelect.addEventListener('blur', updateDdaySelectUI); ddaySelect.addEventListener('mousedown', openDdaySelectUI); ddaySelect.addEventListener('touchstart', openDdaySelectUI, {passive:true}); updateDdaySelectUI(); }
-const ddayDateInput = document.getElementById('dday-date-input'); const dateIconSpan = document.getElementById('date-square-icon');
-if(ddayDateInput && dateIconSpan) { ddayDateInput.addEventListener('change', () => { if(ddayDateInput.value) { dateIconSpan.innerText = '✅'; dateIconSpan.parentElement.style.borderColor = '#2ecc71'; dateIconSpan.parentElement.style.background = '#eafaf1'; } else { dateIconSpan.innerText = '📅'; dateIconSpan.parentElement.style.borderColor = '#ddd'; dateIconSpan.parentElement.style.background = '#f0f4f8'; } }); }
-
+// 🌟 핀 꽂기 로직 적용 완료
+let ddayPressTimer = null; let isDdayPressing = false;
 function renderDdays() { 
     const list = document.getElementById('dday-list-display'); const banner = document.getElementById('main-dday-banner');
     if(!list || !banner) return; list.innerHTML = ''; 
@@ -812,12 +801,23 @@ function renderDdays() {
         let badgeText = d.diff === 0 ? `D-Day<img src="icon-party.png" class="ui-icon" style="margin-left:2px;">` : (d.diff > 0 ? `D-${d.diff}` : `D+${Math.abs(d.diff)}`); 
         let badgeColor = d.diff === 0 ? "#ff6b6b" : (d.diff > 0 ? "#ff9f43" : "#888");
         let badge = `<span style="color:${badgeColor}; font-weight:bold;">${badgeText}</span>`;
-        let pinIcon = d.pinned ? `<img src="icon-pin.png" class="ui-icon" style="width:1em; height:1em;"> ` : '';
+        let pinIcon = d.pinned ? `<span style="margin-right:4px; font-size:1.1em;">📌</span>` : '';
         let customIcon = d.icon ? `<span style="margin-left:4px;">${d.icon}</span>` : '';
         let li = document.createElement('li');
-        li.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px;"><div style="display:flex; align-items:center; gap:6px;">${pinIcon}<strong>${d.title}</strong><div style="display:flex; align-items:center;">${badge}${customIcon}</div></div><span style="font-size:0.85em; color:#888;">${d.date}</span></div><button class="more-btn" onclick="openDdayMenu(${d.originalIndex}, event)">⋮</button>`;
-        li.addEventListener('mousedown', (e) => startDdayPress(d.originalIndex, e)); li.addEventListener('touchstart', (e) => startDdayPress(d.originalIndex, e), {passive: true});
-        li.addEventListener('mouseup', cancelDdayPress); li.addEventListener('mouseleave', cancelDdayPress); li.addEventListener('touchend', cancelDdayPress); li.addEventListener('touchcancel', cancelDdayPress);
+        li.innerHTML = `<div style="display:flex; flex-direction:column; gap:4px;"><div style="display:flex; align-items:center; gap:6px;"><strong>${pinIcon}${d.title}</strong><div style="display:flex; align-items:center;">${badge}${customIcon}</div></div><span style="font-size:0.85em; color:#888;">${d.date}</span></div><button class="more-btn dday-more-btn" onclick="openDdayMenu(${d.originalIndex}, event)">⋮</button>`;
+        
+        let timer;
+        li.onmousedown = li.ontouchstart = (e) => { 
+            if(e.target.classList.contains('more-btn')) return;
+            timer = setTimeout(() => { 
+                ddays[d.originalIndex].pinned = !ddays[d.originalIndex].pinned; 
+                syncToCloud(); 
+                renderDdays(); 
+                if(navigator.vibrate) navigator.vibrate(30); 
+            }, 500); 
+        };
+        li.onmouseup = li.onmouseleave = li.ontouchend = () => clearTimeout(timer);
+        
         list.appendChild(li);
     }); 
     let mainDday = calc.find(d => d.isMain);
@@ -826,6 +826,15 @@ function renderDdays() {
     let mainCustomIcon = mainDday.icon ? ` <span style="font-size:0.9em; margin-left:4px;">${mainDday.icon}</span>` : '';
     banner.innerHTML = `${mainDday.title} ${mainBadgeText}${mainCustomIcon}`; 
 }
+
+const ddaySelect = document.getElementById('dday-icon-select');
+const optTextFull = { "": "기본", "🎂": "🎂 생일", "🔥": "🔥 마감", "💖": "💖 기념", "✈️": "✈️ 여행", "🎓": "🎓 시험", "🎯": "🎯 목표" };
+const optTextShort = { "": "기본", "🎂": "생일", "🔥": "마감", "💖": "기념", "✈️": "여행", "🎓": "시험", "🎯": "목표" };
+function updateDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = opt.selected ? optTextShort[opt.value] : optTextFull[opt.value]; }); }
+function openDdaySelectUI() { if(!ddaySelect) return; Array.from(ddaySelect.options).forEach(opt => { opt.text = optTextFull[opt.value]; }); }
+if(ddaySelect) { ddaySelect.addEventListener('change', updateDdaySelectUI); ddaySelect.addEventListener('blur', updateDdaySelectUI); ddaySelect.addEventListener('mousedown', openDdaySelectUI); ddaySelect.addEventListener('touchstart', openDdaySelectUI, {passive:true}); updateDdaySelectUI(); }
+const ddayDateInput = document.getElementById('dday-date-input'); const dateIconSpan = document.getElementById('date-square-icon');
+if(ddayDateInput && dateIconSpan) { ddayDateInput.addEventListener('change', () => { if(ddayDateInput.value) { dateIconSpan.innerText = '✅'; dateIconSpan.parentElement.style.borderColor = '#2ecc71'; dateIconSpan.parentElement.style.background = '#eafaf1'; } else { dateIconSpan.innerText = '📅'; dateIconSpan.parentElement.style.borderColor = '#ddd'; dateIconSpan.parentElement.style.background = '#f0f4f8'; } }); }
 
 document.getElementById('save-dday-btn')?.addEventListener('click', () => { 
     const tObj = document.getElementById('dday-title-input'); const dObj = document.getElementById('dday-date-input'); const iObj = document.getElementById('dday-icon-select');
@@ -837,6 +846,7 @@ document.getElementById('save-dday-btn')?.addEventListener('click', () => {
     } else { alert("제목과 날짜를 모두 입력해주세요! 🐥"); }
 });
 
+let currentDdayIndex = -1;
 window.openDdayMenu = (index, event) => {
     currentDdayIndex = index; const menu = document.getElementById('dday-dropdown'); if(!menu) return;
     const rect = event.target.getBoundingClientRect(); menu.style.display = 'flex'; menu.style.top = `${rect.bottom + window.scrollY}px`; menu.style.left = `${rect.left - 100}px`; 
@@ -932,7 +942,6 @@ document.getElementById('vocab-edit-btn')?.addEventListener('click', () => {
 });
 document.getElementById('vocab-del-btn')?.addEventListener('click', () => { vocabData[currentVocabFolder].splice(currentVocabIndex, 1); syncToCloud(); renderVocabs(); document.getElementById('vocab-dropdown').style.display = 'none'; });
 
-// 🌟 버그 픽스: 단어장 암기 테스트 성적표(Result) 로직 적용
 window.startVocabTest = (mode) => {
     const list = vocabData[currentVocabFolder] || [];
     if(list.length === 0) { alert("폴더에 단어가 없습니다!"); return; }
@@ -1361,5 +1370,5 @@ function checkWin() {
 applyShortcuts(); 
 renderAllAppUI();
 
-console.log("🌟 껌딱지 꼬꼬 V7.9 로드 완료! (이미지 팝업 차단 및 단어장 성적표 최적화)");
+console.log("🌟 껌딱지 꼬꼬 V8.0 로드 완료! (디데이 핀 터치 동기화 및 탭 여백 완전 제거)");
 // --- 파일 끝 ---

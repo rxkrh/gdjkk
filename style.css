@@ -2,7 +2,6 @@
 
 * { box-sizing: border-box; }
 
-/* 🌟 V7.9: 이미지 꾹 누르기 팝업, 텍스트 선택 완벽 차단 */
 img {
     -webkit-touch-callout: none;
     -webkit-user-select: none;
@@ -86,13 +85,13 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .tab-btn .ui-icon { margin: 0; width: 18px; height: 18px; }
 .tab-btn.active { color: #ff9f43; border-bottom: 3px solid #ff9f43; }
 
-.tab-content { display: none; padding: 5px 15px 0 15px; width: 100%; flex: 1 1 0px; min-height: 0; overflow: hidden; } 
+/* 🌟 버그 픽스: 탭 아래 흰 여백 0px 밀착 */
+.tab-content { display: none; padding: 0 15px 0 15px; width: 100%; flex: 1 1 0px; min-height: 0; overflow: hidden; } 
 .tab-content.active { display: flex; flex-direction: column; } 
 .flex-column-tab { flex-direction: column; }
 
 .scroll-wrapper { flex: 1 1 0px; overflow-y: auto; margin-bottom: 0px; padding-bottom: 0px; min-height: 0; scrollbar-width: none; -ms-overflow-style: none; }
 .scroll-wrapper::-webkit-scrollbar { display: none; }
-
 .sticky-bottom-input { flex: 0 0 auto; background: white; padding: 5px 15px 8px 15px; margin: 0 -15px 0 -15px; border-top: 1px solid #f0f0f0; z-index: 10; }
 
 .d-day-info { font-weight: bold; color: #ff6b6b; margin-bottom: 10px; font-size: 1.25em; display: flex; align-items: center; justify-content: center; text-align: center; }
@@ -140,7 +139,7 @@ body { background-color: #f0f2f5; font-family: 'Pretendard', sans-serif; display
 .vocab-meaning.blind.revealed { background-color: transparent; color: #0984e3; font-weight: bold; }
 .vocab-item.memorized .vocab-word, .vocab-item.memorized .vocab-meaning { text-decoration: line-through; color: #aaa; }
 .vocab-item.memorized .vocab-meaning.blind { background-color: transparent; color: #aaa; }
-.vocab-buttons { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.vocab-buttons { display: flex; align-items: center; gap: 2px; flex-shrink: 0; width: 60px; justify-content: flex-end; }
 .vocab-tts-btn { background: none; border: none; cursor: pointer; font-size: 1.1em; opacity: 0.6; transition: 0.2s; padding: 5px; display: flex; align-items: center; justify-content: center; }
 .vocab-tts-btn:hover { opacity: 1; transform: scale(1.1); }
 .vocab-more-btn { padding: 5px; background: none; border: none; color: #888; font-size: 1.2em; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; }
