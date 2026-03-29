@@ -16,7 +16,7 @@ const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2";
 // ==========================================
 // 🌟 1. 전역 변수 선언 
 // ==========================================
-let isDataLoaded = false; // 🌟 핵심 락: 데이터 증발 방지
+let isDataLoaded = false; 
 
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -155,7 +155,6 @@ setInterval(() => {
     });
 }, 10000);
 
-// 🌟 버그 수정: 동기화 잠금 락
 function syncToCloud() {
     if (auth.currentUser && isDataLoaded) {
         const dataToSync = { 
@@ -330,7 +329,7 @@ function renderTabButtons() {
 }
 
 document.getElementById('tab-edit-list')?.addEventListener('change', (e) => {
-    if(e.target.classList.contains('tab-enable-chk')) { const index = e.target.dataset.index; tabConfig[index].enabled = e.target.checked; renderTabButtons(); syncToCloud(); }
+    if(e.target.classList.contains('tab-enable-chk')) { const index = e.target.dataset.index; tabConfig[index].enabled = e.target.checked; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabButtons(); syncToCloud(); }
 });
 
 function bindTabDragEvents() {
@@ -364,7 +363,7 @@ function jumpKoko() {
     }
 }
 
-// 🌟 버그 수정: 스케줄 N개 표시 시 파란색 제거 및 1개일 때 로직 변경
+// 🌟 버그 수정: 스케줄 N개 표시 시 문구 하나로 통합 및 깔끔한 출력
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
@@ -375,7 +374,7 @@ function kokoScheduleCheck() {
         } else if (todaysSchedules.length === 1) { 
             kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong>`; 
         } else {
-            kokoSpeech.innerHTML = `<span style="display:inline-flex; align-items:baseline; justify-content:center; gap:2px;"><strong style="font-size:1.05em;">${todaysSchedules.length}개</strong>의 일정이 있습니다! 🗓️</span>`; 
+            kokoSpeech.innerHTML = `${todaysSchedules.length}개의 일정이 있습니다! 🗓️`; 
         }
     }
     jumpKoko(); 
@@ -391,7 +390,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직 (핀 제거됨)
+// 📅 3. 캘린더 및 스케줄 로직
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display'); if (!displayObj) return; 
@@ -452,12 +451,14 @@ document.getElementById('schedule-edit-btn')?.addEventListener('click', () => {
     const newTask = prompt("일정을 수정하세요:", currentTask);
     if(newTask && newTask.trim() !== "") {
         schedules[selectedDateStr][currentScheduleIndex].task = newTask.trim();
+        localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
         renderCalendar(); syncToCloud(); 
     }
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
 document.getElementById('schedule-del-btn')?.addEventListener('click', () => { 
     schedules[selectedDateStr].splice(currentScheduleIndex, 1); 
+    localStorage.setItem('koko_schedules', JSON.stringify(schedules)); 
     renderCalendar(); syncToCloud(); 
     document.getElementById('schedule-dropdown').style.display = 'none';
 });
@@ -598,7 +599,7 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
         }
     } catch(e) { console.log("Ranking sync err:", e); }
 
-    myNickname = name; lastChangeDate = new Date();
+    myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     statusObj.innerText = "✅ 변경 완료!"; statusObj.style.color = "#2ecc71"; enableChat();
     
     if(kokoSpeech) {
@@ -1040,7 +1041,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 & 랭킹보드 (1인 1기록 갱신 로직)
+// 🌟 8. 꼬꼬 게임 & 랭킹보드
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -1125,7 +1126,6 @@ function loadRankings(diff) {
     });
 }
 
-// 🌟 버그 픽스: 1유저 1난이도 1기록 (최단 기록 갱신) 로직 완벽 적용
 function saveRanking(time, diff) {
     if(!auth.currentUser || !myNickname || diff === 'custom') return;
     
@@ -1306,16 +1306,15 @@ window.exitGameFromPopup = () => {
     document.getElementById('game-stage-wrapper').style.opacity = '1';
     document.getElementById('game-stage-wrapper').style.pointerEvents = 'auto';
     document.getElementById('fullscreen-game-overlay').style.display = 'none'; 
-};
+}
 
 function checkWin() {
     const revealedCount = document.querySelectorAll('.egg-cell.revealed').length;
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-// 🌟 앱 최초 로드 및 화면 렌더링
 applyShortcuts(); 
 renderAllAppUI();
 
-console.log("🌟 껌딱지 꼬꼬 V7.7 로드 완료! (최고기록 갱신 1인 1랭킹, 황금비율 최적화, UI 다이어트 완료)");
+console.log("🌟 껌딱지 꼬꼬 V7.8 로드 완료! (말풍선 단일 텍스트화 및 모든 줄바꿈 완벽 중앙 정렬 완료)");
 // --- 파일 끝 ---
