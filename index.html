@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V7.0</title>
+    <title>껌딱지 꼬꼬 V7.1</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
-<body class="font-normal">
-    <div class="app-container">
+<body class="font-small"> <div class="app-container">
         
         <header class="top-bar" id="main-top-bar" style="display:none;">
             <div style="display:flex; flex-direction:column; gap:8px; align-items:center; width:40px;">
@@ -64,8 +63,8 @@
                         <span>크기</span>
                         <select id="size-select">
                             <option value="font-xsmall">매우 작게</option>
-                            <option value="font-small">작게</option>
-                            <option value="font-normal" selected>보통</option>
+                            <option value="font-small" selected>작게</option>
+                            <option value="font-normal">보통</option>
                             <option value="font-large">크게</option>
                             <option value="font-xlarge">매우 크게</option>
                         </select>
@@ -304,14 +303,14 @@
                 </label>
                 
                 <div class="input-group" style="margin-bottom: 0;">
-                    <input type="text" id="chat-input" placeholder="닉네임 등록 필요" disabled>
-                    <button id="send-chat-btn" class="action-btn auto-width" disabled>전송</button>
                     <select id="chat-font-size-select" style="padding: 0 8px; font-size: 0.85em; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; width: auto; background: white; outline: none;">
                         <option value="0.75em">작게</option>
                         <option value="0.85em" selected>보통</option>
                         <option value="1em">크게</option>
                         <option value="1.15em">아주 크게</option>
                     </select>
+                    <input type="text" id="chat-input" placeholder="닉네임 등록 필요" disabled>
+                    <button id="send-chat-btn" class="action-btn auto-width" disabled>전송</button>
                 </div>
             </div>
         </section>

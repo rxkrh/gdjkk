@@ -14,7 +14,7 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 
+// 🌟 1. 전역 변수 선언 (V7.1 기본값 최적화)
 // ==========================================
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -39,10 +39,10 @@ let dailyQuests = { q1: false, q2: false, q3: false };
 let schedules = JSON.parse(localStorage.getItem('koko_schedules')) || {};
 
 let currentFont = localStorage.getItem('koko_font') || "'Pretendard', sans-serif";
-let currentFontSize = localStorage.getItem('koko_font_size') || "font-normal";
+let currentFontSize = localStorage.getItem('koko_font_size') || "font-small"; // 🌟 최초 크기 '작게'
 let currentChatFont = localStorage.getItem('koko_chat_font') || "0.85em";
 let customFonts = JSON.parse(localStorage.getItem('koko_custom_fonts')) || [];
-let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: false };
+let shortcuts = JSON.parse(localStorage.getItem('koko_shortcuts')) || { weather: true, fortune: true, game: true }; // 🌟 모두 활성화
 
 const defaultTabs = [
     { id: 'tab-todo', label: '할 일', icon: 'icon-todo.png', enabled: true },
@@ -437,7 +437,7 @@ document.getElementById('schedule-del-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화 
+// 🔐 4. 로그인 및 동기화
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -528,9 +528,9 @@ auth.onAuthStateChanged((user) => {
         if(rankingFab) rankingFab.style.display = 'none';
         if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
         
-        // 🌟 V7.0 랜딩 페이지 멘트 변경 및 아이콘 최적 정렬
+        // 🌟 V7.1: 랜딩 페이지 멘트 및 이모티콘 텍스트 감싸기 처리 (inline-flex 활용)
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' class='ui-icon' style='margin:0 0 0 4px;'>";
+            kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' style='width:1.2em; height:1.2em; margin-left:4px; object-fit:contain;'></span>";
             kokoSpeech.style.backgroundColor = "#ff9f43";
             kokoSpeech.style.color = "white";
             kokoSpeech.dataset.feedMode = "false";
@@ -567,7 +567,13 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
 
     myNickname = name; localStorage.setItem('koko_nickname', myNickname); lastChangeDate = new Date();
     statusObj.innerText = "✅ 변경 완료!"; statusObj.style.color = "#2ecc71"; enableChat();
-    if(kokoSpeech) kokoSpeech.innerHTML = `새 이름 "${myNickname}", 맘에 들어요! <img src='icon-chat.png' class='ui-icon'>`;
+    
+    // 🌟 닉네임 변경 성공 시 말풍선 흰색 고정
+    if(kokoSpeech) {
+        kokoSpeech.innerHTML = `새 이름 "${myNickname}", 맘에 들어요! <img src='icon-chat.png' class='ui-icon'>`;
+        kokoSpeech.style.backgroundColor = "white";
+        kokoSpeech.style.color = "#333";
+    }
 });
 
 document.getElementById('open-feedback-btn')?.addEventListener('click', () => { closeMenu(); document.getElementById('feedback-modal').style.display = 'flex'; });
@@ -834,6 +840,7 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
+// 🌟 단어장 수직 중앙 정렬 및 간격 최적화 렌더링
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -844,14 +851,16 @@ function renderVocabs() {
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0; margin-right:15px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0;">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0; margin:0;">
                 <span class="vocab-word">${v.word}</span>
             </div>
-            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+            <div class="vocab-meaning-box">
                 ${meaningHtml}
+            </div>
+            <div class="vocab-buttons">
                 <button class="vocab-tts-btn" onclick="speakWord('${v.word.replace(/'/g, "\\'")}')">🔊</button>
-                <button class="more-btn vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
+                <button class="vocab-more-btn" onclick="openVocabMenu(${i}, event)">⋮</button>
             </div>
         `;
         list.appendChild(li);
@@ -935,11 +944,6 @@ function updateKokoAppearance() {
     
     if (!auth.currentUser) {
         kokoImg.src = "koko.png";
-        if(kokoSpeech) {
-            kokoSpeech.style.backgroundColor = "#ff9f43";
-            kokoSpeech.style.color = "white";
-            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' class='ui-icon' style='margin:0 0 0 4px;'>";
-        }
         return;
     }
 
@@ -1002,7 +1006,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 (지뢰찾기)
+// 🌟 8. 꼬꼬 게임 & 랭킹보드
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -1261,5 +1265,5 @@ function checkWin() {
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V7.0 로드 완료! (버튼 삐져나감 및 여백 불균형 해결)");
+console.log("🌟 껌딱지 꼬꼬 V7.1 로드 완료! (최초 기본값 세팅 및 레이아웃 밀착 고도화)");
 // --- 파일 끝 ---
