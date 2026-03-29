@@ -14,9 +14,9 @@ const provider = new firebase.auth.GoogleAuthProvider();
 const ADMIN_UID = "2WlMcOeAJoRHRg28Mqw2oXK0Jia2"; 
 
 // ==========================================
-// 🌟 1. 전역 변수 선언 (데이터 보호 잠금장치 추가)
+// 🌟 1. 전역 변수 선언 
 // ==========================================
-let isDataLoaded = false; // 🌟 핵심 버그 픽스: 동기화 안전망
+let isDataLoaded = false; // 🌟 핵심 락: 데이터 증발 방지
 
 let myUid = localStorage.getItem('koko_uid') || ('user_' + Date.now());
 localStorage.setItem('koko_uid', myUid);
@@ -155,7 +155,7 @@ setInterval(() => {
     });
 }, 10000);
 
-// 🌟 버그 수정: 데이터가 완전히 로드되었을 때만 Cloud Sync 허용
+// 🌟 버그 수정: 동기화 잠금 락
 function syncToCloud() {
     if (auth.currentUser && isDataLoaded) {
         const dataToSync = { 
@@ -197,9 +197,9 @@ if (sizeSelect) sizeSelect.value = currentFontSize;
 if (chatFontSelect) chatFontSelect.value = currentChatFont;
 if (chatBox) chatBox.style.fontSize = currentChatFont;
 
-fontSelect?.addEventListener('change', e => { currentFont = e.target.value; document.body.style.fontFamily = currentFont; syncToCloud(); });
-sizeSelect?.addEventListener('change', e => { currentFontSize = e.target.value; document.body.className = currentFontSize; if(kokoSpeech) kokoSpeech.innerHTML = "글씨 크기 조절 완료! <img src='icon-sparkle.png' class='ui-icon'>"; syncToCloud(); });
-chatFontSelect?.addEventListener('change', e => { currentChatFont = e.target.value; if(chatBox) chatBox.style.fontSize = currentChatFont; syncToCloud(); });
+fontSelect?.addEventListener('change', e => { currentFont = e.target.value; document.body.style.fontFamily = currentFont; localStorage.setItem('koko_font', currentFont); syncToCloud(); });
+sizeSelect?.addEventListener('change', e => { currentFontSize = e.target.value; document.body.className = currentFontSize; localStorage.setItem('koko_font_size', currentFontSize); if(kokoSpeech) kokoSpeech.innerHTML = "글씨 크기 조절 완료! <img src='icon-sparkle.png' class='ui-icon'>"; syncToCloud(); });
+chatFontSelect?.addEventListener('change', e => { currentChatFont = e.target.value; localStorage.setItem('koko_chat_font', currentChatFont); if(chatBox) chatBox.style.fontSize = currentChatFont; syncToCloud(); });
 
 function loadCustomFonts() {
     const select = document.getElementById('font-select');
@@ -214,6 +214,7 @@ function loadCustomFonts() {
     });
     select.value = currentFont;
 }
+loadCustomFonts();
 
 function applyShortcuts() {
     document.getElementById('icon-weather').style.display = shortcuts.weather ? 'inline-flex' : 'none';
@@ -231,7 +232,7 @@ function applyShortcuts() {
 document.querySelectorAll('.chk-shortcut').forEach(chk => {
     chk.addEventListener('change', (e) => {
         shortcuts[e.target.dataset.key] = e.target.checked;
-        applyShortcuts(); syncToCloud();
+        localStorage.setItem('koko_shortcuts', JSON.stringify(shortcuts)); applyShortcuts(); syncToCloud();
     });
 });
 
@@ -336,7 +337,7 @@ function bindTabDragEvents() {
     const list = document.getElementById('tab-edit-list'); let dragEl = null;
     list.addEventListener('dragstart', e => { dragEl = e.target.closest('li'); e.dataTransfer.effectAllowed = 'move'; setTimeout(() => dragEl.style.opacity = '0.5', 0); });
     list.addEventListener('dragover', e => { e.preventDefault(); const target = e.target.closest('li'); if(target && target !== dragEl) { const rect = target.getBoundingClientRect(); const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5; list.insertBefore(dragEl, next && target.nextSibling || target); } });
-    list.addEventListener('dragend', e => { dragEl.style.opacity = '1'; const newConfig = []; list.querySelectorAll('li').forEach(li => { newConfig.push(tabConfig[+li.dataset.index]); }); tabConfig = newConfig; renderTabEditor(); renderTabButtons(); syncToCloud(); });
+    list.addEventListener('dragend', e => { dragEl.style.opacity = '1'; const newConfig = []; list.querySelectorAll('li').forEach(li => { newConfig.push(tabConfig[+li.dataset.index]); }); tabConfig = newConfig; localStorage.setItem('koko_tab_config', JSON.stringify(tabConfig)); renderTabEditor(); renderTabButtons(); syncToCloud(); });
 }
 
 // ==========================================
@@ -363,6 +364,7 @@ function jumpKoko() {
     }
 }
 
+// 🌟 버그 수정: 스케줄 N개 표시 시 파란색 제거 및 1개일 때 로직 변경
 function kokoScheduleCheck() {
     const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
     const todaysSchedules = schedules[todayStr] || [];
@@ -370,8 +372,10 @@ function kokoScheduleCheck() {
     if (kokoSpeech) {
         if(todaysSchedules.length === 0) { 
             kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
-        } else { 
-            kokoSpeech.innerHTML = `<span style="display:inline-flex; align-items:baseline; justify-content:center; gap:2px;"><strong style="color:#0984e3; font-size:1.05em;">${todaysSchedules.length}개</strong>의 일정이 있습니다! 🗓️</span>`; 
+        } else if (todaysSchedules.length === 1) { 
+            kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong>`; 
+        } else {
+            kokoSpeech.innerHTML = `<span style="display:inline-flex; align-items:baseline; justify-content:center; gap:2px;"><strong style="font-size:1.05em;">${todaysSchedules.length}개</strong>의 일정이 있습니다! 🗓️</span>`; 
         }
     }
     jumpKoko(); 
@@ -387,7 +391,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직
+// 📅 3. 캘린더 및 스케줄 로직 (핀 제거됨)
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display'); if (!displayObj) return; 
@@ -459,7 +463,7 @@ document.getElementById('schedule-del-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화 (🌟 데이터 덮어쓰기 완벽 차단)
+// 🔐 4. 로그인 및 동기화 (오류 방어 로직)
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -519,7 +523,7 @@ auth.onAuthStateChanged((user) => {
                     loadCustomFonts();
                 }
                 
-                isDataLoaded = true; // 🌟 DB 로드 완벽히 끝난 후 잠금 해제
+                isDataLoaded = true; 
                 
                 applyShortcuts(); 
                 renderAllAppUI();
@@ -533,10 +537,10 @@ auth.onAuthStateChanged((user) => {
                 if (data.lastNicknameChange) lastChangeDate = data.lastNicknameChange.toDate();
                 if(kokoSpeech) kokoSpeech.innerHTML = "동기화 완료! 보고 싶었어요 <img src='icon-cloud.png' class='ui-icon'>";
             } else { 
-                isDataLoaded = true; // 🌟 완전 신규 유저일 경우에만 바로 잠금 해제
+                isDataLoaded = true; 
                 applyShortcuts();
                 renderAllAppUI(); 
-                syncToCloud(); // 비로소 첫 저장 실행
+                syncToCloud(); 
                 if(kokoSpeech) kokoSpeech.innerHTML = "환영해요! 데이터를 안전하게 보관할게요 <img src='icon-heart.png' class='ui-icon'>"; 
             }
         }).catch(err => { console.error("Data Load Error:", err); });
@@ -550,7 +554,7 @@ auth.onAuthStateChanged((user) => {
         if(uidDisplay) uidDisplay.innerText = '비로그인';
         
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "<span style='display:inline-flex; align-items:center;'>'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요!</span>";
+            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요!";
             kokoSpeech.style.backgroundColor = "#ff9f43";
             kokoSpeech.style.color = "white";
             kokoSpeech.dataset.feedMode = "false";
@@ -696,17 +700,17 @@ document.getElementById('send-chat-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🏆 6. 퀘스트, 투두, 디데이 (이모티콘 완벽 제거)
+// 🏆 6. 퀘스트, 투두, 디데이
 // ==========================================
 function checkAttendanceUI() {
     const todayStr = new Date().toDateString(); const btn = document.getElementById('attendance-btn'); const streak = document.getElementById('attendance-streak');
     if(streak) streak.innerText = attendance.streak;
     if(btn) {
         if (attendance.lastDate === todayStr) { 
-            btn.innerHTML = `오늘 출석 완료!`; // 🌟 버그 픽스
+            btn.innerHTML = `오늘 출석 완료!`; 
             btn.disabled = true; btn.style.backgroundColor = "#aaa"; completeQuest(2); 
         } else { 
-            btn.innerHTML = `오늘의 출석체크 도장 찍기`; // 🌟 버그 픽스
+            btn.innerHTML = `오늘의 출석체크 도장 찍기`; 
             btn.disabled = false; btn.style.backgroundColor = "#2ecc71"; 
         }
     }
@@ -765,7 +769,6 @@ window.openTodoMenu = (index, event) => { currentTodoIndex = index; const menu =
 document.getElementById('todo-edit-btn')?.addEventListener('click', () => { const currentText = todoData[currentTodoFolder][currentTodoIndex].text; const newText = prompt("할 일을 수정하세요:", currentText); if(newText && newText.trim() !== "") { todoData[currentTodoFolder][currentTodoIndex].text = newText.trim(); syncToCloud(); renderTodos(); } document.getElementById('todo-dropdown').style.display = 'none'; });
 document.getElementById('todo-del-btn')?.addEventListener('click', () => { todoData[currentTodoFolder].splice(currentTodoIndex, 1); syncToCloud(); renderTodos(); document.getElementById('todo-dropdown').style.display = 'none'; });
 
-// 모든 메뉴 닫기 통합 관리
 document.addEventListener('click', (e) => { 
     const dmenu = document.getElementById('dday-dropdown'); if (dmenu && dmenu.style.display === 'flex' && !e.target.classList.contains('more-btn')) dmenu.style.display = 'none'; 
     const tmenu = document.getElementById('todo-dropdown'); if (tmenu && tmenu.style.display === 'flex' && !e.target.classList.contains('todo-more-btn')) tmenu.style.display = 'none'; 
@@ -834,7 +837,7 @@ document.getElementById('dday-edit-btn')?.addEventListener('click', () => {
     const newText = prompt("디데이 제목을 수정하세요:", currentText);
     if(newText && newText.trim() !== "") {
         ddays[currentDdayIndex].title = newText.trim();
-        syncToCloud(); renderDdays(); 
+        syncToCloud(); renderDdays();
     }
     document.getElementById('dday-dropdown').style.display = 'none';
 });
@@ -1037,7 +1040,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 & 랭킹보드
+// 🌟 8. 꼬꼬 게임 & 랭킹보드 (1인 1기록 갱신 로직)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -1122,15 +1125,32 @@ function loadRankings(diff) {
     });
 }
 
+// 🌟 버그 픽스: 1유저 1난이도 1기록 (최단 기록 갱신) 로직 완벽 적용
 function saveRanking(time, diff) {
     if(!auth.currentUser || !myNickname || diff === 'custom') return;
-    db.collection('minesweeper_ranks').add({
-        uid: myUid,
-        nickname: myNickname,
-        time: time,
-        diff: diff,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    
+    const docId = `${myUid}_${diff}`;
+    const docRef = db.collection('minesweeper_ranks').doc(docId);
+    
+    docRef.get().then(doc => {
+        if(doc.exists) {
+            if(time < doc.data().time) {
+                docRef.update({
+                    time: time,
+                    nickname: myNickname,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            }
+        } else {
+            docRef.set({
+                uid: myUid,
+                nickname: myNickname,
+                time: time,
+                diff: diff,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        }
+    }).catch(err => console.error("Ranking save error:", err));
 }
 
 const inputRows = document.getElementById('input-rows');
@@ -1293,9 +1313,9 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-// 앱 최초 접속 시
+// 🌟 앱 최초 로드 및 화면 렌더링
 applyShortcuts(); 
 renderAllAppUI();
 
-console.log("🌟 껌딱지 꼬꼬 V7.6 로드 완료! (데이터 덮어쓰기 버그 완벽 차단 & UI 다이어트)");
+console.log("🌟 껌딱지 꼬꼬 V7.7 로드 완료! (최고기록 갱신 1인 1랭킹, 황금비율 최적화, UI 다이어트 완료)");
 // --- 파일 끝 ---
