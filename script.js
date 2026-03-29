@@ -437,7 +437,7 @@ document.getElementById('schedule-del-btn')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🔐 4. 로그인 및 동기화 (닉네임 변경 시 랭킹 연동)
+// 🔐 4. 로그인 및 동기화 
 // ==========================================
 document.getElementById('google-login-btn')?.addEventListener('click', () => auth.signInWithPopup(provider));
 document.getElementById('logout-btn')?.addEventListener('click', () => auth.signOut());
@@ -528,11 +528,11 @@ auth.onAuthStateChanged((user) => {
         if(rankingFab) rankingFab.style.display = 'none';
         if(centerLoginBtn) centerLoginBtn.style.display = 'flex';
         
-        // 🌟 비로그인 랜딩 페이지 멘트 변경 적용
+        // 🌟 V7.0 랜딩 페이지 멘트 변경 및 아이콘 최적 정렬
         if (kokoSpeech) {
-            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해 계정 로그인을 진행해주세요! <img src='icon-chick.png' class='ui-icon'>";
-            kokoSpeech.style.backgroundColor = "white";
-            kokoSpeech.style.color = "#333";
+            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' class='ui-icon' style='margin:0 0 0 4px;'>";
+            kokoSpeech.style.backgroundColor = "#ff9f43";
+            kokoSpeech.style.color = "white";
             kokoSpeech.dataset.feedMode = "false";
             kokoSpeech.dataset.testMode = "false";
         }
@@ -545,7 +545,6 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// 🌟 버그 수정: 닉네임 변경 시 랭킹 데이터 실시간 동기화 업데이트!
 document.getElementById('save-nickname-btn')?.addEventListener('click', async () => {
     const nickInput = document.getElementById('nickname-input'); const statusObj = document.getElementById('profile-status'); if(!nickInput || !statusObj) return;
     const name = nickInput.value.trim(); if (!name || name === myNickname) return;
@@ -557,7 +556,6 @@ document.getElementById('save-nickname-btn')?.addEventListener('click', async ()
     await nameRef.set({ uid: myUid }); 
     await db.collection('users').doc(myUid).set({ nickname: name, lastNicknameChange: firebase.firestore.FieldValue.serverTimestamp() }, { merge: true });
     
-    // 🌟 Firebase Batch를 활용하여 과거 랭킹 기록의 닉네임을 한 번에 수정
     try {
         const rankDocs = await db.collection('minesweeper_ranks').where('uid', '==', myUid).get();
         if (!rankDocs.empty) {
@@ -836,7 +834,6 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
-// 🌟 버그 수정: 단어장 렌더링 로직 (Flex 황금비율 적용 및 뜻 상자 최적화)
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -933,16 +930,15 @@ function getKokoWeather() { if(navigator.geolocation) { navigator.geolocation.ge
 
 function getDefaultSpeech() { const h = new Date().getHours(); return h<12?"아침 화이팅! <img src='icon-sun.png' class='ui-icon'>":(h<18?"나른한 오후 <img src='icon-cloud.png' class='ui-icon'>":"수고했어요! <img src='icon-moon.png' class='ui-icon'>"); }
 
-// 🌟 비로그인 시 멘트 변경
 function updateKokoAppearance() {
     const kokoImg = document.getElementById('koko'); if(!kokoImg) return;
     
     if (!auth.currentUser) {
         kokoImg.src = "koko.png";
         if(kokoSpeech) {
-            kokoSpeech.style.backgroundColor = "white";
-            kokoSpeech.style.color = "#333";
-            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해 계정 로그인을 진행해주세요! <img src='icon-chick.png' class='ui-icon'>";
+            kokoSpeech.style.backgroundColor = "#ff9f43";
+            kokoSpeech.style.color = "white";
+            kokoSpeech.innerHTML = "'데이터 동기화' 작업을 위해<br>계정 로그인을 진행해 주세요! <img src='icon-chick.png' class='ui-icon' style='margin:0 0 0 4px;'>";
         }
         return;
     }
@@ -1006,7 +1002,7 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 & 랭킹보드
+// 🌟 8. 꼬꼬 게임 (지뢰찾기)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
@@ -1265,5 +1261,5 @@ function checkWin() {
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V6.9 로드 완료! (동기화, 단어장 밸런스, 랭킹보드 완성)");
+console.log("🌟 껌딱지 꼬꼬 V7.0 로드 완료! (버튼 삐져나감 및 여백 불균형 해결)");
 // --- 파일 끝 ---

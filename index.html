@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>껌딱지 꼬꼬 V6.9</title>
+    <title>껌딱지 꼬꼬 V7.0</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="koko.png">
 </head>
@@ -371,8 +371,7 @@
             </div>
             
             <div class="game-stage-wrapper" style="background:white; box-shadow:none; border-top: none; border-radius:0; padding:10px 20px;">
-                <div id="ranking-list" style="width:100%; display:flex; flex-direction:column; gap:10px;">
-                    </div>
+                <div id="ranking-list" style="width:100%; display:flex; flex-direction:column; gap:10px;"></div>
             </div>
         </div>
     </div>
@@ -434,22 +433,16 @@
             <h3 style="margin-top:0; color:#74b9ff;">쪽지 보내기</h3>
             <p class="modal-desc">개발자에게 보내고 싶은 내용을 써주세요.</p>
             <textarea id="feedback-text" rows="5"></textarea>
-            <div class="modal-buttons">
-                <button id="close-feedback-btn" class="action-btn" style="background-color:#ccc; color:#333;">취소</button>
-                <button id="send-feedback-btn" class="action-btn" style="background-color:#74b9ff;">전송하기</button>
+            <div class="modal-buttons" style="display:flex; gap:10px; width:100%; margin-top:15px;">
+                <button id="close-feedback-btn" class="action-btn" style="flex:1; background-color:#ccc; color:#333;">취소</button>
+                <button id="send-feedback-btn" class="action-btn" style="flex:1; background-color:#74b9ff;">전송하기</button>
             </div>
         </div>
     </div>
 
     <div id="schedule-dropdown" class="dday-dropdown"><button id="schedule-edit-btn">✏️ 수정</button><button id="schedule-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
     <div id="todo-dropdown" class="dday-dropdown"><button id="todo-edit-btn">✏️ 수정</button><button id="todo-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
-    
-    <div id="dday-dropdown" class="dday-dropdown">
-        <button id="dday-main-btn">👑 대표 지정</button>
-        <button id="dday-edit-btn">✏️ 수정</button> 
-        <button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button>
-    </div>
-    
+    <div id="dday-dropdown" class="dday-dropdown"><button id="dday-main-btn">👑 대표 지정</button><button id="dday-edit-btn">✏️ 수정</button><button id="dday-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
     <div id="vocab-dropdown" class="dday-dropdown"><button id="vocab-edit-btn">✏️ 수정</button><button id="vocab-del-btn" style="color:#ff6b6b;">❌ 삭제</button></div>
 
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
