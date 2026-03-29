@@ -351,24 +351,16 @@ function jumpKoko() {
     }
 }
 
-// 스케줄 핀 고정 체크 연동 로직
+// 🌟 버그 픽스: 스케줄 N개 표시 동적 멘트 적용 완료
 function kokoScheduleCheck() {
-    let pinnedSchedule = null;
-    Object.keys(schedules).forEach(d => {
-        schedules[d].forEach(s => { if(s.pinned) pinnedSchedule = s; });
-    });
-
+    const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
+    const todaysSchedules = schedules[todayStr] || [];
+    
     if (kokoSpeech) {
-        if(pinnedSchedule) {
-            kokoSpeech.innerHTML = `📌 고정된 일정!<br><strong style="color:#0984e3; font-size:0.95em;">'${pinnedSchedule.task}'</strong>`;
-        } else {
-            const todayStr = `${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
-            const todaysSchedules = schedules[todayStr] || [];
-            if(todaysSchedules.length === 0) { 
-                kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
-            } else { 
-                kokoSpeech.innerHTML = `일정이 있습니다!<br><strong style="color:#0984e3; font-size:0.95em;">'${todaysSchedules[0].task}'</strong> 🗓️`; 
-            }
+        if(todaysSchedules.length === 0) { 
+            kokoSpeech.innerHTML = "오늘은 특별한 일정이 없어요 <img src='icon-chick.png' class='ui-icon'>"; 
+        } else { 
+            kokoSpeech.innerHTML = `<strong style="color:#0984e3; font-size:1.05em;">${todaysSchedules.length}개</strong>의 일정이 있습니다! 🗓️`; 
         }
     }
     jumpKoko(); 
@@ -384,7 +376,7 @@ document.getElementById('chat-header-bar')?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 📅 3. 캘린더 및 스케줄 로직
+// 📅 3. 캘린더 및 스케줄 로직 (핀 제거)
 // ==========================================
 function renderCalendar() {
     const displayObj = document.getElementById('current-month-display'); if (!displayObj) return; 
@@ -412,37 +404,14 @@ function renderSchedulesForSelected() {
     daySchedules.sort((a, b) => { if (a.time === "종일") return -1; if (b.time === "종일") return 1; return a.time.localeCompare(b.time); });
     if(daySchedules.length === 0) { list.innerHTML = `<li style="justify-content:center; color:#aaa;">등록된 일정이 없습니다.</li>`; return; }
     
+    // 🌟 스케줄 핀 관련 로직 모두 제거
     daySchedules.forEach((s, i) => { 
         let badgeClass = s.time === "종일" ? "schedule-time-badge allday" : "schedule-time-badge";
-        let pinIcon = s.pinned ? `<span style="margin-right:5px; font-size:1.1em;">📌</span>` : '';
         let li = document.createElement('li');
-        li.innerHTML = `<span style="display:flex; align-items:center; flex-grow:1;"><span class="${badgeClass}">${s.time}</span> <span style="word-break:break-all;">${pinIcon}${s.task}</span></span><button class="more-btn schedule-more-btn" onclick="openScheduleMenu(${i}, event)">⋮</button>`;
-        li.addEventListener('mousedown', (e) => startSchedulePress(selectedDateStr, i, e));
-        li.addEventListener('touchstart', (e) => startSchedulePress(selectedDateStr, i, e), {passive: true});
-        li.addEventListener('mouseup', cancelSchedulePress);
-        li.addEventListener('mouseleave', cancelSchedulePress);
-        li.addEventListener('touchend', cancelSchedulePress);
-        li.addEventListener('touchcancel', cancelSchedulePress);
+        li.innerHTML = `<span style="display:flex; align-items:center; flex-grow:1;"><span class="${badgeClass}">${s.time}</span> <span style="word-break:break-all;">${s.task}</span></span><button class="more-btn schedule-more-btn" onclick="openScheduleMenu(${i}, event)">⋮</button>`;
         list.appendChild(li);
     });
 }
-
-let schedulePressTimer = null; let isSchedulePressing = false;
-window.startSchedulePress = (dateStr, index, event) => { 
-    if(event.target.classList.contains('schedule-more-btn')) return; 
-    isSchedulePressing = true; 
-    schedulePressTimer = setTimeout(() => { 
-        if(isSchedulePressing) { 
-            const wasPinned = schedules[dateStr][index].pinned;
-            Object.keys(schedules).forEach(d => schedules[d].forEach(s => s.pinned = false));
-            if(!wasPinned) schedules[dateStr][index].pinned = true;
-            
-            renderSchedulesForSelected(); syncToCloud(); kokoScheduleCheck();
-            if(navigator.vibrate) navigator.vibrate(50); 
-        } 
-    }, 500); 
-};
-window.cancelSchedulePress = () => { isSchedulePressing = false; if(schedulePressTimer) clearTimeout(schedulePressTimer); };
 
 document.getElementById('prev-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() - 1); renderCalendar(); });
 document.getElementById('next-month-btn')?.addEventListener('click', () => { currentCalDate.setMonth(currentCalDate.getMonth() + 1); renderCalendar(); });
@@ -451,7 +420,7 @@ document.getElementById('add-schedule-btn')?.addEventListener('click', () => {
     if(!timeObj || !taskObj) return; let time = timeObj.value; const task = taskObj.value.trim();
     if (!task) { alert("일정 내용을 입력해주세요!"); return; } if (!time) time = "종일";
     if(!schedules[selectedDateStr]) schedules[selectedDateStr] = [];
-    schedules[selectedDateStr].push({ time: time, task: task, pinned: false });
+    schedules[selectedDateStr].push({ time: time, task: task }); // pinned 속성 완전히 삭제
     localStorage.setItem('koko_schedules', JSON.stringify(schedules)); timeObj.value = ''; taskObj.value = ''; renderCalendar(); syncToCloud();
 });
 
@@ -563,7 +532,6 @@ auth.onAuthStateChanged((user) => {
                 updateKokoAppearance(); 
             } else { 
                 applyShortcuts();
-                // 🌟 신규(일반) 계정 최초 접속 시 탭 UI가 날아가지 않도록 즉시 렌더링 호출
                 renderTabEditor(); 
                 renderTabButtons();
                 renderTodoFolders(); 
@@ -794,7 +762,6 @@ window.openTodoMenu = (index, event) => { currentTodoIndex = index; const menu =
 document.getElementById('todo-edit-btn')?.addEventListener('click', () => { const currentText = todoData[currentTodoFolder][currentTodoIndex].text; const newText = prompt("할 일을 수정하세요:", currentText); if(newText && newText.trim() !== "") { todoData[currentTodoFolder][currentTodoIndex].text = newText.trim(); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); } document.getElementById('todo-dropdown').style.display = 'none'; });
 document.getElementById('todo-del-btn')?.addEventListener('click', () => { todoData[currentTodoFolder].splice(currentTodoIndex, 1); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); document.getElementById('todo-dropdown').style.display = 'none'; });
 
-// 모든 메뉴 닫기 통합 관리
 document.addEventListener('click', (e) => { 
     const dmenu = document.getElementById('dday-dropdown'); if (dmenu && dmenu.style.display === 'flex' && !e.target.classList.contains('more-btn')) dmenu.style.display = 'none'; 
     const tmenu = document.getElementById('todo-dropdown'); if (tmenu && tmenu.style.display === 'flex' && !e.target.classList.contains('todo-more-btn')) tmenu.style.display = 'none'; 
@@ -901,6 +868,7 @@ document.getElementById('del-vocab-folder-btn')?.addEventListener('click', () =>
 
 document.getElementById('vocab-blind-check')?.addEventListener('change', (e) => { isVocabBlindMode = e.target.checked; renderVocabs(); });
 
+// 🌟 버그 수정: 단어장 레이아웃 황금비율 적용
 function renderVocabs() { 
     const list = document.getElementById('vocab-list'); if(!list) return; list.innerHTML = ''; 
     let currentList = vocabData[currentVocabFolder] || [];
@@ -911,11 +879,11 @@ function renderVocabs() {
         let meaningHtml = isVocabBlindMode ? `<span class="vocab-meaning blind" onclick="this.classList.toggle('revealed')">${v.mean}</span>` : `<span class="vocab-meaning">${v.mean}</span>`;
         
         li.innerHTML = `
-            <div style="display:flex; align-items:center; gap:8px; flex-grow:1; min-width:0;">
+            <div class="vocab-word-container">
                 <input type="checkbox" ${v.memorized ? 'checked' : ''} onchange="toggleVocab(${i})" style="flex-shrink:0; margin:0;">
                 <span class="vocab-word">${v.word}</span>
             </div>
-            <div class="vocab-meaning-box">
+            <div class="vocab-meaning-container">
                 ${meaningHtml}
             </div>
             <div class="vocab-buttons">
@@ -1322,7 +1290,7 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-// 🌟 앱 최초 접속 시 무조건 탭 UI 렌더링하도록 밖으로 꺼냄
+// 🌟 앱 최초 접속 시 무조건 탭 UI 렌더링
 renderTabEditor(); 
 renderTabButtons();
 renderTodoFolders(); 
@@ -1332,5 +1300,5 @@ renderDdays();
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V7.3 로드 완료! (iOS 확대/팝업 차단 및 신규 계정 탭 증발 해결)");
+console.log("🌟 껌딱지 꼬꼬 V7.4 로드 완료!");
 // --- 파일 끝 ---
