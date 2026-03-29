@@ -59,7 +59,6 @@ let selectedDateStr = `${currentCalDate.getFullYear()}-${String(currentCalDate.g
 const kokoSpeech = document.getElementById('koko-speech');
 const kokoChar = document.getElementById('koko');
 
-// 🌟 스크롤 헤더 핀 토글
 window.togglePin = (type) => {
     const header = document.getElementById(`${type}-folder-header`);
     const btn = document.getElementById(`${type}-pin-btn`);
@@ -72,7 +71,6 @@ window.togglePin = (type) => {
     }
 };
 
-// 푸시 알림 엔진
 function sendPushNotification(title, options) {
     if ("Notification" in window && Notification.permission === "granted") {
         new Notification(title, options);
@@ -229,7 +227,6 @@ document.querySelectorAll('.chk-shortcut').forEach(chk => {
     });
 });
 
-// 🌟 게임 열기/닫기 시 랭킹(트로피) 아이콘 교체
 document.getElementById('icon-game')?.addEventListener('click', () => { 
     document.getElementById('main-tab-buttons').style.display = 'none';
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -716,6 +713,14 @@ window.openTodoMenu = (index, event) => { currentTodoIndex = index; const menu =
 document.getElementById('todo-edit-btn')?.addEventListener('click', () => { const currentText = todoData[currentTodoFolder][currentTodoIndex].text; const newText = prompt("할 일을 수정하세요:", currentText); if(newText && newText.trim() !== "") { todoData[currentTodoFolder][currentTodoIndex].text = newText.trim(); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); } document.getElementById('todo-dropdown').style.display = 'none'; });
 document.getElementById('todo-del-btn')?.addEventListener('click', () => { todoData[currentTodoFolder].splice(currentTodoIndex, 1); localStorage.setItem('koko_todo_data', JSON.stringify(todoData)); renderTodos(); syncToCloud(); document.getElementById('todo-dropdown').style.display = 'none'; });
 
+// 모든 메뉴 닫기 통합 관리
+document.addEventListener('click', (e) => { 
+    const dmenu = document.getElementById('dday-dropdown'); if (dmenu && dmenu.style.display === 'flex' && !e.target.classList.contains('more-btn')) dmenu.style.display = 'none'; 
+    const tmenu = document.getElementById('todo-dropdown'); if (tmenu && tmenu.style.display === 'flex' && !e.target.classList.contains('todo-more-btn')) tmenu.style.display = 'none'; 
+    const vmenu = document.getElementById('vocab-dropdown'); if (vmenu && vmenu.style.display === 'flex' && !e.target.classList.contains('vocab-more-btn')) vmenu.style.display = 'none'; 
+    const smenu = document.getElementById('schedule-dropdown'); if (smenu && smenu.style.display === 'flex' && !e.target.classList.contains('schedule-more-btn')) smenu.style.display = 'none';
+});
+
 let currentDdayIndex = -1; let ddayPressTimer = null; let isPressing = false;
 window.startDdayPress = (index, event) => { if(event.target.classList.contains('more-btn')) return; isPressing = true; ddayPressTimer = setTimeout(() => { if(isPressing) { ddays[index].pinned = !ddays[index].pinned; renderDdays(); syncToCloud(); if(navigator.vibrate) navigator.vibrate(50); } }, 500); };
 window.cancelDdayPress = () => { isPressing = false; if(ddayPressTimer) clearTimeout(ddayPressTimer); };
@@ -984,12 +989,12 @@ kokoChar?.addEventListener('click', () => {
 });
 
 // ==========================================
-// 🌟 8. 꼬꼬 게임 (랭킹보드 연동)
+// 🌟 8. 꼬꼬 게임 (랭킹보드 연동 & 우회 쿼리 적용 완료)
 // ==========================================
 let timerInterval; let gameTime = 0; let remainingMines = 0; let gridData = []; 
 let boardRows = 10; let boardCols = 10; let mineCount = 12; let isFirstClick = true;
 let currentZoom = 1;
-let currentMinesweeperDiff = 'normal'; // 현재 난이도 저장용
+let currentMinesweeperDiff = 'normal'; 
 
 document.getElementById('play-minesweeper-list-btn')?.addEventListener('click', () => {
     document.getElementById('fullscreen-game-overlay').style.display = 'flex';
@@ -1005,7 +1010,7 @@ document.getElementById('game-close-x')?.addEventListener('click', () => {
     clearInterval(timerInterval);
 });
 
-// 🌟 랭킹보드 UI 제어
+// 랭킹보드 UI 제어
 document.getElementById('icon-ranking')?.addEventListener('click', () => {
     document.getElementById('fullscreen-ranking-overlay').style.display = 'flex';
     document.getElementById('ranking-main-view').style.display = 'flex';
@@ -1017,14 +1022,13 @@ document.getElementById('ranking-close-x')?.addEventListener('click', () => {
 document.getElementById('open-minesweeper-ranking')?.addEventListener('click', () => {
     document.getElementById('ranking-main-view').style.display = 'none';
     document.getElementById('ranking-detail-view').style.display = 'flex';
-    loadRankings('easy'); // 기본 난이도 로드
+    loadRankings('easy'); 
 });
 document.getElementById('ranking-back-btn')?.addEventListener('click', () => {
     document.getElementById('ranking-detail-view').style.display = 'none';
     document.getElementById('ranking-main-view').style.display = 'flex';
 });
 
-// 랭킹 탭 전환
 document.querySelectorAll('.rank-tab').forEach(tab => {
     tab.addEventListener('click', (e) => {
         document.querySelectorAll('.rank-tab').forEach(t => t.classList.remove('active'));
@@ -1033,20 +1037,26 @@ document.querySelectorAll('.rank-tab').forEach(tab => {
     });
 });
 
-// 랭킹 데이터 불러오기
+// 🌟 버그 픽스: Firebase 인덱스 에러를 방지하기 위해 클라이언트 사이드에서 시간 정렬!
 function loadRankings(diff) {
     const list = document.getElementById('ranking-list');
     list.innerHTML = '<div style="text-align:center; padding:20px; color:#888;">데이터 불러오는 중...</div>';
     
-    db.collection('minesweeper_ranks').where('diff', '==', diff).orderBy('time', 'asc').limit(50).get().then(snap => {
+    db.collection('minesweeper_ranks').where('diff', '==', diff).get().then(snap => {
         list.innerHTML = '';
         if(snap.empty) {
             list.innerHTML = '<div style="text-align:center; padding:20px; color:#aaa;">아직 기록이 없습니다. 첫 랭커가 되어보세요!</div>';
             return;
         }
+        
+        // 브라우저 메모리에서 직접 오름차순(가장 빠른 시간) 정렬
+        let rankData = [];
+        snap.forEach(doc => rankData.push(doc.data()));
+        rankData.sort((a, b) => parseFloat(a.time) - parseFloat(b.time));
+        rankData = rankData.slice(0, 50); // 상위 50명만 표기
+        
         let rank = 1;
-        snap.forEach(doc => {
-            const d = doc.data();
+        rankData.forEach(d => {
             let rankIcon = rank;
             if(rank === 1) rankIcon = '<img src="gold-medal.png" style="width:24px; height:24px;">';
             else if(rank === 2) rankIcon = '<img src="silver-medal.png" style="width:24px; height:24px;">';
@@ -1067,7 +1077,6 @@ function loadRankings(diff) {
     });
 }
 
-// 랭킹 저장 함수
 function saveRanking(time, diff) {
     if(!auth.currentUser || !myNickname || diff === 'custom') return;
     db.collection('minesweeper_ranks').add({
@@ -1202,7 +1211,7 @@ function gameOver(win) {
         header.innerText = "지뢰찾기 성공! 🎉";
         header.style.color = "#2ecc71"; 
         msg.innerHTML = `지뢰를 모두 찾는 데에 <span style="color:#0984e3;">${gameTime}초</span> 걸렸어요!`;
-        saveRanking(gameTime, currentMinesweeperDiff); // 🌟 랭킹 저장 호출
+        saveRanking(gameTime, currentMinesweeperDiff); 
     } else {
         let correctFlags = 0;
         document.querySelectorAll('.egg-cell.flagged').forEach(cell => {
@@ -1239,9 +1248,8 @@ function checkWin() {
     if(revealedCount === (boardRows * boardCols) - mineCount) gameOver(true);
 }
 
-// 🌟 앱 실행 시 기본 날씨 및 초기 렌더링 호출
 getKokoWeather(); 
 updateKokoAppearance(); 
 
-console.log("🌟 껌딱지 꼬꼬 V6.7 로드 완료! (하단 패딩 수정, 핀 고정, 랭킹보드 구축 완료)");
+console.log("🌟 껌딱지 꼬꼬 V6.8 로드 완료! (파이어베이스 인덱스 에러 제거 및 클라이언트 사이드 정렬 최적화)");
 // --- 파일 끝 ---
